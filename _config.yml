@@ -111,7 +111,7 @@ theme: xoxo
 ## 这里使用git部署网站
 deploy:
   type: git
-  repo: git@www.hufeifei.cn:repo/post.hufeifei.cn.git
+  repo: git@www.hufeifei.cn:repo/posts.hufeifei.cn.git
   branch: master
   message: "hexo deployment: {{ now('YYYY-MM-DD HH:mm:ss') }}"
 
