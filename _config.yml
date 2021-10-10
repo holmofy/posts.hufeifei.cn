@@ -106,5 +106,12 @@ theme: xoxo
 
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
+# Deployment
+## Docs: https://hexo.io/docs/deployment.html
+## 这里使用git部署网站
 deploy:
-  type: ''
+  type: git
+  repo: git@www.hufeifei.cn:repo/post.hufeifei.cn.git
+  branch: master
+  message: "hexo deployment: {{ now('YYYY-MM-DD HH:mm:ss') }}"
+
