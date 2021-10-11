@@ -98,6 +98,7 @@ pagination_dir: page
 include:
 exclude:
 ignore:
+  - "google4b244692104f4e5f.html"
 
 # Extensions
 ## Plugins: https://hexo.io/plugins/
