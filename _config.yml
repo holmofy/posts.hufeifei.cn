@@ -99,6 +99,7 @@ include:
 exclude:
 ignore:
   - ads.txt
+  - "google4b244692104f4e5f.html"
 
 # Extensions
 ## Plugins: https://hexo.io/plugins/
