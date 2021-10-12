@@ -1,7 +1,7 @@
 ---
 title: 日志分析下ES/ClickHouse/Loki比较与思考
 date: 2021-08-04 14:23
-categories: 后段
+categories: 后端
 mathjax: true
 post_src: https://zhuanlan.zhihu.com/p/396211457
 tags: 
