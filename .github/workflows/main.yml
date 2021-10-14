@@ -24,6 +24,7 @@ jobs:
         echo "${{ secrets.ID_RSA }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         ssh-add ~/.ssh/id_rsa
+        ssh-keyscan -H posts.hufeifei.cn >> ~/.ssh/known_hosts
         git config --global user.email "hff1996723@gmail.com"
         git config --global user.name "github/holmofy"
         npm install -g hexo-cli && npm install
