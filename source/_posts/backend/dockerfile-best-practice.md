@@ -26,10 +26,6 @@ tags:
 - 增加Dockerfile可读性
 - 让Docker容器使用起来更简单
 
-**总结：**
-
-[TOC]
-
 # 示例
 
 示例 Dockerfile 犯了几乎所有的错(当然我是故意的)。接下来，我会一步步优化它。假设我们需要使用 Docker 运行一个 Node.js 应用，下面就是它的 Dockerfile(CMD 指令太复杂了，所以我简化了，它是错误的，仅供参考)。
