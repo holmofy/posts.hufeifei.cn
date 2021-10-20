@@ -6,8 +6,7 @@ mathjax: false
 post_src: https://blog.fundebug.com/2017/05/15/write-excellent-dockerfile/
 tags:
 - Docker
-keywords:
-- 最佳实践
+keywords: Docker,最佳实践
 ---
 
 **译者按:** Dockerfile的语法非常简单，然而如何加快镜像构建速度，如何减少Docker镜像的大小却不是那么直观，需要积累实践经验。这篇博客可以帮助你快速掌握编写Dockerfile的技巧。
