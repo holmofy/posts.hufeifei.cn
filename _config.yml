@@ -145,3 +145,18 @@ sitemap:
   rel: true
   tags: true
   categories: true
+
+# https://github.com/hexojs/hexo-filter-nofollow
+# 解决图片外链的问题
+nofollow:
+  enable: true
+  elements: ["img"]
+  field: post
+  include:
+    - "img.draveness.me"
+  rel:
+    - 'external'
+    - 'noreferrer'
+    - 'nofollow'
+    - 'noopener'
+  referrerpolicy: 'no-referrer'
