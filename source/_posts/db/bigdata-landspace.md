@@ -1,6 +1,6 @@
 ---
 title: 一文读懂大数据平台——写给大数据开发初学者的话!
-date: 2021-10-02 12:23
+date: 2021-10-02
 categories: 数据库
 mathjax: true
 post_src: https://zhuanlan.zhihu.com/p/26545566
