@@ -29,6 +29,8 @@ category_dir: categories
 code_dir: downloads/code
 i18n_dir: :lang
 skip_render:
+  - ads.txt
+  - "google4b244692104f4e5f.html"
 
 # Writing
 new_post_name: :title.md # File name of new posts
@@ -98,8 +100,6 @@ pagination_dir: page
 include:
 exclude:
 ignore:
-  - ads.txt
-  - "google4b244692104f4e5f.html"
 
 # Extensions
 ## Plugins: https://hexo.io/plugins/
@@ -119,7 +119,7 @@ plugins:
 ## 这里使用git部署网站
 deploy:
   type: git
-  repo: git@www.hufeifei.cn:repo/posts.hufeifei.cn.git
+  repo: git@posts.hufeifei.cn:repo/posts.hufeifei.cn.git
   branch: master
   message: "hexo deployment: {{ now('YYYY-MM-DD HH:mm:ss') }}"
 
@@ -138,3 +138,10 @@ toc:
   slugify: transliteration
   decodeEntities: false
   anchor: false
+
+sitemap:
+  path: sitemap.xml
+  #template: ./sitemap_template.xml
+  rel: true
+  tags: true
+  categories: true
