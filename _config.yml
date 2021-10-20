@@ -29,6 +29,8 @@ category_dir: categories
 code_dir: downloads/code
 i18n_dir: :lang
 skip_render:
+  - ads.txt
+  - "google4b244692104f4e5f.html"
 
 # Writing
 new_post_name: :title.md # File name of new posts
@@ -98,8 +100,6 @@ pagination_dir: page
 include:
 exclude:
 ignore:
-  - ads.txt
-  - "google4b244692104f4e5f.html"
 
 # Extensions
 ## Plugins: https://hexo.io/plugins/
