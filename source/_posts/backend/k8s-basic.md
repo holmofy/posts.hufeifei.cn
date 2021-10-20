@@ -1,6 +1,6 @@
 ---
 title: Kubernetes解决了哪些问题
-date: 2021-10-04 14:23
+date: 2021-10-04
 categories: 后端
 mathjax: true
 post_src: https://www.zhihu.com/question/329365548/answer/1545488275
