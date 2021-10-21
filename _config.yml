@@ -66,6 +66,11 @@ index_generator:
   path: ''
   per_page: 20
   order_by: -date
+# https://github.com/hexojs/hexo-generator-tag
+tag_generator:
+  per_page: 10
+  order_by: -date
+  enable_index_page: tag-index
 # https://github.com/hexojs/hexo-generator-feed
 feed:
   type: atom ##feed类型 atom或者rss2
@@ -145,3 +150,18 @@ sitemap:
   rel: true
   tags: true
   categories: true
+
+# https://github.com/hexojs/hexo-filter-nofollow
+# 解决图片外链的问题
+nofollow:
+  enable: true
+  elements: ["img"]
+  field: post
+  include:
+    - "img.draveness.me"
+  rel:
+    - 'external'
+    - 'noreferrer'
+    - 'nofollow'
+    - 'noopener'
+  referrerpolicy: 'no-referrer'
