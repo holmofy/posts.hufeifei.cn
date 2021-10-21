@@ -434,7 +434,7 @@ Docker 目前已经成为了非常主流的技术，已经在很多成熟公司�
 # Reference
 
 - [Chapter 4. Docker Fundamentals · Using Docker by Adrian Mount](https://www.safaribooksonline.com/library/view/using-docker/9781491915752/ch04.html)
-- [TECHNIQUES BEHIND DOCKER](https://washraf.gitbooks.io/the-docker-ecosystem/content/Chapter 1/Section 3/techniques_behind_docker.html)
+- [TECHNIQUES BEHIND DOCKER](https://washraf.gitbooks.io/the-docker-ecosystem/content)
 - [Docker overview](https://docs.docker.com/engine/docker-overview/#the-underlying-technology)
 - [Unifying filesystems with union mounts](https://lwn.net/Articles/312641/)
 - [DOCKER 基础技术：AUFS](https://coolshell.cn/articles/17061.html)
