@@ -12,7 +12,7 @@ tags:
 - 数据中心
 ---
 
-2014 年发布的 Kubernetes 在今天俨然已成为容器编排领域的事实标准，相信谈到 Kubernetes 的开发者都会一再复述上述现象。如下图所示，今天的大多数个人或者团队都会选择 Kubernetes 管理容器，而也有 75% 的人会在生产环境中使用 Kubernetes。
+2014 年发布的 Kubernetes 在今天俨然已成为容器编排领域的事实标准，相信谈到 Kubernetes 的开发者都会一再复述上述现象。如下图所示，今天的大多数个人或者团队都会选择 Kubernetes 管理容器，而也有 75% 的人会在生产环境中使用 Kubernetes[^1]。
 
 ![kube-in-prod](https://img.draveness.me/kube-in-prod-2021-04-17-16186676828761.png)
 
@@ -188,18 +188,18 @@ Volcano 也是在 Kubernetes 上构建的批处理任务管理系统[^14]，它�
 
 ------
 
-[^1] [Kubernetes and Container Security and Adoption Trends](https://www.stackrox.com/kubernetes-adoption-security-and-market-share-for-containers/ )
-[^2] [AWS Pricing Calculator](https://calculator.aws/#/createCalculator/EC2 )
-[^3] [Considerations for large clusters](https://kubernetes.io/docs/setup/best-practices/cluster-large/ )
-[^4] [How Microsoft drives exabyte analytics on the world’s largest YARN cluster](https://azure.microsoft.com/en-us/blog/how-microsoft-drives-exabyte-analytics-on-the-world-s-largest-yarn-cluster/ )
-[^5] [备战双 11！蚂蚁金服万级规模 K8s 集群管理系统如何设计？](https://www.sofastack.tech/blog/ant-financial-managing-large-scale-kubernetes-clusters/ )
-[^6] [sig-scalability-kubemark dashboard](https://testgrid.k8s.io/sig-scalability-kubemark#kubemark-5000 )
-[^7] [Node-local API cache #84248](https://github.com/kubernetes/kubernetes/issues/84248 )
-[^8] [Multicluster Special Interest Group](https://github.com/kubernetes/community/tree/master/sig-multicluster )
-[^9] [Cluster API Scope and Objectives](https://github.com/kubernetes-sigs/cluster-api/blob/master/docs/scope-and-objectives.md )
-[^10] [Demystifying Kubernetes as a service – How Alibaba cloud manages 10,000s of Kubernetes clusters](https://www.cncf.io/blog/2019/12/12/demystifying-kubernetes-as-a-service-how-does-alibaba-cloud-manage-10000s-of-kubernetes-clusters/ )
-[^11] [Run job on each node once to help with setup #64623](https://github.com/kubernetes/kubernetes/issues/64623 )
-[^12] [StatefulSet does not upgrade to a newer version of manifests #78007](https://github.com/kubernetes/kubernetes/issues/78007 )
-[^13] [Coscheduling based on PodGroup CRD](https://github.com/kubernetes-sigs/scheduler-plugins/tree/master/kep/42-podgroup-coscheduling )
-[^14]  [Volcano · A Kubernetes Native Batch System](https://github.com/volcano-sh/volcano)
-[^15]  [Kubernetes Working Group for Multi-Tenancy](https://github.com/kubernetes-sigs/multi-tenancy
+[^1]: [Kubernetes and Container Security and Adoption Trends](https://www.stackrox.com/kubernetes-adoption-security-and-market-share-for-containers/ )
+[^2]: [AWS Pricing Calculator](https://calculator.aws/#/createCalculator/EC2 )
+[^3]: [Considerations for large clusters](https://kubernetes.io/docs/setup/best-practices/cluster-large/ )
+[^4]: [How Microsoft drives exabyte analytics on the world’s largest YARN cluster](https://azure.microsoft.com/en-us/blog/how-microsoft-drives-exabyte-analytics-on-the-world-s-largest-yarn-cluster/ )
+[^5]: [备战双 11！蚂蚁金服万级规模 K8s 集群管理系统如何设计？](https://www.sofastack.tech/blog/ant-financial-managing-large-scale-kubernetes-clusters/ )
+[^6]: [sig-scalability-kubemark dashboard](https://testgrid.k8s.io/sig-scalability-kubemark#kubemark-5000 )
+[^7]: [Node-local API cache #84248](https://github.com/kubernetes/kubernetes/issues/84248 )
+[^8]: [Multicluster Special Interest Group](https://github.com/kubernetes/community/tree/master/sig-multicluster )
+[^9]: [Cluster API Scope and Objectives](https://github.com/kubernetes-sigs/cluster-api/blob/master/docs/scope-and-objectives.md )
+[^10]: [Demystifying Kubernetes as a service – How Alibaba cloud manages 10,000s of Kubernetes clusters](https://www.cncf.io/blog/2019/12/12/demystifying-kubernetes-as-a-service-how-does-alibaba-cloud-manage-10000s-of-kubernetes-clusters/ )
+[^11]: [Run job on each node once to help with setup #64623](https://github.com/kubernetes/kubernetes/issues/64623 )
+[^12]: [StatefulSet does not upgrade to a newer version of manifests #78007](https://github.com/kubernetes/kubernetes/issues/78007 )
+[^13]: [Coscheduling based on PodGroup CRD](https://github.com/kubernetes-sigs/scheduler-plugins/tree/master/kep/42-podgroup-coscheduling )
+[^14]: [Volcano · A Kubernetes Native Batch System](https://github.com/volcano-sh/volcano)
+[^15]: [Kubernetes Working Group for Multi-Tenancy](https://github.com/kubernetes-sigs/multi-tenancy
