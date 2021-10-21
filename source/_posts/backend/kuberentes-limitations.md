@@ -202,4 +202,4 @@ Volcano 也是在 Kubernetes 上构建的批处理任务管理系统[^14]，它�
 [^12]: [StatefulSet does not upgrade to a newer version of manifests #78007](https://github.com/kubernetes/kubernetes/issues/78007 )
 [^13]: [Coscheduling based on PodGroup CRD](https://github.com/kubernetes-sigs/scheduler-plugins/tree/master/kep/42-podgroup-coscheduling )
 [^14]: [Volcano · A Kubernetes Native Batch System](https://github.com/volcano-sh/volcano)
-[^15]: [Kubernetes Working Group for Multi-Tenancy](https://github.com/kubernetes-sigs/multi-tenancy
+[^15]: [Kubernetes Working Group for Multi-Tenancy](https://github.com/kubernetes-sigs/multi-tenancy)
