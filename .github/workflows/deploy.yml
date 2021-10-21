@@ -21,7 +21,8 @@ jobs:
         with:
           node-version: '14'
           cache: 'npm'
-      - run: npm install -g hexo-cli && npm install
+      - run: npm install -g hexo-cli
+      - run: npm install
       - name: Install ssh-key
         uses: kielabokkie/ssh-key-and-known-hosts-action@v1
         with:
