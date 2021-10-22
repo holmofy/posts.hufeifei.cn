@@ -9,19 +9,26 @@ jobs:
     name: A job to deploy blog.
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
         with:
           submodules: true # Checkout private submodules(themes or something else).
       - name: update submodule branch
         run: |
           git submodule sync
           git submodule update --remote
+      - name: Install npm denpendency 
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+          cache: 'npm'
+      - run: npm install -g hexo-cli
+      - run: npm install
       - name: Install ssh-key
         uses: kielabokkie/ssh-key-and-known-hosts-action@v1
         with:
           ssh-private-key: ${{ secrets.ID_RSA }}
           ssh-host: posts.hufeifei.cn
-      - name: Install npm denpendency & Hexo Deploy
+      - name: Hexo Deploy
         run: |
           echo "${{ secrets.ID_RSA }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
@@ -29,5 +36,4 @@ jobs:
           ssh-keyscan -t rsa posts.hufeifei.cn >> ~/.ssh/known_hosts
           git config --global user.email "hff1996723@gmail.com"
           git config --global user.name "github/holmofy"
-          npm install -g hexo-cli && npm install
           hexo clean && hexo g && hexo d
