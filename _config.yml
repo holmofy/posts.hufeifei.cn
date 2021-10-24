@@ -168,6 +168,7 @@ nofollow:
     - 'noopener'
   referrerpolicy: 'no-referrer'
 
+# https://github.com/glazec/hexo-web-push-notification
 webPushNotification:
   webpushrKey: "58da4dca1a881f72d046a390a59f3615"
   webpushrAuthToken: "39508"
