@@ -4,11 +4,11 @@
 
 # Site
 title: 站在巨人的肩膀上
-subtitle: ''
-description: ''
-keywords:
-author: John Doe
-language: en
+subtitle: '技术文章精选'
+description: '各大平台上精选优质文章进行汇总'
+keywords: 程序员,技术,精选,博客
+author: Holmofy
+language: zh-cn
 timezone: ''
 
 # URL
