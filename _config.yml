@@ -167,3 +167,8 @@ nofollow:
     - 'nofollow'
     - 'noopener'
   referrerpolicy: 'no-referrer'
+
+webPushNotification:
+  webpushrKey: "58da4dca1a881f72d046a390a59f3615"
+  webpushrAuthToken: "39508"
+  trackingCode: "BPOxQK5zO7VR8Ja1xRzI_E6lKWqJqwAMSNJozmybmGC6-aujLX8k-lHdIAdb_BcX9po-j5bpVTyEEA6f9Kz0bqU"
