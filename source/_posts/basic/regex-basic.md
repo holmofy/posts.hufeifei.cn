@@ -82,26 +82,26 @@ keywords: 正则表达式教程,正则教程,正则30分钟,正则表达式30分
 
 所谓非贪婪模式，就是匹配尽可能少的内容，比如，对于源字符串
 
-```
+```html
 <div>a</div><div>b</div>
 ```
 
 使用`<div>(.*?)</div>`会得到2个结果（**注意：如果源字符串有换行，使用[\s\S]替换 .** ）：
 
-```
+```html
 <div>a</div>
 ```
 
 和
 
-```
+```html
 <div>b</div>
 ```
 
 因为，当遇到第一个`</div>`，非贪婪模式就不会再往后找了。
 而使用`<div>(.*)</div>`（贪婪模式）则会得到整个字符串
 
-```
+```html
 <div>a</div><div>b</div>
 ```
 
@@ -163,7 +163,7 @@ svn abc
 原因是`</div>`的`/`与分隔符相同，但是却没有做转义。
 如下程序：
 
-```
+```php
 preg_match('/<div>.*?</div>/', '<div>abc</div>', $match);
 ```
 
@@ -208,7 +208,7 @@ PHP中会收到错误提示：`Warning: preg_match(): Unknown modifier 'd' in re
 
 每一个正则都是有针对性的，只有这样正则才有意义。因此，写正则之前，先观察你要解析的数据，找准唯一的锚点，比如，你要解析一个页面的title标签，得到title内容，那么这个title就是锚点。有时候，所要取的数据确实无法定位一个唯一的锚点，那么，你可以分解数据，先通过一个唯一锚点锁定你的数据块，取出来之后，再对这个数据块取数据即可。比如，有这么一段源字符串：
 
-```
+```html
 <div id="module_1">
     <div class="content">
               content 1
@@ -223,7 +223,7 @@ PHP中会收到错误提示：`Warning: preg_match(): Unknown modifier 'd' in re
 
 你直接通过class="content"来匹配数据的话很明显会得到两个，那么，你可以扩展它的数据域，先以id="module_1"作为锚点，获取整个
 
-```
+```html
 <div id="module_1">
     <div class="content">
               content 1
