@@ -1,3 +1,3 @@
 [submodule "themes/xoxo"]
 	path = themes/xoxo
-	url = https://github.com/holmofy/hexo-theme-xoxo
+	url = https://github.com/holmofy/hexo-theme-xoxo.git
