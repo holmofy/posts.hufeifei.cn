@@ -163,6 +163,7 @@ nofollow:
   field: post
   include:
     - "img.draveness.me"
+    - "duanple.com"
   rel:
     - 'external'
     - 'noreferrer'
