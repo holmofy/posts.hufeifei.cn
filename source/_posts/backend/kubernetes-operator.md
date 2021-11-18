@@ -3,7 +3,7 @@ title: 亲历者说：Kubernetes API 与 Operator，不为人知的开发者战�
 date: 2021-11-18
 categories: 后端
 mathjax: false
-post_src: https://draveness.me/docker/
+post_src: https://developer.aliyun.com/article/685522
 tags:
 - Kubernetes
 - Operator
