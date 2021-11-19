@@ -1,5 +1,5 @@
 ---
-title: Kubernetes解决了哪些问题
+title: 一文图解Kubernetes的持久化存储解决方案
 date: 2021-11-19
 categories: 后端
 mathjax: true
