@@ -166,6 +166,8 @@ nofollow:
     - "img.draveness.me"
     - "duanple.com"
     - "*.zhiimg.com"
+    - "www.uml.org.cn"
+    - "*.infoq.cn"
   rel:
     - 'external'
     - 'noreferrer'
