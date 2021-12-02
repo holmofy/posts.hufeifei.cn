@@ -18,7 +18,7 @@ tags:
 
 通过Google论文可以了解到系统整体的架构，通过对应开源系统可以在代码层面进行学习。具体如下图(浅蓝色部分为Google论文/黄色为开源系统)：
 
-[![img](http://duanple.com/wp-content/uploads/2019/08/paper-1024x766.jpg)](http://duanple.com/wp-content/uploads/2019/08/paper.jpg)
+![img](https://pica.zhimg.com/80/v2-89ebe0b3972ada20f8ef8c79b0229ab8_720w.png)
 
 # 2.Google论文简介
 
@@ -114,7 +114,7 @@ tags:
 
 如题”他山之石”，人们常说不能总是低头拉车，还要注意抬头看路。那么应该如何走出去看看，看什么呢？我们可以将其划分为两个维度(时间和空间)，三个层次(架构、细节和实现)，如下图：
 
-[![img](http://duanple.com/wp-content/uploads/2019/08/paper2-1024x527.png)](http://duanple.com/wp-content/uploads/2019/08/paper2.png)
+![两维度，三层次](https://pic1.zhimg.com/80/v2-14e2ebe32a591e1204dc3340a154f191_720w.png)
 
 两个维度：时间维度上可以分为过去，现在和未来。Google的那些论文就属于未来，看看它们，那可能是未来要做的，当然慢慢地它们也会成为过去；经典的理论的东西，放到过去这个维度，它们是非常重要的，这决定了对系统理解的深度和高度；现在，就是正在做的或者符合目前实际环境可以直接借鉴的。人们有时候往往喜欢抓着未来，总是忽略了过去和现在，又或者是仅看着当前，忽略了未来和过去。空间维度上可以分为上层和底层，上层是指依赖于我们自己系统的那些应用，底层则指我们的系统本身底层所依赖的那些。有时候为了继续前进，需要跳出当前的框框，从多个维度上去学习，通过不断学习反过来进一步促进当前系统的演化。
 
@@ -126,7 +126,7 @@ tags:
 
 ### 3.2.1 分
 
-[![img](http://duanple.com/wp-content/uploads/2019/08/paper3-1024x238.png)](http://duanple.com/wp-content/uploads/2019/08/paper3.png)
+![img](https://pic2.zhimg.com/80/v2-2c8fbb6586b8e17a371f3cb7e6fdfde1_720w.png)
 
 实例：
 
@@ -138,7 +138,7 @@ tags:
 
 ### 3.2.2 合
 
-[![img](http://duanple.com/wp-content/uploads/2019/08/paper4-1024x205.png)](http://duanple.com/wp-content/uploads/2019/08/paper4.png)
+[![img](https://pic1.zhimg.com/80/v2-b189503f559f5f86e0298b340ccbca17_720w.png)](http://duanple.com/wp-content/uploads/2019/08/paper4.png)
 
 实例：
 
@@ -176,7 +176,9 @@ tags:
 
 ### 4.1.1 “冰山一角”
 
-首先还是回到第一张图，我们把图缩小一下，并重点关注图的顶部。[![img](http://duanple.com/wp-content/uploads/2019/08/paper-1024x766.jpg)](http://duanple.com/wp-content/uploads/2019/08/paper.jpg)
+首先还是回到第一张图，我们把图缩小一下，并重点关注图的顶部。
+
+[![img](https://pic3.zhimg.com/80/v2-89ebe0b3972ada20f8ef8c79b0229ab8_720w.png)](http://duanple.com/wp-content/uploads/2019/08/paper.jpg)
 
 可以看到，在Google强大的软硬件基础设施之上，在其云平台上暴露给外部用户使用的则寥寥无几。这个场景就像我们看到了一座冰山，露在水面上的只有那一角。即便是已经开放给外部用户的Cloud Bigtable是2015年才发布的，此时距离Bigtable论文发表已经过了快10年。Cloud Spanner是2017年，也已经是论文发表5年之后。虽然在2008年就推出了GAE，但是也一直不温不火。
 
@@ -227,5 +229,3 @@ http://www.infoq.com/cn/news/2014/08/google-data-warehouse-mesa
 https://en.wikipedia.org/wiki/Amazon_Web_Services
 
 https://en.wikipedia.org/wiki/Thomas_J._Watson
-
-# 
