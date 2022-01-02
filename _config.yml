@@ -165,6 +165,9 @@ nofollow:
   include:
     - "img.draveness.me"
     - "duanple.com"
+    - "*.zhiimg.com"
+    - "*.cdn.sohucs.com"
+    - "*.infoq.cn"
   rel:
     - 'external'
     - 'noreferrer'
