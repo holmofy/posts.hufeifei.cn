@@ -130,8 +130,8 @@ plugins:
 ## 这里使用git部署网站
 deploy:
   type: git
-  repo: git@posts.hufeifei.cn:repo/posts.hufeifei.cn.git
-  branch: master
+  repo: git@github.com:holmofy/posts.hufeifei.cn.git
+  branch: gh-page
   message: "hexo deployment: {{ now('YYYY-MM-DD HH:mm:ss') }}"
 
 # 配置Math.js
