@@ -1,0 +1,754 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#202020"/>
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta name="keywords" content="Docker,Kubernetes,PersistentVolume," />
+  
+
+  
+    <meta name="description" content="各大平台上精选优质文章进行汇总" />
+  
+  
+  <link rel="icon" type="image/x-icon" href="/logo.png">
+  <title>一文图解Kubernetes的持久化存储解决方案 [ 站在巨人的肩膀上 ]</title>
+  
+    <!-- stylesheets list from config.yml -->
+    
+      <link rel="stylesheet" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css">
+    
+      <link rel="stylesheet" href="//unpkg.com/swiper/swiper-bundle.min.css">
+    
+      <link rel="stylesheet" href="/css/xoxo.css">
+    
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-H58NSPXYPF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'G-H58NSPXYPF');
+  </script>
+<meta name="generator" content="Hexo 5.4.0"><style>mjx-container[jax="SVG"] {
+  direction: ltr;
+}
+
+mjx-container[jax="SVG"] > svg {
+  overflow: visible;
+}
+
+mjx-container[jax="SVG"][display="true"] {
+  display: block;
+  text-align: center;
+  margin: 1em 0;
+}
+
+mjx-container[jax="SVG"][justify="left"] {
+  text-align: left;
+}
+
+mjx-container[jax="SVG"][justify="right"] {
+  text-align: right;
+}
+
+g[data-mml-node="merror"] > g {
+  fill: red;
+  stroke: red;
+}
+
+g[data-mml-node="merror"] > rect[data-background] {
+  fill: yellow;
+  stroke: none;
+}
+
+g[data-mml-node="mtable"] > line[data-line] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > rect[data-frame] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > .mjx-dashed {
+  stroke-dasharray: 140;
+}
+
+g[data-mml-node="mtable"] > .mjx-dotted {
+  stroke-linecap: round;
+  stroke-dasharray: 0,140;
+}
+
+g[data-mml-node="mtable"] > svg {
+  overflow: visible;
+}
+
+[jax="SVG"] mjx-tool {
+  display: inline-block;
+  position: relative;
+  width: 0;
+  height: 0;
+}
+
+[jax="SVG"] mjx-tool > mjx-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+mjx-tool > mjx-tip {
+  display: inline-block;
+  padding: .2em;
+  border: 1px solid #888;
+  font-size: 70%;
+  background-color: #F8F8F8;
+  color: black;
+  box-shadow: 2px 2px 5px #AAAAAA;
+}
+
+g[data-mml-node="maction"][data-toggle] {
+  cursor: pointer;
+}
+
+mjx-status {
+  display: block;
+  position: fixed;
+  left: 1em;
+  bottom: 1em;
+  min-width: 25%;
+  padding: .2em .4em;
+  border: 1px solid #888;
+  font-size: 90%;
+  background-color: #F8F8F8;
+  color: black;
+}
+
+foreignObject[data-mjx-xml] {
+  font-family: initial;
+  line-height: normal;
+  overflow: visible;
+}
+
+.MathJax path {
+  stroke-width: 3;
+}
+
+mjx-container[display="true"] {
+  overflow: auto hidden;
+}
+
+mjx-container[display="true"] + br {
+  display: none;
+}
+</style><link rel="alternate" href="/atom.xml" title="站在巨人的肩膀上" type="application/atom+xml">
+</head>
+
+
+<body>
+  <div class="nav-container">
+    <nav class="home-menu pure-menu pure-menu-horizontal">
+  <a class="pure-menu-heading" href="/">
+    <img class="avatar" src="https://www.hufeifei.cn/favicon.jpg">
+    <span class="title">站在巨人的肩膀上</span>
+  </a>
+
+  <ul class="pure-menu-list clearfix">
+      
+          
+            <li class="pure-menu-item"><a href="/" class="pure-menu-link">首页</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/tags" class="pure-menu-link">标签</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/atom.xml" class="pure-menu-link">RSS</a></li>
+          
+      
+  </ul>
+   
+</nav>
+  </div>
+
+  <div class="container" id="content-outer">
+    <div class="inner" id="content-inner">
+      <div class="post-container">
+  <article class="post" id="post">
+    <header class="post-header text-center">
+      <h1 class="title">
+        一文图解Kubernetes的持久化存储解决方案
+      </h1>
+      <span>
+        
+        <time class="time" datetime="2021-11-19T00:00:00.000Z">
+          2021-11-19
+        </time>
+        
+      </span>
+      <span class="slash">/</span>
+      <span class="post-meta">
+        <span class="post-tags">
+          <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Docker/" rel="tag">Docker</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kubernetes/" rel="tag">Kubernetes</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PersistentVolume/" rel="tag">PersistentVolume</a></li></ul>
+        </span>
+      </span>
+      <span class="slash">/</span>
+      <span id="/backend/kubernetes-persistent/" class="read leancloud_visitors" data-flag-title="一文图解Kubernetes的持久化存储解决方案">
+        <span class="leancloud-visitors-count"></span> 点击
+      </span>
+      <span class="slash">/</span>
+      <span class="read">阅读耗时 32 分钟</span>
+    </header>
+
+    <div class="post-content">
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Kubernetes（下称k8s）作为目前行业内使用最广泛的容器编排工具，已经深入到各个技术领域，正在彻底改变应用程序的开发和部署方式；但从另一个方面讲，k8s的架构是不断变化的。容器的创建和销毁，从本质上讲，它们的生命周期是短暂的。因而，K8s的发展历程势必无法绕开持久化的问题，本文就将从这一点出发，为大家讲解k8s在持久化存储方面所提供的解决方案，帮助大家更好的理解k8s的整体技术生态。</p>
+<p>本文的章节内容分配如下：</p>
+<ul>
+<li>概述</li>
+<li>K8s有哪些持久化方案</li>
+<li>Docker存储</li>
+<li>K8s原生存储</li>
+<li>开源存储项目Ceph&amp;Rook</li>
+<li>总结</li>
+</ul>
+<hr>
+<h2 id="K8s有哪些持久化方案"><a href="#K8s有哪些持久化方案" class="headerlink" title="K8s有哪些持久化方案"></a>K8s有哪些持久化方案</h2><ul>
+<li><strong>外部存储方案：</strong></li>
+</ul>
+<p>先抛一张<a target="_blank" rel="noopener" href="https://landscape.cncf.io/">CNCF（云原生计算基金会）</a>公布的云原生存储解决方案一览图，这里只截取了存储的部分。</p>
+<p><img src="https://pic1.zhimg.com/80/v2-cf616af7b8b84824c5381376c82eb50c_720w.jpg" alt="img"></p>
+<p>图中列举的存储方案，目前都可以集成到Kubernetes平台。</p>
+<ul>
+<li><p><strong>Docker存储卷</strong></p>
+<p>当使用Docker作为K8s的容器方案时，Docker自身所支持的存储卷也就成为了可选方案之一。Docker存储卷是容器服务在单节点的存储组织形式，作为解决数据存储、容器运行时的技术方案；</p>
+</li>
+<li><p><strong>K8s存储卷</strong></p>
+<p>K8s自己的持久化存储方案更关注于应用和集群层面，主要用于容器集群的存储编排，从应用使用存储的角度提供存储服务。另一方面，K8s的持久化存储方案能够完全兼容自身的对象，如Pod对象等，即插即用，无需二次开发。</p>
+</li>
+</ul>
+<p>下面，我们就对这几种存储方案一一进行解释。</p>
+<h2 id="Docker存储"><a href="#Docker存储" class="headerlink" title="Docker存储"></a>Docker存储</h2><p><strong>容器的读写层</strong></p>
+<p>为了提高节点存储的使用效率，容器不光在不同运行的容器之间共享镜像资源，而且还实现了在不同镜像之间共享数据。共享镜像数据的实现原理：镜像是分层组合而成的，即一个完整的镜像会包含多个数据层，每层数据相互叠加、覆盖组成了最终的完整镜像。</p>
+<p><img src="https://pic4.zhimg.com/80/v2-d5b7bd1951c46c530e0bd9a402b90047_720w.jpg" alt="img"></p>
+<p>为了实现多个容器间共享镜像数据，容器镜像每一层都是只读的。而容器使用镜像时，在多个镜像分层的最上面还添加了一个读写层。每一个容器在运行时，都会基于当前镜像在其最上层挂载一个读写层，用户针对容器的所有操作都在读写层中完成。一旦容器销毁，这个读写层也随之销毁。</p>
+<p><strong>容器的数据卷</strong></p>
+<p>容器中的应用读写数据都是发生在容器的读写层，镜像层+读写层映射为容器内部文件系统、负责容器内部存储的底层架构。当我们需要容器内部应用和外部存储进行交互时，还需要一个外置存储，容器数据卷即提供了这样的功能。</p>
+<p>另一方面，容器本身的存储数据都是临时存储，在容器销毁的时候数据会一起删除。而通过数据卷将外部存储挂载到容器文件系统，应用可以引用外部数据，也可以将自己产出的数据持久化到数据卷中，因此容器数据卷是容器实现数据持久化的主要实现方式。<br><mjx-container class="MathJax" jax="SVG" display="true"><svg style="vertical-align: -0.452ex" xmlns="http://www.w3.org/2000/svg" width="62.545ex" height="2.149ex" role="img" focusable="false" viewBox="0 -750 27644.9 950"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="mi"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">容</text></g><g data-mml-node="mi" transform="translate(900,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">器</text></g><g data-mml-node="mi" transform="translate(1800,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">存</text></g><g data-mml-node="mi" transform="translate(2700,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">储</text></g><g data-mml-node="mi" transform="translate(3600,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">组</text></g><g data-mml-node="mi" transform="translate(4500,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">成</text></g><g data-mml-node="mi" transform="translate(5400,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">：</text></g><g data-mml-node="mi" transform="translate(6300,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">只</text></g><g data-mml-node="mi" transform="translate(7200,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">读</text></g><g data-mml-node="mi" transform="translate(8100,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">层</text></g><g data-mml-node="mi" transform="translate(9000,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">（</text></g><g data-mml-node="mi" transform="translate(9900,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">容</text></g><g data-mml-node="mi" transform="translate(10800,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">器</text></g><g data-mml-node="mi" transform="translate(11700,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">镜</text></g><g data-mml-node="mi" transform="translate(12600,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">像</text></g><g data-mml-node="mi" transform="translate(13500,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">）</text></g><g data-mml-node="mo" transform="translate(14622.2,0)"><path data-c="2B" d="M56 237T56 250T70 270H369V420L370 570Q380 583 389 583Q402 583 409 568V270H707Q722 262 722 250T707 230H409V-68Q401 -82 391 -82H389H387Q375 -82 369 -68V230H70Q56 237 56 250Z"></path></g><g data-mml-node="mi" transform="translate(15622.4,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">读</text></g><g data-mml-node="mi" transform="translate(16522.4,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">写</text></g><g data-mml-node="mi" transform="translate(17422.4,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">层</text></g><g data-mml-node="mo" transform="translate(18544.7,0)"><path data-c="2B" d="M56 237T56 250T70 270H369V420L370 570Q380 583 389 583Q402 583 409 568V270H707Q722 262 722 250T707 230H409V-68Q401 -82 391 -82H389H387Q375 -82 369 -68V230H70Q56 237 56 250Z"></path></g><g data-mml-node="mi" transform="translate(19544.9,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">外</text></g><g data-mml-node="mi" transform="translate(20444.9,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">置</text></g><g data-mml-node="mi" transform="translate(21344.9,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">存</text></g><g data-mml-node="mi" transform="translate(22244.9,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">储</text></g><g data-mml-node="mi" transform="translate(23144.9,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">（</text></g><g data-mml-node="mi" transform="translate(24044.9,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">数</text></g><g data-mml-node="mi" transform="translate(24944.9,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">据</text></g><g data-mml-node="mi" transform="translate(25844.9,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">卷</text></g><g data-mml-node="mi" transform="translate(26744.9,0)"><text data-variant="italic" transform="scale(1,-1)" font-size="884px" font-family="serif" font-style="italic">）</text></g></g></g></svg></mjx-container><br>容器数据卷从作用范围可以分为：单机数据卷 和 集群数据卷。其中单机数据卷即为容器服务在一个节点上的数据卷挂载能力，docker volume 是单机数据卷的代表实现；</p>
+<p>Docker Volume 是一个可供多个容器使用的目录，它绕过 UFS，包含以下特性：</p>
+<blockquote>
+<p>数据卷可以在容器之间共享和重用；<br>相比通过存储驱动实现的可写层，数据卷读写是直接对外置存储进行读写，效率更高；<br>对数据卷的更新是对外置存储读写，不会影响镜像和容器读写层；<br>数据卷可以一直存在，直到没有容器使用。</p>
+</blockquote>
+<h3 id="1）Docker-数据卷类型"><a href="#1）Docker-数据卷类型" class="headerlink" title="1）Docker 数据卷类型"></a>1）Docker 数据卷类型</h3><p>Bind：将主机目录/文件直接挂载到容器内部。</p>
+<blockquote>
+<p>需要使用主机的上的绝对路径，且可以自动创建主机目录；<br>容器可以修改挂载目录下的任何文件，是应用更具有便捷性，但也带来了安全隐患。</p>
+</blockquote>
+<p>Volume：使用第三方数据卷的时候使用这种方式。</p>
+<blockquote>
+<p>Volume命令行指令：docker volume (create/rm)；<br>是Docker提供的功能，所以在非 docker 环境下无法使用；<br>分为命名数据卷和匿名数据卷，其实现是一致的，区别是匿名数据卷的名字为随机码；<br>支持数据卷驱动扩展，实现更多外部存储类型的接入。</p>
+</blockquote>
+<p>Tmpfs：非持久化的卷类型，存储在内存中。</p>
+<blockquote>
+<p>数据易丢失。</p>
+</blockquote>
+<h3 id="2）数据卷使用语法"><a href="#2）数据卷使用语法" class="headerlink" title="2）数据卷使用语法"></a>2）数据卷使用语法</h3><ul>
+<li><strong>Bind挂载语法</strong></li>
+</ul>
+<p>-v: src:dst:opts 只支持单机版。</p>
+<blockquote>
+<p>Src：表示卷映射源，主机目录或文件，需要是绝对地址；<br>Dst：容器内目标挂载地址；<br>Opts：可选，挂载属性：ro, consistent, delegated, cached, z, Z；<br>Consistent, delegated, cached：为mac系统配置共享传播属性；<br>Z、z：配置主机目录的selinux label。</p>
+</blockquote>
+<p>示例：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ docker run -d --name devtest -v /home:/data:ro,rslave nginx</span><br><span class="line">$ docker run -d --name devtest --mount <span class="built_in">type</span>=<span class="built_in">bind</span>,<span class="built_in">source</span>=/home,target=/data,<span class="built_in">readonly</span>,bind-propagation=rslave nginx</span><br><span class="line">$ docker run -d --name devtest -v /home:/data:z nginx</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>Volume 挂载方式语法</strong></li>
+</ul>
+<p>-v: src:dst:opts 只支持单机版。</p>
+<blockquote>
+<p>Src：表示卷映射源，数据卷名、空；<br>Dst：容器内目标目录；<br>Opts：可选，挂载属性：ro（只读）。</p>
+</blockquote>
+<p>示例：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ docker run -d --name devtest -v myvol:/app:ro nginx</span><br><span class="line">$ docker run -d --name devtest --mount <span class="built_in">source</span>=myvol2,target=/app,<span class="built_in">readonly</span> nginx</span><br></pre></td></tr></table></figure>
+
+<h3 id="3）Docker数据卷插件"><a href="#3）Docker数据卷插件" class="headerlink" title="3）Docker数据卷插件"></a>3）Docker数据卷插件</h3><p>Docker 数据卷实现了将容器外部存储挂载到容器文件系统的方式。为了扩展容器对外部存储类型的需求，docker 提出了通过存储插件的方式挂载不同类型的存储服务。扩展插件统称为 Volume Driver，可以为每种存储类型开发一种存储插件。</p>
+<p>可以查看链接：<a target="_blank" rel="noopener" href="https://docs.docker.com/engine/extend/legacy_plugins/#volume-plugins">https://docs.docker.com/engine/extend/legacy_plugins/#volume-plugins</a></p>
+<p>其特性简单来说可以总结为2点：</p>
+<blockquote>
+<p>单个节点上可以部署多个存储插件；<br>一个存储插件负责一种存储类型的挂载服务。</p>
+</blockquote>
+<p><img src="https://pic4.zhimg.com/80/v2-e9541900fd6cf76b79e9a5a55a618963_720w.jpg" alt="img"></p>
+<p>关于Volume plugin的代码实现，可以参考这篇小文章：<a target="_blank" rel="noopener" href="https://jimmysong.io/blog/docker-create-plugin/">Docker 17.03-CE create plugin源码解析</a></p>
+<p>Docker Plugin 是以Web Service的服务运行在每一台Docker Host上的，通过HTTP协议传输RPC风格的JSON数据完成通信。Plugin的启动和停止，并不归Docker管理，Docker Daemon依靠在缺省路径下查找Unix Socket文件，自动发现可用的插件。</p>
+<p>当客户端与Daemon交互，使用插件创建数据卷时，Daemon会在后端找到插件对应的 socket 文件，建立连接并发起相应的API请求，最终结合Daemon自身的处理完成客户端的请求。</p>
+<p>Docker Daemon 与 Volume driver 通信方式有：</p>
+<ul>
+<li>Sock文件：linux 下放在/run/docker/plugins 目录下</li>
+<li>Spec文件：/etc/docker/plugins/convoy.spec 定义</li>
+<li>Json文件：/usr/lib/docker/plugins/infinit.json 定义</li>
+</ul>
+<p>实现接口：</p>
+<blockquote>
+<p>Create, Remove, Mount, Path, Umount, Get, List, Capabilities;</p>
+</blockquote>
+<p>使用示例：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ docker volume create --driver nas -o diskid=<span class="string">""</span> -o host=<span class="string">"10.46.225.247"</span> -o path=”/nas1<span class="string">" -o mode="</span><span class="string">" --name nas1</span></span><br></pre></td></tr></table></figure>
+
+<p>Docker Volume Driver 适用在单机容器环境或者 swarm 平台进行数据卷管理，随着 K8s 的流行其使用场景已经越来越少，这里不做赘述。</p>
+<h2 id="K8s原生存储"><a href="#K8s原生存储" class="headerlink" title="K8s原生存储"></a>K8s原生存储</h2><p>如果说Docker注重的是单节点的存储能力，那K8s 数据卷关注的则是集群级别的数据卷编排能力。</p>
+<h3 id="卷-Volume"><a href="#卷-Volume" class="headerlink" title="卷-Volume"></a>卷-Volume</h3><p>Kubernetes 提供是卷存储类型，从存在的生命周期可分为临时和持久卷。 从卷的类型分，又可以分为本地存储、网络存储、Secret/ConfigMap、CSI/Flexvolume、PVC；有兴趣的小伙伴可以参考一下官方文档：<a target="_blank" rel="noopener" href="https://kubernetes.io/zh/docs/concepts/storage/volumes/">https://kubernetes.io/zh/docs/concepts/storage/volumes/</a></p>
+<p>这里就以一幅图来展示各个存储的存在形式。</p>
+<p><img src="https://pic2.zhimg.com/80/v2-cfd94cca4b32bcf42cdd253a5812aff5_720w.jpg" alt="img"></p>
+<p>如上图所示：</p>
+<ul>
+<li>最上层的pod和PVC由用户管理，pod创建volume卷，并指定存储方式。</li>
+<li>中间部分由集群管理者创建StorageClass对象，StorageClass只需确定PV属性（存储类型，大小等）及创建PV所需要用的的存储插件；K8s会自动根据用户提交的PVC来找到对应的StorageClass，之后根据其定义的存储插件，创建出PV。</li>
+<li>最下层指代各个实际的存储资源。</li>
+</ul>
+<h3 id="PV和PVC"><a href="#PV和PVC" class="headerlink" title="PV和PVC"></a>PV和PVC</h3><p>这里单独来聊聊PV和PVC，也是实际应用场景中最常用的一组概念，其中：</p>
+<p>PV 是 PersistentVolume 的缩写，译为持久化存储卷；PV 在 K8s 中代表一个具体存储类型的卷，其对象中定义了具体存储类型和卷参数。即目标存储服务所有相关的信息都保存在 PV 中，K8s 引用 PV 中的存储信息执行挂载操作。</p>
+<p>PVC的存在，是从应用角度对存储卷进行二次抽象；由于 PV 描述的是对具体存储类型，需要定义详细的存储信息，而应用层用户在消费存储服务的时候往往不希望对底层细节知道的太多，让应用编排层面来定义具体的存储服务不够友好。这时对存储服务再次进行抽象，只把用户关系的参数提炼出来，用 PVC 来抽象更底层的 PV。所以 PVC、PV 关注的对象不一样，PVC 关注用户对存储需求，给用户提供统一的存储定义方式；而 PV 关注的是存储细节，可以定义具体存储类型、存储挂载使用的详细参数等。其具体的对应关系如下图所示：</p>
+<p><img src="https://pic1.zhimg.com/80/v2-bd7774b3daa4dabeca12532ab77f4850_720w.jpg" alt="img"></p>
+<h3 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h3><p>PVC 只有绑定了 PV 之后才能被 Pod 使用，而 PVC 绑定 PV 的过程即是消费 PV 的过程，这个过程是有一定规则的，下面规则都满足的 PV 才能被 PVC 绑定：</p>
+<ul>
+<li>VolumeMode：被消费 PV 的 VolumeMode 需要和 PVC 一致；</li>
+<li>AccessMode：被消费 PV 的 AccessMode 需要和 PVC 一致；</li>
+<li>StorageClassName：如果 PVC 定义了此参数，PV 必须有相关的参数定义才能进行绑定；</li>
+<li>LabelSelector：通过 label 匹配的方式从 PV 列表中选择合适的 PV 绑定；</li>
+<li>storage：被消费 PV 的 capacity 必须大于或者等于 PVC 的存储容量需求才能被绑定。</li>
+</ul>
+<p>PVC模板：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolumeClaim</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">disk-1</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">storage:</span> <span class="string">20Gi</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">test-disk</span></span><br><span class="line">  <span class="attr">volumeMode:</span> <span class="string">Filesystem</span></span><br></pre></td></tr></table></figure>
+
+<p>PV模板：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolume</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">failure-domain.beta.kubernetes.io/region:</span> <span class="string">cn-zn</span></span><br><span class="line">    <span class="attr">failure-domain.beta.kubernetes.io/zone:</span> <span class="string">cn-zn</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">d-wz9g2j5qbo37r2lamkg4</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">  <span class="attr">capacity:</span></span><br><span class="line">    <span class="attr">storage:</span> <span class="string">30Gi</span></span><br><span class="line">  <span class="attr">flexVolume:</span></span><br><span class="line">    <span class="attr">driver:</span> <span class="string">alicloud/disk</span></span><br><span class="line">    <span class="attr">fsType:</span> <span class="string">ext4</span></span><br><span class="line">    <span class="attr">options:</span></span><br><span class="line">      <span class="attr">VolumeId:</span> <span class="string">d-wz9g2j5qbo37r2lamkg4</span></span><br><span class="line">  <span class="attr">persistentVolumeReclaimPolicy:</span> <span class="string">Delete</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">test-disk</span></span><br><span class="line">  <span class="attr">volumeMode:</span> <span class="string">Filesystem</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="开源存储项目Ceph-amp-Rook"><a href="#开源存储项目Ceph-amp-Rook" class="headerlink" title="开源存储项目Ceph&Rook"></a>开源存储项目Ceph&amp;Rook</h2><p>围绕云原生技术的工具和项目正在大量涌现。作为生产中最突出的问题之一，有相当一部分开源项目致力于解决“在云原生架构上处理存储”这个问题。</p>
+<p>目前最受欢迎的存储项目是<strong>Ceph</strong>和<strong>Rook</strong>。</p>
+<p>Ceph是一个动态管理的、水平可伸缩的分布式存储集群。Ceph提供了对存储资源的逻辑抽象。它被设计成不存在单点故障、可自我管理和基于软件的。Ceph同时为相同的存储集群提供块、对象或文件系统接口。它能够提供非常稳定的块存储系统，并且K8S对Ceph放出了完整的生态，几乎可以说是全面兼容。</p>
+<p>Ceph的架构非常复杂，有许多底层技术，如RADOS、librados、RADOSGW、RDB，它的CRUSH 算法和监视器、OSD和MDS等组件。这里不深入解读其架构，关键在于，Ceph是一个分布式存储集群，它可提供更高的可伸缩性，在不牺牲性能的情况下消除了单点故障，并提供了对对象、块和文件的访问的统一存储。</p>
+<p><img src="https://pic3.zhimg.com/80/v2-0d1ff3204a1eba68463e9fc56b2b7e0e_720w.jpg" alt="img"></p>
+<p>对于Rook，我们可以从以下几点来了解这个有趣的项目。它旨在聚合Kubernetes和Ceph的工具——将计算和存储放在一个集群中。</p>
+<ul>
+<li>Rook 是一个开源的cloud-native storage编排, 提供平台和框架；为各种存储解决方案提供平台、框架和支持，以便与云原生环境本地集成。</li>
+<li>Rook 将存储软件转变为自我管理、自我扩展和自我修复的存储服务，它通过自动化部署、引导、配置、置备、扩展、升级、迁移、灾难恢复、监控和资源管理来实现此目的。</li>
+<li>Rook 使用底层云本机容器管理、调度和编排平台提供的工具来实现它自身的功能。</li>
+<li>Rook 目前支持Ceph、NFS、Minio Object Store和CockroachDB。</li>
+<li>Rook使用Kubernetes原语使Ceph存储系统能够在Kubernetes上运行。</li>
+</ul>
+<p>所以在ROOK的帮助之下我们甚至可以做到一键编排部署Ceph，同时部署结束之后的运维工作ROOK也会介入自动进行实现对存储拓展，即便是集群出现了问题ROOK也能在一定程度上保证存储的高可用性，绝大多数情况之下甚至不需要Ceph的运维知识都可以正常使用。</p>
+<h3 id="安装方法"><a href="#安装方法" class="headerlink" title="安装方法"></a>安装方法</h3><ol>
+<li><strong>获取rook仓库：</strong><a target="_blank" rel="noopener" href="https://github.com/rook/rook.git">https://github.com/rook/rook.git</a></li>
+<li><strong>获取部署yaml文件</strong>，在rook仓库之中的<a target="_blank" rel="noopener" href="https://github.com/rook/rook/blob/master/cluster/examples/kubernetes/ceph/common.yaml">cluster/examples/kubernetes/ceph/common.yaml</a> 文件。</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#运行common.yaml文件 </span></span><br><span class="line">kubectl create -f common.yaml</span><br></pre></td></tr></table></figure>
+
+<p><strong>3. 安装operator，编排文件为<a target="_blank" rel="noopener" href="https://github.com/rook/rook/blob/master/cluster/examples/kubernetes/ceph/operator.yaml">/cluster/examples/kubernetes/ceph/operator.yaml</a></strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#运行operator.yaml文件</span></span><br><span class="line">kubectl create -f operator.yaml</span><br></pre></td></tr></table></figure>
+
+<p><strong>4. 安装完成之后需要等待所有的操作器正常运行之后才能继续还是ceph分部署集群的安装：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#获取命名空间下运行的pod，等待所以的pod都是running状态之后继续下一步</span></span><br><span class="line">kubectl -n rook-ceph get pod</span><br></pre></td></tr></table></figure>
+
+<p><strong>5. 创建Ceph集群，编排文件为<a target="_blank" rel="noopener" href="https://github.com/rook/rook/blob/master/cluster/examples/kubernetes/ceph/cluster.yaml">/cluster/examples/kubernetes/ceph/cluster.yaml</a></strong></p>
+<p>这里也需要进行一定的基础配置与修改才能继续，cluster.yaml文件内容如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">ceph.rook.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">CephCluster</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">rook-ceph</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">rook-ceph</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">cephVersion:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">ceph/ceph:v14.2.6</span></span><br><span class="line">    <span class="attr">allowUnsupported:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">dataDirHostPath:</span> <span class="string">/var/lib/rook</span></span><br><span class="line">  <span class="attr">skipUpgradeChecks:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">continueUpgradeAfterChecksEvenIfNotHealthy:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">mon:</span></span><br><span class="line">    <span class="comment">#这里是最重要的，mon是存储集群的监控器，我们K8S里面有多少主机这里的就必须使用多少个mon</span></span><br><span class="line">    <span class="attr">count:</span> <span class="number">3</span></span><br><span class="line">    <span class="attr">allowMultiplePerNode:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">dashboard:</span></span><br><span class="line">   <span class="comment">#这里是是否启用监控面板，基本上都会使用 </span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="comment">#监控面板是否使用SSL，如果是使用8443端口，不是则使用7000端口，由于这是运维人员使用建议不启用</span></span><br><span class="line">    <span class="attr">ssl:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">monitoring:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">false</span></span><br><span class="line">    <span class="attr">rulesNamespace:</span> <span class="string">rook-ceph</span></span><br><span class="line">  <span class="attr">network:</span></span><br><span class="line">    <span class="attr">hostNetwork:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">rbdMirroring:</span></span><br><span class="line">    <span class="attr">workers:</span> <span class="number">0</span></span><br><span class="line">  <span class="attr">crashCollector:</span></span><br><span class="line">    <span class="attr">disable:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">annotations:</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">  <span class="attr">removeOSDsIfOutAndSafeToRemove:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">storage:</span></span><br><span class="line">    <span class="attr">useAllNodes:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">useAllDevices:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">config:</span></span><br><span class="line">  <span class="attr">disruptionManagement:</span></span><br><span class="line">    <span class="attr">managePodBudgets:</span> <span class="literal">false</span></span><br><span class="line">    <span class="attr">osdMaintenanceTimeout:</span> <span class="number">30</span></span><br><span class="line">    <span class="attr">manageMachineDisruptionBudgets:</span> <span class="literal">false</span></span><br><span class="line">    <span class="attr">machineDisruptionBudgetNamespace:</span> <span class="string">openshift-machine-api</span></span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#运行cluster.yaml文件</span></span><br><span class="line">kubectl create -f cluster.yaml</span><br></pre></td></tr></table></figure>
+
+<p><strong>6. 创建ceph控制面板</strong></p>
+<p>如果上面部署时，启用了SSL则需要使用<a target="_blank" rel="noopener" href="https://github.com/rook/rook/blob/master/cluster/examples/kubernetes/ceph/dashboard-external-https.yaml">/cluster/examples/kubernetes/ceph/dashboard-external-https.yaml</a>，否则使用同目录下的<a target="_blank" rel="noopener" href="https://github.com/rook/rook/blob/master/cluster/examples/kubernetes/ceph/dashboard-external-http.yaml">dashboard-external-http.yaml</a>文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#dashboard没有启用SSL</span></span><br><span class="line">kubectl create -f dashboard-external-http.yaml</span><br><span class="line"><span class="comment">#dashboard启用SSL</span></span><br><span class="line">kubectl create -f dashboard-external-https.yaml</span><br></pre></td></tr></table></figure>
+
+<p><strong>7. 创建Ceph工具</strong></p>
+<p>运维人员可以直接通过对这个容器的shell进行Ceph集群的控制（后面有实例），编排文件是<a target="_blank" rel="noopener" href="https://github.com/rook/rook/blob/master/cluster/examples/kubernetes/ceph/toolbox.yaml">toolbox.yaml</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#安装Ceph工具</span></span><br><span class="line">kubectl create -f toolbox.yaml</span><br></pre></td></tr></table></figure>
+
+<p><strong>8，创建存储系统与存储类</strong></p>
+<p>集群搭建完毕之后便是存储的创建，目前Ceph支持块存储、文件系统存储、对象存储三种方案，K8S官方对接的存储方案是块存储，他也是比较稳定的方案，但是块存储目前不支持多主机读写；文件系统存储是支持多主机存储的性能也不错；对象存储系统IO性能太差不考虑，所以可以根据要求自行决定。</p>
+<p>存储系统创建完成之后对这个系统添加一个存储类之后整个集群才能通过K8S的存储类直接使用Ceph存储。</p>
+<ul>
+<li>块存储系统+块存储类yaml文件：</li>
+</ul>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">ceph.rook.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">CephBlockPool</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">replicapool</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">rook-ceph</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">failureDomain:</span> <span class="string">host</span></span><br><span class="line">  <span class="attr">replicated:</span></span><br><span class="line">    <span class="attr">size:</span> <span class="number">3</span> <span class="comment">#这里的数字分部署数量，一样有几台主机便写入对应的值</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">storage.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">StorageClass</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">   <span class="attr">name:</span> <span class="string">rook-ceph-block</span></span><br><span class="line"><span class="attr">provisioner:</span> <span class="string">rook-ceph.rbd.csi.ceph.com</span></span><br><span class="line"><span class="attr">parameters:</span></span><br><span class="line">    <span class="attr">clusterID:</span> <span class="string">rook-ceph</span></span><br><span class="line">    <span class="attr">pool:</span> <span class="string">replicapool</span></span><br><span class="line">    <span class="attr">imageFormat:</span> <span class="string">"2"</span></span><br><span class="line">    <span class="attr">imageFeatures:</span> <span class="string">layering</span></span><br><span class="line">    <span class="attr">csi.storage.k8s.io/provisioner-secret-name:</span> <span class="string">rook-csi-rbd-provisioner</span></span><br><span class="line">    <span class="attr">csi.storage.k8s.io/provisioner-secret-namespace:</span> <span class="string">rook-ceph</span></span><br><span class="line">    <span class="attr">csi.storage.k8s.io/node-stage-secret-name:</span> <span class="string">rook-csi-rbd-node</span></span><br><span class="line">    <span class="attr">csi.storage.k8s.io/node-stage-secret-namespace:</span> <span class="string">rook-ceph</span></span><br><span class="line">    <span class="attr">csi.storage.k8s.io/fstype:</span> <span class="string">xfs</span></span><br><span class="line"><span class="attr">reclaimPolicy:</span> <span class="string">Delete</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>文件系统存储yaml文件：</li>
+</ul>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">ceph.rook.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">CephFilesystem</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">myfs</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">rook-ceph</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">metadataPool:</span></span><br><span class="line">    <span class="attr">replicated:</span></span><br><span class="line">      <span class="attr">size:</span> <span class="number">3</span> <span class="comment">#这里的数字分部署数量，一样有几台主机便写入对应的值</span></span><br><span class="line">  <span class="attr">dataPools:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">replicated:</span> </span><br><span class="line">        <span class="attr">size:</span> <span class="number">3</span> <span class="comment">#这里的数字分部署数量，一样有几台主机便写入对应的值</span></span><br><span class="line">  <span class="attr">preservePoolsOnDelete:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">metadataServer:</span></span><br><span class="line">    <span class="attr">activeCount:</span> <span class="number">1</span></span><br><span class="line">    <span class="attr">activeStandby:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>文件系统存储类yaml文件：</li>
+</ul>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">storage.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">StorageClass</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">csi-cephfs</span></span><br><span class="line"><span class="attr">provisioner:</span> <span class="string">rook-ceph.cephfs.csi.ceph.com</span></span><br><span class="line"><span class="attr">parameters:</span></span><br><span class="line">  <span class="attr">clusterID:</span> <span class="string">rook-ceph</span></span><br><span class="line">  <span class="attr">fsName:</span> <span class="string">myfs</span></span><br><span class="line">  <span class="attr">pool:</span> <span class="string">myfs-data0</span></span><br><span class="line">  <span class="attr">csi.storage.k8s.io/provisioner-secret-name:</span> <span class="string">rook-csi-cephfs-provisioner</span></span><br><span class="line">  <span class="attr">csi.storage.k8s.io/provisioner-secret-namespace:</span> <span class="string">rook-ceph</span></span><br><span class="line">  <span class="attr">csi.storage.k8s.io/node-stage-secret-name:</span> <span class="string">rook-csi-cephfs-node</span></span><br><span class="line">  <span class="attr">csi.storage.k8s.io/node-stage-secret-namespace:</span> <span class="string">rook-ceph</span></span><br><span class="line"><span class="attr">reclaimPolicy:</span> <span class="string">Delete</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本文通过介绍并图解K8s中各个存储方案实现方式以及可选择的开源项目，为读者呈现更全面的K8s存储方案选择。在我们实际的使用场景中，亦需要根据特定的需求来制定符合项目要求的存储方案，从而达到最好的实现效果。也希望有更多的朋友能够加入到kubernetes的队伍中来，让kubernetes真正深入到众多的用户和企业中去。</p>
+
+    </div>
+
+    <div>全文完。</div>
+  </article>
+  <div class="fix-container">
+    <div id="toc" class="fix-right">
+      
+<div class="toc-wrapper">
+  <strong class="toc-title">目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#K8s%E6%9C%89%E5%93%AA%E4%BA%9B%E6%8C%81%E4%B9%85%E5%8C%96%E6%96%B9%E6%A1%88"><span class="toc-text">K8s有哪些持久化方案</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Docker%E5%AD%98%E5%82%A8"><span class="toc-text">Docker存储</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1%EF%BC%89Docker-%E6%95%B0%E6%8D%AE%E5%8D%B7%E7%B1%BB%E5%9E%8B"><span class="toc-text">1）Docker 数据卷类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2%EF%BC%89%E6%95%B0%E6%8D%AE%E5%8D%B7%E4%BD%BF%E7%94%A8%E8%AF%AD%E6%B3%95"><span class="toc-text">2）数据卷使用语法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3%EF%BC%89Docker%E6%95%B0%E6%8D%AE%E5%8D%B7%E6%8F%92%E4%BB%B6"><span class="toc-text">3）Docker数据卷插件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#K8s%E5%8E%9F%E7%94%9F%E5%AD%98%E5%82%A8"><span class="toc-text">K8s原生存储</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8D%B7-Volume"><span class="toc-text">卷-Volume</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#PV%E5%92%8CPVC"><span class="toc-text">PV和PVC</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95"><span class="toc-text">使用方法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%80%E6%BA%90%E5%AD%98%E5%82%A8%E9%A1%B9%E7%9B%AECeph-amp-Rook"><span class="toc-text">开源存储项目Ceph&amp;Rook</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%89%E8%A3%85%E6%96%B9%E6%B3%95"><span class="toc-text">安装方法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol>
+</div>
+
+      
+<div class="ads-banner">
+    <div class="swiper-wrapper">
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/gze2lfYy" title="买云服务器，参与礼品兑换、抽奖，最高送价值8000元IPad，还有Bose耳机、千元京东卡等您来！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E4%BC%81%E4%B8%9A%E7%9B%9B%E5%A4%8F%E6%9C%89%E7%A4%BC-345x200-d2146292109c1c9e1ae000a6c3ecde162d89e493.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/ecs_amd_test-0901?userCode=s4pthvp2" title="云服务器AMD二代火热公测">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/2480630_1634815908.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/LonPwhxX" title="DNSPod解析套餐全面升配降价，更高的套餐配置规格，更优的价格方案，全面提升可用性及响应率，专业版限时99元/年！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%E9%8D%93%EE%88%9B%E6%B9%B0-82de69db27c1e7984b871bdba4ea3dd5d5acda1f.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/7ec01pIF" title="云产品限时秒杀，爆款1核2G云服务器，首年74元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-788d0ee3eed06e913b85ddb6b178f8b9960c4684.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/minisite/goods?userCode=s4pthvp2" title="云小站特惠">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/6421642_1634812338.jpg" />
+            
+            <span>云小站特惠</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/95DUQ4ON" title="境外1核2G服务器低至2折，半价续费券限量免费领取！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A8%E7%90%83%E8%B4%AD_345%20200-dd004d4a4191fcbabcabea4fcd96f67d1e069f58.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SAIuJMWI" title="星星海SA2云服务器，1核2G首年99元起，高性价比首选">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%20%281%29-87905a297b9ba92f411e1e8fefc629b63cca5781.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/3YMiCK6w" title="推广者专属福利，新客户无门槛领取总价值高达2860元代金券，每种代金券限量500张，先到先得。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200--2953d058277cb63c6b1cd127285163335cd6751e.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/activity_selection?userCode=s4pthvp2" title="云服务器 精选特惠 新用户低至0.5折起 爆款免费试用3个月">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9125844_1634816292.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/qbSzF0sM" title="中小企业福利专场，多款刚需产品，满足企业通用场景需求，云服务器2.5折起">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-b28f7dee9552f4241ea6a543f15a9798049701d4.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/H6YmBFC4" title="云开发CloudBase，一站式高效开发平台，新用户选购低至0元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-a1b026a76d4ef2fc73b9fd976759da3a16715b44.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/daily/bestoffer?userCode=s4pthvp2" title="阿里云 爆款特惠 精选爆款产品低至0.5折">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9604134_1634812518.jpg" />
+            
+            <span>阿里云 爆款特惠 精选爆款产品低至0.5折</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/new?userCode=s4pthvp2" title="新人特惠专享 汇聚阿里云爆款云产品，云服务器1核2G n4 72.6元/年">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/3500689_1634812626.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/hDCEkRsS" title="ElasticSearch新用户特惠，快速实现日志分析、应用搜索，首购低至4折">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E8%85%BE%E8%AE%AF%E4%BA%913_345%20200_1-7aeb8eb451fd6de33676444898914b1ff3298996.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/YjfBwRLm" title="腾讯云数据库性能卓越稳定可靠，为您解决数据库运维难题">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A5%E9%97%A8%E4%BA%91%E6%95%B0%E6%8D%AE%E5%BA%93MYSQL-345x200-a68c566987f9bf687433e2cf4fbdc85ece6e2d93.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SDMIWAoV" title="腾讯云图，像PPT一样简单的数据可视化工具。5元搞定数据可视化，模板丰富，拖拖拽拽就能做出好看的可视化大屏。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-89eeba55a2f49008e686e1a51e14bfe79f63af13.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/8DvMAlwF" title="视频通信爆款 9.9 元起， 提供电商、教育、社交娱乐等多行业多场景的一站式解决方案，最快 1 天布局火爆赛道">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200-51cc0ac5a1b375c4269c679987e3bc7c62a2c592.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/care?userCode=s4pthvp2" title="云服务器老用户专享礼遇 实例升级低至 6.3折、续费低至 3.5折 限时折扣！">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/7740487_1634816569.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/VbUAuJ2j" title="即时通信 IM 首购 1 折特惠，仅需99.9元/月，支持直播电商、在线教育等多种热门应用场景">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD-15e14b2502f1e6df9e647ba452416d4a4f3dda04.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/6HS1Q41a" title="9.9元体验2万分钟实时音视频通话,支持1对1或多人音视频通话,单房可支持300人同时在线，10万人同时观看；全平台互通高品质通话">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%202-15a05a841743ffd2dc01731972dd7b3c2b46e357.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/Z3HKwaYY" title="云数据库MySQL基础版1元体验，为中小企业量身打造，单节点架构，保证数据可靠性">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E6%95%B0%E6%8D%AE%E5%BA%93%20SQL%20345x200-0f7c36787bd045c5a201bc29b01deab00bb4a3cd.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/pcReLJBk" title="专业版APP加固特惠5折起，可享免费兼容性测试">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-5d6e2cf6805432934eeb9f7800bd1a5d282906ae.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/xwWYC6oW" title="新客户首购 TPNS 特惠9.8元/万 DAU，新老客户低至6.5折，给您提供快速、稳定、安全、高效的用户促活利器">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%203-9f78293b201220263799ac53f85ae6cd13e0e8a7.png" />
+            
+        </a>
+        
+    </div>
+    <div aria-label="Previous" class="swiper-button-prev"></div>
+    <div aria-label="Next" class="swiper-button-next"></div>
+    <div class="swiper-pagination"></div>
+</div>
+<script>
+    window.addEventListener('load', function () {
+            let options = {"pagination":{"el":".swiper-pagination","type":"progressbar"},"navigation":{"nextEl":".swiper-button-next","prevEl":".swiper-button-prev"},"slidesPerView":1,"spaceBetween":10,"loop":true,"autoplay":{"delay":2000,"disableOnInteraction":false}} ;
+            var swiper = new Swiper(".ads-banner", options);
+        },
+        false);
+</script>
+
+    </div>
+  </div>
+</div>
+<div class="copyright">
+    <span>原文链接：</span>
+    <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/365780238">https://zhuanlan.zhihu.com/p/365780238</a>
+</div>
+<div class="share" style="width: 100%;">
+  <img src="https://www.hufeifei.cn/wechat-public-account.jpg" alt="Holmofy" style="margin: auto; display: block; width: 40%;min-width: 160px;max-width: 400px;"/>
+  <div style="margin: auto; text-align: center; font-size: 0.8em; color: grey;">老铁们关注走一走，不迷路</div>
+</div>
+
+  
+    <div class="post-nav">
+      <div class="post-nav-item post-nav-next">
+        
+          <span>〈 </span>
+          <a href="/backend/kubernetes-operator/" rel="next" title="亲历者说：Kubernetes API 与 Operator，不为人知的开发者战争">
+          亲历者说：Kubernetes API 与 Operator，不为人知的开发者战争
+          </a>
+        
+      </div>
+  
+      <div class="post-nav-item post-nav-prev">
+          
+          <a href="/backend/alimonitor-sunfire/" rel="prev" title="阿里业务全链路智能监控探索">
+            阿里业务全链路智能监控探索
+          </a>
+          <span>〉</span>
+        
+      </div>
+    </div>
+  
+
+<div id="vcomments" style="padding: 10px 50px;"></div>
+<script>
+    window.addEventListener('load', function () {
+        new Valine({"el":"#vcomments","enable":true,"appId":"8Yo6tv65sOStsPwvGSOAmOtM-gzGzoHsz","appKey":"IJPXPCV29V5ja34nj1JL3tQe","notify":false,"verify":false,"pageSize":10,"avatar":"mm","lang":"zh-cn","placeholder":"Just go go","visitor":true,"recordIP":true,"requiredFields":["nick"]});
+    });
+</script>
+
+    </div>
+
+    
+
+  </div>
+  <footer class="footer text-center">
+    <div id="bottom-inner">
+        <a class="bottom-item" href="https://www.hufeifei.cn">首页</a> |
+        <a class="bottom-item" href="https://blog.hufeifei.cn" target="_blank">个人博客</a> |
+        <a class="bottom-item" href="https://github.com/holmofy" target="_blank">GitHub</a>
+    </div>
+    
+    <div>
+        <span class="bottom-item">友情链接: </span>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://draveness.me/">draveness</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://coolshell.cn/">CoolShell</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://martin.kleppmann.com/">martin kleppmann</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://www.skywind.me/blog/">skywind</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://duanple.com/">duanple</a>
+        
+    </div>
+    
+</footer>
+
+  
+  <!-- scripts list from theme config.yml -->
+  
+    <script src="//unpkg.com/swiper/swiper-bundle.min.js"></script>
+  
+    <script src="//cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+  
+
+
+<script>
+  (function(window, document, undefined) {
+
+    var timer = null;
+
+    function returnTop() {
+      cancelAnimationFrame(timer);
+      timer = requestAnimationFrame(function fn() {
+        var oTop = document.body.scrollTop || document.documentElement.scrollTop;
+        if (oTop > 0) {
+          document.body.scrollTop = document.documentElement.scrollTop = oTop - 50;
+          timer = requestAnimationFrame(fn);
+        } else {
+          cancelAnimationFrame(timer);
+        }
+      });
+    }
+
+    var hearts = [];
+    window.requestAnimationFrame = (function() {
+      return window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        function(callback) {
+          setTimeout(callback, 1000 / 60);
+        }
+    })();
+    init();
+
+    function init() {
+      css(".heart{z-index:9999;width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+      attachEvent();
+      gameloop();
+      addMenuEvent();
+    }
+
+    function gameloop() {
+      for (var i = 0; i < hearts.length; i++) {
+        if (hearts[i].alpha <= 0) {
+          document.body.removeChild(hearts[i].el);
+          hearts.splice(i, 1);
+          continue;
+        }
+        hearts[i].y--;
+        hearts[i].scale += 0.004;
+        hearts[i].alpha -= 0.013;
+        hearts[i].el.style.cssText = "left:" + hearts[i].x + "px;top:" + hearts[i].y + "px;opacity:" + hearts[i].alpha + ";transform:scale(" + hearts[i].scale + "," + hearts[i].scale + ") rotate(45deg);background:" + hearts[i].color;
+      }
+      requestAnimationFrame(gameloop);
+    }
+
+    /**
+     * 给logo设置点击事件
+     * 
+     * - 回到顶部
+     * - 出现爱心
+     */
+    function attachEvent() {
+      var old = typeof window.onclick === "function" && window.onclick;
+      var logo = document.getElementById("logo");
+      if (logo) {
+        logo.onclick = function(event) {
+          returnTop();
+          old && old();
+          createHeart(event);
+        }
+      }
+      
+    }
+
+    function createHeart(event) {
+      var d = document.createElement("div");
+      d.className = "heart";
+      hearts.push({
+        el: d,
+        x: event.clientX - 5,
+        y: event.clientY - 5,
+        scale: 1,
+        alpha: 1,
+        color: randomColor()
+      });
+      document.body.appendChild(d);
+    }
+
+    function css(css) {
+      var style = document.createElement("style");
+      style.type = "text/css";
+      try {
+        style.appendChild(document.createTextNode(css));
+      } catch (ex) {
+        style.styleSheet.cssText = css;
+      }
+      document.getElementsByTagName('head')[0].appendChild(style);
+    }
+
+    function randomColor() {
+      // return "rgb(" + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + ")";
+      return "#F44336";
+    }
+
+    function addMenuEvent() {
+      var menu = document.getElementById('menu-main-post');
+      if (menu) {
+        var toc = document.getElementById('toc');
+        if (toc) {
+          menu.onclick = function() {
+            if (toc) {
+              if (toc.style.display == 'block') {
+                toc.style.display = 'none';
+              } else {
+                toc.style.display = 'block';
+              }
+            }
+          };
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+    }
+
+  })(window, document);
+</script>
+
+  
+
+
+
+<script>(function (w, d, s, id) {
+            if (typeof (w.webpushr) !== 'undefined') return; w.webpushr = w.webpushr || function () { (w.webpushr.q = w.webpushr.q || []).push(arguments) }; var js, fjs = d.getElementsByTagName(s)[0]; js = d.createElement(s); js.id = id; js.async = 1; js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window, document, 'script', 'webpushr-jssdk'));webpushr('setup', { 'key': 'BPOxQK5zO7VR8Ja1xRzI_E6lKWqJqwAMSNJozmybmGC6-aujLX8k-lHdIAdb_BcX9po-j5bpVTyEEA6f9Kz0bqU' });</script></body>
+</html>

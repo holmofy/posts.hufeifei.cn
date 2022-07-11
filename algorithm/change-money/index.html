@@ -1,0 +1,509 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#202020"/>
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta name="keywords" content="algorithm,递归,动态规划," />
+  
+
+  
+    <meta name="description" content="各大平台上精选优质文章进行汇总" />
+  
+  
+  <link rel="icon" type="image/x-icon" href="/logo.png">
+  <title>换零钱问题 [ 站在巨人的肩膀上 ]</title>
+  
+    <!-- stylesheets list from config.yml -->
+    
+      <link rel="stylesheet" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css">
+    
+      <link rel="stylesheet" href="//unpkg.com/swiper/swiper-bundle.min.css">
+    
+      <link rel="stylesheet" href="/css/xoxo.css">
+    
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-H58NSPXYPF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'G-H58NSPXYPF');
+  </script>
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="站在巨人的肩膀上" type="application/atom+xml">
+</head>
+
+
+<body>
+  <div class="nav-container">
+    <nav class="home-menu pure-menu pure-menu-horizontal">
+  <a class="pure-menu-heading" href="/">
+    <img class="avatar" src="https://www.hufeifei.cn/favicon.jpg">
+    <span class="title">站在巨人的肩膀上</span>
+  </a>
+
+  <ul class="pure-menu-list clearfix">
+      
+          
+            <li class="pure-menu-item"><a href="/" class="pure-menu-link">首页</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/tags" class="pure-menu-link">标签</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/atom.xml" class="pure-menu-link">RSS</a></li>
+          
+      
+  </ul>
+   
+</nav>
+  </div>
+
+  <div class="container" id="content-outer">
+    <div class="inner" id="content-inner">
+      <div class="post-container">
+  <article class="post" id="post">
+    <header class="post-header text-center">
+      <h1 class="title">
+        换零钱问题
+      </h1>
+      <span>
+        
+        <time class="time" datetime="2021-10-27T00:00:00.000Z">
+          2021-10-27
+        </time>
+        
+      </span>
+      <span class="slash">/</span>
+      <span class="post-meta">
+        <span class="post-tags">
+          <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/" rel="tag">动态规划</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E9%80%92%E5%BD%92/" rel="tag">递归</a></li></ul>
+        </span>
+      </span>
+      <span class="slash">/</span>
+      <span id="/algorithm/change-money/" class="read leancloud_visitors" data-flag-title="换零钱问题">
+        <span class="leancloud-visitors-count"></span> 点击
+      </span>
+      <span class="slash">/</span>
+      <span class="read">阅读耗时 12 分钟</span>
+    </header>
+
+    <div class="post-content">
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><h2 id="换零钱问题"><a href="#换零钱问题" class="headerlink" title="换零钱问题"></a>换零钱问题</h2><p>在《SICP》第一章 1.22节，刚介绍完递归和迭代，给了一道相当有难度的例题：统计换零钱的方法</p>
+<blockquote>
+<p>给定半美元、25美分、10美分、5美分、1美分 5种硬币，将 1 美元换成硬币，有多少种硬币组合？<br>给定任意数量的现金 和 任意组合的硬币种类，计算换零钱所有方式的种数。</p>
+</blockquote>
+<h2 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h2><p>书上给出的解题思想为递归分治： 将总数为 a 的现金换成 n 种硬币组合的数目等于两部分之和：</p>
+<ul>
+<li>第一部分为现金 <code>a</code> 换成除第一种硬币外的所有其他硬币种类的数目</li>
+<li>第二部分为现金数 <code>a-d</code> 换成所有种类硬币的不同方式数目，其中 <code>d</code> 为第一种硬币的币值。</li>
+</ul>
+<p>怎么来理解呢，这里是将换零钱的方法分为两组，第一组是都没有使用第一种硬币，第二组是都用了第一咱硬币。显然，换成零钱的全部方式就等于完全不用第一种硬币的方式的数目，加上用了第一种硬币的方式的数目。可以看出，分成两组后，这两个问题新问题相对于原问题的范围缩小了，第一组现金没有变，但可选的硬币种类少了一种；第二组硬币种类没有变，但是现金减少了第一种硬币的币值。<br>这样，就可以将给定金额的换零钱方式问题，通过递归化简为对 更少现金 和 更少种类硬币的同一问题，而求解这样的递归子问题，我们只需确定好问题的边界在哪里，就可以完成运算。边界问题如下：</p>
+<ul>
+<li>当现金数 <code>a</code> 为 0 时，应该算作是有 1 种换零钱的方法</li>
+<li>当现金数 <code>a</code> 小于 0 时，应该算作是有 0 种换零钱的方法</li>
+<li>当换零钱可选的硬币种类为 0 时，应该算作是有 0 种换零钱的方法</li>
+</ul>
+<h2 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h2><p>光看这些解释还不够直观，我们来用 10 美分来演算一下。</p>
+<p>10 美分能够用到的硬币种类只有<code>[10, 5, 1]</code>三种。我们用 <code>10$[10, 5, 1]</code>这种记法来标记问题。先按币值为10的硬币来分类，将问题化为：</p>
+<ol>
+<li>第一组，不使用 10 美分的硬币来表示，只用5美分和1美分来表示 即 <code>10$[5, 1]</code></li>
+<li>第二组，使用了 10 美分的硬币，剩下的金额 0 使用全部的硬币种类表示，即 <code>0$[10, 5, 1]</code></li>
+</ol>
+<p>根据上面的规则，当现金数为0 时，应该算作是有 1 种换零钱的方法，所以第二组的值为 1。我们只用求解第一组的 <code>10$[5, 1]</code>, 然后加上第二组的 1 就是问题 <code>10$[10, 5, 1]</code> 的结果。继续化简问题 <code>10$[5, 1]</code>，按币值为 5 的硬币来分解:</p>
+<ul>
+<li>1-1. 第一组，不使用 5 美分的硬币，只用 1 美分的币值来表示 10 美分，即 <code>10$[1]</code></li>
+<li>1-2. 第二组，使用了一个 5 美分，剩下的 5 美分仍用<code>[5, 1]</code> 两种来表示，即 <code>5$[5, 1]</code></li>
+</ul>
+<p>其中第一组的结果为 1 ，继续求解第二组问题 <code>5$[5, 1]</code>，仍按 5 美分来分类，可以分为：</p>
+<ul>
+<li>1-2-1. 第一组，不使用 5 美分的硬币，只用 1 美分的币值来表示 5 美分，即 <code>5$[1]</code></li>
+<li>1-2-2. 第二组，使用一个 5 美分的硬币，剩下的金额 0 使用全部的硬币种类表示 <code>0$[5, 1]</code></li>
+</ul>
+<p>综上所述，10 美分金额的硬币换的结果为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">10</span>$[<span class="number">10</span>, <span class="number">5</span>, <span class="number">1</span>] = <span class="number">10</span>$[<span class="number">5</span>, <span class="number">1</span>] + <span class="number">0</span>$[<span class="number">10</span>, <span class="number">5</span>, <span class="number">1</span>]</span><br><span class="line">              = <span class="number">10</span>$[<span class="number">1</span>] + <span class="number">5</span>$[<span class="number">5</span>, <span class="number">1</span>] + <span class="number">0</span>$[<span class="number">10</span>, <span class="number">5</span>, <span class="number">1</span>]</span><br><span class="line">              = <span class="number">10</span>$[<span class="number">1</span>] + <span class="number">5</span>$[<span class="number">1</span>] + <span class="number">0</span>$[<span class="number">5</span>, <span class="number">1</span>] + <span class="number">0</span>$[<span class="number">10</span>, <span class="number">5</span>, <span class="number">1</span>]</span><br></pre></td></tr></table></figure>
+
+<p>按边界规则，可以直观看出，当金额为 0 或 可选币种只有 1 种时，组合数都为 1 。<br>所以 <code>10$[10, 5, 1]</code> 的最终结果为 4 。这其中的思想就是将一个复杂的问题归约为简单的子问题求解。</p>
+<h2 id="scheme代码"><a href="#scheme代码" class="headerlink" title="scheme代码"></a>scheme代码</h2><p>书上 1.22节给出的示例代码如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#lang planet neil/sicp</span></span><br><span class="line">(define (count-change amount)</span><br><span class="line">  (cc amount <span class="number">5</span>))</span><br><span class="line"></span><br><span class="line">(define (cc amount kinds-of-coins)</span><br><span class="line">  (cond ((= amount <span class="number">0</span>) <span class="number">1</span>)</span><br><span class="line">        ((<span class="keyword">or</span> (&lt; amount <span class="number">0</span>) (= kinds-of-coins <span class="number">0</span>)) <span class="number">0</span>)</span><br><span class="line">        (<span class="keyword">else</span> (+ (cc amount (- kinds-of-coins <span class="number">1</span>))</span><br><span class="line">                 (cc (- amount</span><br><span class="line">                        (first-denomination kinds-of-coins))</span><br><span class="line">                     kinds-of-coins)))))</span><br><span class="line"></span><br><span class="line">(define (first-denomination kinds-of-coins)</span><br><span class="line">  (cond ((= kinds-of-coins <span class="number">1</span>) <span class="number">1</span>)</span><br><span class="line">        ((= kinds-of-coins <span class="number">2</span>) <span class="number">5</span>)</span><br><span class="line">        ((= kinds-of-coins <span class="number">3</span>) <span class="number">10</span>)</span><br><span class="line">        ((= kinds-of-coins <span class="number">4</span>) <span class="number">25</span>)</span><br><span class="line">        ((= kinds-of-coins <span class="number">5</span>) <span class="number">50</span>)))</span><br><span class="line"></span><br><span class="line">(count-change <span class="number">100</span>)</span><br></pre></td></tr></table></figure>
+
+<p>由于第一章刚刚介绍完 Lisp 的判断语句，没有学习数据结构，需要用判断语句来实现硬币种类，所以上面的示例相对麻烦一些。<br>在学习完第二章的数据结构链表后，可以用表来表示硬币的种类和币值，这样可以轻易更换兑换币种。将上面的程序再重写一下。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#lang planet neil/sicp</span></span><br><span class="line"></span><br><span class="line">(define us-coins (<span class="built_in">list</span> <span class="number">50</span> <span class="number">25</span> <span class="number">10</span> <span class="number">5</span> <span class="number">1</span>))</span><br><span class="line">(define uk-coins (<span class="built_in">list</span> <span class="number">100</span> <span class="number">50</span> <span class="number">20</span> <span class="number">10</span> <span class="number">5</span> <span class="number">2</span> <span class="number">1</span> <span class="number">0.5</span>))</span><br><span class="line"></span><br><span class="line">(define (new-cc amount coin-values)</span><br><span class="line">  (cond ((= amount <span class="number">0</span>) <span class="number">1</span>)</span><br><span class="line">        (( <span class="keyword">or</span> (&lt; amount <span class="number">0</span>) (null? coin-values)) <span class="number">0</span>)</span><br><span class="line">        (<span class="keyword">else</span></span><br><span class="line">         (+ (new-cc amount</span><br><span class="line">                    (cdr coin-values))</span><br><span class="line">            (new-cc (- amount</span><br><span class="line">                       (car coin-values))</span><br><span class="line">                    coin-values)))))</span><br><span class="line"></span><br><span class="line">(new-cc <span class="number">100</span> us-coins)</span><br><span class="line">(new-cc <span class="number">100</span> uk-coins)  </span><br></pre></td></tr></table></figure>
+
+<p>上面的两种方案都是用递归来化简问题，其中用 <code>car</code>、 <code>cdr</code>、 <code>null?</code> 来实现对列表的操作。</p>
+<h2 id="Python代码"><a href="#Python代码" class="headerlink" title="Python代码"></a>Python代码</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -- coding = utf-8 --</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">count_change</span>(<span class="params">amount, coins_list</span>):</span></span><br><span class="line">    <span class="keyword">if</span> amount == <span class="number">0</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span></span><br><span class="line">    <span class="keyword">elif</span> amount &lt; <span class="number">0</span> <span class="keyword">or</span> <span class="keyword">not</span> coins_list:</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        part1 = count_change(amount, coins_list[<span class="number">1</span>:])</span><br><span class="line">        part2 = count_change(amount-coins_list[<span class="number">0</span>], coins_list[:])</span><br><span class="line">    <span class="keyword">return</span> part1 + part2</span><br><span class="line"></span><br><span class="line">us_coins = [<span class="number">1</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">25</span>, <span class="number">50</span>]</span><br><span class="line"><span class="built_in">print</span>(count_change(<span class="number">100</span>, us_coins)</span><br></pre></td></tr></table></figure>
+
+<p>上面代码使用递归方法实现，逻辑非常清楚直观。缺点也比较明显，一是Python 有递归深度限制，当数据金额特别大时可能报错。二是空间复用度高。</p>
+<p>凡是递归能解决的问题都可以用迭代解决，具体到这个题目，可以用动态规划的思路来解决。 下面是网上大神的动态规划代码，特别优雅，只有6行。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -- coding = utf-8 --</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">count_change_iterate</span>(<span class="params">count, coins_list</span>):</span></span><br><span class="line">    result=[<span class="number">1</span>] + [<span class="number">0</span>] * (count) <span class="comment"># 设置结果集</span></span><br><span class="line">    <span class="keyword">for</span> coin_value <span class="keyword">in</span> coins_list: <span class="comment"># 控制变量，硬币种类从第一种开始，逐一添加</span></span><br><span class="line">        <span class="keyword">for</span> amount <span class="keyword">in</span> <span class="built_in">range</span>(coin_value, count+<span class="number">1</span>):  </span><br><span class="line">            <span class="comment"># result[amount] 存储未添加当前种类硬币币值时 金额 amount 全部兑换的方式</span></span><br><span class="line">            <span class="comment"># result[amount - coin_value] 为包括当前币值时 金额 amount - coin_value可以兑换的方式</span></span><br><span class="line">            <span class="comment"># 两者相加，则为将 result[amount] 更新为 包括当前币值金额 amount可以兑换的方式</span></span><br><span class="line">            result[amount] += result[amount - coin_value]</span><br><span class="line">    <span class="keyword">return</span> result[count]</span><br><span class="line"></span><br><span class="line">us_coins = [<span class="number">1</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">25</span>, <span class="number">50</span>]</span><br><span class="line"><span class="built_in">print</span>(count_change_iterate(<span class="number">100</span>, us_coins)</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过对换零钱问题的分析和求解，让我们更深入的理分治算法的思想，就是将复杂的问题分成两个或更多的相同或相似的子问题，再把子问题分成更小的子问题……直到最后子问题可以简单的直接求解，原问题的解即子问题的解的合并。</p>
+
+    </div>
+
+    <div>全文完。</div>
+  </article>
+  <div class="fix-container">
+    <div id="toc" class="fix-right">
+      
+<div class="toc-wrapper">
+  <strong class="toc-title">目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8D%A2%E9%9B%B6%E9%92%B1%E9%97%AE%E9%A2%98"><span class="toc-text">换零钱问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%A3%E9%A2%98%E6%80%9D%E8%B7%AF"><span class="toc-text">解题思路</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%86%E6%9E%90"><span class="toc-text">分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#scheme%E4%BB%A3%E7%A0%81"><span class="toc-text">scheme代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Python%E4%BB%A3%E7%A0%81"><span class="toc-text">Python代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol>
+</div>
+
+      
+<div class="ads-banner">
+    <div class="swiper-wrapper">
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/gze2lfYy" title="买云服务器，参与礼品兑换、抽奖，最高送价值8000元IPad，还有Bose耳机、千元京东卡等您来！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E4%BC%81%E4%B8%9A%E7%9B%9B%E5%A4%8F%E6%9C%89%E7%A4%BC-345x200-d2146292109c1c9e1ae000a6c3ecde162d89e493.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/ecs_amd_test-0901?userCode=s4pthvp2" title="云服务器AMD二代火热公测">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/2480630_1634815908.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/LonPwhxX" title="DNSPod解析套餐全面升配降价，更高的套餐配置规格，更优的价格方案，全面提升可用性及响应率，专业版限时99元/年！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%E9%8D%93%EE%88%9B%E6%B9%B0-82de69db27c1e7984b871bdba4ea3dd5d5acda1f.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/7ec01pIF" title="云产品限时秒杀，爆款1核2G云服务器，首年74元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-788d0ee3eed06e913b85ddb6b178f8b9960c4684.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/minisite/goods?userCode=s4pthvp2" title="云小站特惠">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/6421642_1634812338.jpg" />
+            
+            <span>云小站特惠</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/95DUQ4ON" title="境外1核2G服务器低至2折，半价续费券限量免费领取！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A8%E7%90%83%E8%B4%AD_345%20200-dd004d4a4191fcbabcabea4fcd96f67d1e069f58.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SAIuJMWI" title="星星海SA2云服务器，1核2G首年99元起，高性价比首选">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%20%281%29-87905a297b9ba92f411e1e8fefc629b63cca5781.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/3YMiCK6w" title="推广者专属福利，新客户无门槛领取总价值高达2860元代金券，每种代金券限量500张，先到先得。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200--2953d058277cb63c6b1cd127285163335cd6751e.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/activity_selection?userCode=s4pthvp2" title="云服务器 精选特惠 新用户低至0.5折起 爆款免费试用3个月">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9125844_1634816292.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/qbSzF0sM" title="中小企业福利专场，多款刚需产品，满足企业通用场景需求，云服务器2.5折起">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-b28f7dee9552f4241ea6a543f15a9798049701d4.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/H6YmBFC4" title="云开发CloudBase，一站式高效开发平台，新用户选购低至0元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-a1b026a76d4ef2fc73b9fd976759da3a16715b44.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/daily/bestoffer?userCode=s4pthvp2" title="阿里云 爆款特惠 精选爆款产品低至0.5折">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9604134_1634812518.jpg" />
+            
+            <span>阿里云 爆款特惠 精选爆款产品低至0.5折</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/new?userCode=s4pthvp2" title="新人特惠专享 汇聚阿里云爆款云产品，云服务器1核2G n4 72.6元/年">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/3500689_1634812626.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/hDCEkRsS" title="ElasticSearch新用户特惠，快速实现日志分析、应用搜索，首购低至4折">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E8%85%BE%E8%AE%AF%E4%BA%913_345%20200_1-7aeb8eb451fd6de33676444898914b1ff3298996.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/YjfBwRLm" title="腾讯云数据库性能卓越稳定可靠，为您解决数据库运维难题">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A5%E9%97%A8%E4%BA%91%E6%95%B0%E6%8D%AE%E5%BA%93MYSQL-345x200-a68c566987f9bf687433e2cf4fbdc85ece6e2d93.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SDMIWAoV" title="腾讯云图，像PPT一样简单的数据可视化工具。5元搞定数据可视化，模板丰富，拖拖拽拽就能做出好看的可视化大屏。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-89eeba55a2f49008e686e1a51e14bfe79f63af13.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/8DvMAlwF" title="视频通信爆款 9.9 元起， 提供电商、教育、社交娱乐等多行业多场景的一站式解决方案，最快 1 天布局火爆赛道">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200-51cc0ac5a1b375c4269c679987e3bc7c62a2c592.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/care?userCode=s4pthvp2" title="云服务器老用户专享礼遇 实例升级低至 6.3折、续费低至 3.5折 限时折扣！">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/7740487_1634816569.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/VbUAuJ2j" title="即时通信 IM 首购 1 折特惠，仅需99.9元/月，支持直播电商、在线教育等多种热门应用场景">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD-15e14b2502f1e6df9e647ba452416d4a4f3dda04.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/6HS1Q41a" title="9.9元体验2万分钟实时音视频通话,支持1对1或多人音视频通话,单房可支持300人同时在线，10万人同时观看；全平台互通高品质通话">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%202-15a05a841743ffd2dc01731972dd7b3c2b46e357.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/Z3HKwaYY" title="云数据库MySQL基础版1元体验，为中小企业量身打造，单节点架构，保证数据可靠性">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E6%95%B0%E6%8D%AE%E5%BA%93%20SQL%20345x200-0f7c36787bd045c5a201bc29b01deab00bb4a3cd.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/pcReLJBk" title="专业版APP加固特惠5折起，可享免费兼容性测试">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-5d6e2cf6805432934eeb9f7800bd1a5d282906ae.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/xwWYC6oW" title="新客户首购 TPNS 特惠9.8元/万 DAU，新老客户低至6.5折，给您提供快速、稳定、安全、高效的用户促活利器">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%203-9f78293b201220263799ac53f85ae6cd13e0e8a7.png" />
+            
+        </a>
+        
+    </div>
+    <div aria-label="Previous" class="swiper-button-prev"></div>
+    <div aria-label="Next" class="swiper-button-next"></div>
+    <div class="swiper-pagination"></div>
+</div>
+<script>
+    window.addEventListener('load', function () {
+            let options = {"pagination":{"el":".swiper-pagination","type":"progressbar"},"navigation":{"nextEl":".swiper-button-next","prevEl":".swiper-button-prev"},"slidesPerView":1,"spaceBetween":10,"loop":true,"autoplay":{"delay":2000,"disableOnInteraction":false}} ;
+            var swiper = new Swiper(".ads-banner", options);
+        },
+        false);
+</script>
+
+    </div>
+  </div>
+</div>
+<div class="copyright">
+    <span>原文链接：</span>
+    <a target="_blank" rel="noopener" href="http://sigenzhe.top/python/2019/11/05/%E6%8D%A2%E9%9B%B6%E9%92%B1%E7%9A%84%E6%96%B9%E6%B3%95.html">http://sigenzhe.top/python/2019/11/05/%E6%8D%A2%E9%9B%B6%E9%92%B1%E7%9A%84%E6%96%B9%E6%B3%95.html</a>
+</div>
+<div class="share" style="width: 100%;">
+  <img src="https://www.hufeifei.cn/wechat-public-account.jpg" alt="Holmofy" style="margin: auto; display: block; width: 40%;min-width: 160px;max-width: 400px;"/>
+  <div style="margin: auto; text-align: center; font-size: 0.8em; color: grey;">老铁们关注走一走，不迷路</div>
+</div>
+
+  
+    <div class="post-nav">
+      <div class="post-nav-item post-nav-next">
+        
+          <span>〈 </span>
+          <a href="/backend/docker-core-technologies/" rel="next" title="Docker 核心技术与实现原理">
+          Docker 核心技术与实现原理
+          </a>
+        
+      </div>
+  
+      <div class="post-nav-item post-nav-prev">
+          
+          <a href="/backend/google-paper-opensource/" rel="prev" title="Google论文、开源与云计算">
+            Google论文、开源与云计算
+          </a>
+          <span>〉</span>
+        
+      </div>
+    </div>
+  
+
+<div id="vcomments" style="padding: 10px 50px;"></div>
+<script>
+    window.addEventListener('load', function () {
+        new Valine({"el":"#vcomments","enable":true,"appId":"8Yo6tv65sOStsPwvGSOAmOtM-gzGzoHsz","appKey":"IJPXPCV29V5ja34nj1JL3tQe","notify":false,"verify":false,"pageSize":10,"avatar":"mm","lang":"zh-cn","placeholder":"Just go go","visitor":true,"recordIP":true,"requiredFields":["nick"]});
+    });
+</script>
+
+    </div>
+
+    
+
+  </div>
+  <footer class="footer text-center">
+    <div id="bottom-inner">
+        <a class="bottom-item" href="https://www.hufeifei.cn">首页</a> |
+        <a class="bottom-item" href="https://blog.hufeifei.cn" target="_blank">个人博客</a> |
+        <a class="bottom-item" href="https://github.com/holmofy" target="_blank">GitHub</a>
+    </div>
+    
+    <div>
+        <span class="bottom-item">友情链接: </span>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://draveness.me/">draveness</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://coolshell.cn/">CoolShell</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://martin.kleppmann.com/">martin kleppmann</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://www.skywind.me/blog/">skywind</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://duanple.com/">duanple</a>
+        
+    </div>
+    
+</footer>
+
+  
+  <!-- scripts list from theme config.yml -->
+  
+    <script src="//unpkg.com/swiper/swiper-bundle.min.js"></script>
+  
+    <script src="//cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+  
+
+
+<script>
+  (function(window, document, undefined) {
+
+    var timer = null;
+
+    function returnTop() {
+      cancelAnimationFrame(timer);
+      timer = requestAnimationFrame(function fn() {
+        var oTop = document.body.scrollTop || document.documentElement.scrollTop;
+        if (oTop > 0) {
+          document.body.scrollTop = document.documentElement.scrollTop = oTop - 50;
+          timer = requestAnimationFrame(fn);
+        } else {
+          cancelAnimationFrame(timer);
+        }
+      });
+    }
+
+    var hearts = [];
+    window.requestAnimationFrame = (function() {
+      return window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        function(callback) {
+          setTimeout(callback, 1000 / 60);
+        }
+    })();
+    init();
+
+    function init() {
+      css(".heart{z-index:9999;width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+      attachEvent();
+      gameloop();
+      addMenuEvent();
+    }
+
+    function gameloop() {
+      for (var i = 0; i < hearts.length; i++) {
+        if (hearts[i].alpha <= 0) {
+          document.body.removeChild(hearts[i].el);
+          hearts.splice(i, 1);
+          continue;
+        }
+        hearts[i].y--;
+        hearts[i].scale += 0.004;
+        hearts[i].alpha -= 0.013;
+        hearts[i].el.style.cssText = "left:" + hearts[i].x + "px;top:" + hearts[i].y + "px;opacity:" + hearts[i].alpha + ";transform:scale(" + hearts[i].scale + "," + hearts[i].scale + ") rotate(45deg);background:" + hearts[i].color;
+      }
+      requestAnimationFrame(gameloop);
+    }
+
+    /**
+     * 给logo设置点击事件
+     * 
+     * - 回到顶部
+     * - 出现爱心
+     */
+    function attachEvent() {
+      var old = typeof window.onclick === "function" && window.onclick;
+      var logo = document.getElementById("logo");
+      if (logo) {
+        logo.onclick = function(event) {
+          returnTop();
+          old && old();
+          createHeart(event);
+        }
+      }
+      
+    }
+
+    function createHeart(event) {
+      var d = document.createElement("div");
+      d.className = "heart";
+      hearts.push({
+        el: d,
+        x: event.clientX - 5,
+        y: event.clientY - 5,
+        scale: 1,
+        alpha: 1,
+        color: randomColor()
+      });
+      document.body.appendChild(d);
+    }
+
+    function css(css) {
+      var style = document.createElement("style");
+      style.type = "text/css";
+      try {
+        style.appendChild(document.createTextNode(css));
+      } catch (ex) {
+        style.styleSheet.cssText = css;
+      }
+      document.getElementsByTagName('head')[0].appendChild(style);
+    }
+
+    function randomColor() {
+      // return "rgb(" + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + ")";
+      return "#F44336";
+    }
+
+    function addMenuEvent() {
+      var menu = document.getElementById('menu-main-post');
+      if (menu) {
+        var toc = document.getElementById('toc');
+        if (toc) {
+          menu.onclick = function() {
+            if (toc) {
+              if (toc.style.display == 'block') {
+                toc.style.display = 'none';
+              } else {
+                toc.style.display = 'block';
+              }
+            }
+          };
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+    }
+
+  })(window, document);
+</script>
+
+  
+
+
+
+<script>(function (w, d, s, id) {
+            if (typeof (w.webpushr) !== 'undefined') return; w.webpushr = w.webpushr || function () { (w.webpushr.q = w.webpushr.q || []).push(arguments) }; var js, fjs = d.getElementsByTagName(s)[0]; js = d.createElement(s); js.id = id; js.async = 1; js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window, document, 'script', 'webpushr-jssdk'));webpushr('setup', { 'key': 'BPOxQK5zO7VR8Ja1xRzI_E6lKWqJqwAMSNJozmybmGC6-aujLX8k-lHdIAdb_BcX9po-j5bpVTyEEA6f9Kz0bqU' });</script></body>
+</html>

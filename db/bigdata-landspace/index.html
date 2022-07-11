@@ -1,0 +1,812 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#202020"/>
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta name="keywords" content="Hadoop,Hive,Spark,Storm,Kafka,DataX," />
+  
+
+  
+    <meta name="description" content="各大平台上精选优质文章进行汇总" />
+  
+  
+  <link rel="icon" type="image/x-icon" href="/logo.png">
+  <title>一文读懂大数据平台——写给大数据开发初学者的话! [ 站在巨人的肩膀上 ]</title>
+  
+    <!-- stylesheets list from config.yml -->
+    
+      <link rel="stylesheet" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css">
+    
+      <link rel="stylesheet" href="//unpkg.com/swiper/swiper-bundle.min.css">
+    
+      <link rel="stylesheet" href="/css/xoxo.css">
+    
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-H58NSPXYPF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'G-H58NSPXYPF');
+  </script>
+<meta name="generator" content="Hexo 5.4.0"><style>mjx-container[jax="SVG"] {
+  direction: ltr;
+}
+
+mjx-container[jax="SVG"] > svg {
+  overflow: visible;
+}
+
+mjx-container[jax="SVG"][display="true"] {
+  display: block;
+  text-align: center;
+  margin: 1em 0;
+}
+
+mjx-container[jax="SVG"][justify="left"] {
+  text-align: left;
+}
+
+mjx-container[jax="SVG"][justify="right"] {
+  text-align: right;
+}
+
+g[data-mml-node="merror"] > g {
+  fill: red;
+  stroke: red;
+}
+
+g[data-mml-node="merror"] > rect[data-background] {
+  fill: yellow;
+  stroke: none;
+}
+
+g[data-mml-node="mtable"] > line[data-line] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > rect[data-frame] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > .mjx-dashed {
+  stroke-dasharray: 140;
+}
+
+g[data-mml-node="mtable"] > .mjx-dotted {
+  stroke-linecap: round;
+  stroke-dasharray: 0,140;
+}
+
+g[data-mml-node="mtable"] > svg {
+  overflow: visible;
+}
+
+[jax="SVG"] mjx-tool {
+  display: inline-block;
+  position: relative;
+  width: 0;
+  height: 0;
+}
+
+[jax="SVG"] mjx-tool > mjx-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+mjx-tool > mjx-tip {
+  display: inline-block;
+  padding: .2em;
+  border: 1px solid #888;
+  font-size: 70%;
+  background-color: #F8F8F8;
+  color: black;
+  box-shadow: 2px 2px 5px #AAAAAA;
+}
+
+g[data-mml-node="maction"][data-toggle] {
+  cursor: pointer;
+}
+
+mjx-status {
+  display: block;
+  position: fixed;
+  left: 1em;
+  bottom: 1em;
+  min-width: 25%;
+  padding: .2em .4em;
+  border: 1px solid #888;
+  font-size: 90%;
+  background-color: #F8F8F8;
+  color: black;
+}
+
+foreignObject[data-mjx-xml] {
+  font-family: initial;
+  line-height: normal;
+  overflow: visible;
+}
+
+.MathJax path {
+  stroke-width: 3;
+}
+
+mjx-container[display="true"] {
+  overflow: auto hidden;
+}
+
+mjx-container[display="true"] + br {
+  display: none;
+}
+</style><link rel="alternate" href="/atom.xml" title="站在巨人的肩膀上" type="application/atom+xml">
+</head>
+
+
+<body>
+  <div class="nav-container">
+    <nav class="home-menu pure-menu pure-menu-horizontal">
+  <a class="pure-menu-heading" href="/">
+    <img class="avatar" src="https://www.hufeifei.cn/favicon.jpg">
+    <span class="title">站在巨人的肩膀上</span>
+  </a>
+
+  <ul class="pure-menu-list clearfix">
+      
+          
+            <li class="pure-menu-item"><a href="/" class="pure-menu-link">首页</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/tags" class="pure-menu-link">标签</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/atom.xml" class="pure-menu-link">RSS</a></li>
+          
+      
+  </ul>
+   
+</nav>
+  </div>
+
+  <div class="container" id="content-outer">
+    <div class="inner" id="content-inner">
+      <div class="post-container">
+  <article class="post" id="post">
+    <header class="post-header text-center">
+      <h1 class="title">
+        一文读懂大数据平台——写给大数据开发初学者的话!
+      </h1>
+      <span>
+        
+        <time class="time" datetime="2021-10-02T00:00:00.000Z">
+          2021-10-02
+        </time>
+        
+      </span>
+      <span class="slash">/</span>
+      <span class="post-meta">
+        <span class="post-tags">
+          <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/DataX/" rel="tag">DataX</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hadoop/" rel="tag">Hadoop</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hive/" rel="tag">Hive</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kafka/" rel="tag">Kafka</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Spark/" rel="tag">Spark</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Storm/" rel="tag">Storm</a></li></ul>
+        </span>
+      </span>
+      <span class="slash">/</span>
+      <span id="/db/bigdata-landspace/" class="read leancloud_visitors" data-flag-title="一文读懂大数据平台——写给大数据开发初学者的话!">
+        <span class="leancloud-visitors-count"></span> 点击
+      </span>
+      <span class="slash">/</span>
+      <span class="read">阅读耗时 32 分钟</span>
+    </header>
+
+    <div class="post-content">
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><p>经常有初学者会问，自己想往大数据方向发展，该学哪些技术，学习路线是什么样的，觉得大数据很火，就业很好，薪资很高……首先，如果你确定了想往这个方面发展，先考虑自己的过去从业经历、专业、兴趣是什么。计算机专业——操作系统、硬件、网络、服务器？软件专业——软件开发、编程、写代码？还是数学、统计学专业——对数据和数字特别感兴趣？</p>
+<p>其实这就是想告诉你大数据的三个发展方向，<strong>平台搭建/优化/运维/监控、大数据开发/设计/架构、数据分析/挖掘</strong>。</p>
+<p>先扯一下大数据的4V特征：</p>
+<ul>
+<li>数据量大，TB-&gt;PB</li>
+<li>数据类型繁多，结构化、非结构化文本、日志、视频、图片、地理位置等；</li>
+<li>商业价值高，但是这种价值需要在海量数据之上，通过数据分析与机器学习更快速的挖掘出来；</li>
+<li>处理时效性高，海量数据的处理需求不再局限在离线计算当中。</li>
+</ul>
+<p>现如今，正式为了应对大数据的这几个特点，开源的大数据框架越来越多，越来越强，先列举一些常见的：</p>
+<p>文件存储：Hadoop HDFS、Tachyon、KFS</p>
+<p>离线计算：Hadoop MapReduce、Spark</p>
+<p>流式、实时计算：Storm、Spark Streaming、S4、Heron</p>
+<p>K-V、NOSQL数据库：HBase、Redis、MongoDB</p>
+<p>资源管理：YARN、Mesos</p>
+<p>日志收集：Flume、Scribe、Logstash、Kibana</p>
+<p>消息系统：Kafka、StormMQ、ZeroMQ、RabbitMQ</p>
+<p>查询分析：Hive、Impala、Pig、Presto、Phoenix、SparkSQL、Drill、Flink、Kylin、Druid</p>
+<p>分布式协调服务：Zookeeper</p>
+<p>集群管理与监控：Ambari、Ganglia、Nagios、Cloudera Manager</p>
+<p>数据挖掘、机器学习：Mahout、Spark MLLib</p>
+<p>数据同步：Sqoop</p>
+<p>任务调度：Oozie</p>
+<p>······</p>
+<p>[TOC]</p>
+<h1 id="第一章：初识Hadoop"><a href="#第一章：初识Hadoop" class="headerlink" title="第一章：初识Hadoop"></a>第一章：初识Hadoop</h1><p><strong>1.1 学会百度与Google</strong></p>
+<p>不论遇到什么问题，先试试搜索并自己解决。</p>
+<p>Google首选，翻不过去的，就用百度吧。</p>
+<p><strong>1.2 参考资料首选官方文档</strong></p>
+<p>特别是对于入门来说，官方文档永远是首选文档。</p>
+<p>相信搞这块的大多是文化人，英文凑合就行，实在看不下去的，请参考第一步。</p>
+<p><strong>1.3 先让Hadoop跑起来</strong></p>
+<p>Hadoop可以算是大数据存储和计算的开山鼻祖，现在大多开源的大数据框架都依赖Hadoop或者与它能很好的兼容。</p>
+<p>关于Hadoop,你至少需要搞清楚以下是什么：</p>
+<ul>
+<li>Hadoop 1.0、Hadoop 2.0</li>
+<li>MapReduce、HDFS</li>
+<li>NameNode、DataNode</li>
+<li>JobTracker、TaskTracker</li>
+<li>Yarn、ResourceManager、NodeManager</li>
+</ul>
+<p>自己搭建Hadoop，请使用第一步和第二步，能让它跑起来就行。</p>
+<p>建议先使用安装包命令行安装，不要使用管理工具安装。</p>
+<p>另外：Hadoop1.0知道它就行了，现在都用Hadoop 2.0.</p>
+<p><strong>1.4 尝试使用Hadoop</strong></p>
+<ul>
+<li>HDFS目录操作命令；</li>
+<li>上传、下载文件命令；</li>
+<li>提交运行MapReduce示例程序；</li>
+<li>打开Hadoop WEB界面，查看Job运行状态，查看Job运行日志。</li>
+<li>知道Hadoop的系统日志在哪里。</li>
+</ul>
+<p><strong>1.5 了解它们的原理</strong></p>
+<p>MapReduce：如何分而治之；</p>
+<p>HDFS：数据到底在哪里，什么是副本；</p>
+<p>Yarn到底是什么，它能干什么；</p>
+<p>NameNode到底在干些什么；</p>
+<p>ResourceManager到底在干些什么；</p>
+<p><strong>1.6</strong> <strong>自己写一个MapReduce程序</strong></p>
+<p>仿照WordCount例子，自己写一个（照抄也行）WordCount程序，</p>
+<p>打包并提交到Hadoop运行。</p>
+<p>不会Java的话，Shell、Python都可以，有个东西叫Hadoop Streaming。</p>
+<p>如果能认真完成了以上几步，恭喜你，你的一只脚已经进来了。</p>
+<h1 id="第二章：更高效的WordCount"><a href="#第二章：更高效的WordCount" class="headerlink" title="第二章：更高效的WordCount"></a>第二章：更高效的WordCount</h1><p><strong>2.1 学点SQL吧</strong></p>
+<p>如果不懂数据库的童鞋先学习使用SQL句。</p>
+<p><strong>2.2 SQL版WordCount</strong></p>
+<p>在1.6中，你写（或者抄）的WordCount一共有几行代码？</p>
+<p>如果用SQL的话：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT word,COUNT(1) FROM wordcount GROUP BY word;</span><br></pre></td></tr></table></figure>
+
+<p>这便是SQL的魅力，编程需要几十行，甚至上百行代码，SQL一句就搞定；使用SQL处理分析Hadoop上的数据，方便、高效、易上手、更是趋势。不论是离线计算还是实时计算，越来越多的大数据处理框架都在积极提供SQL接口。</p>
+<p><strong>2.3 安装配置Hive</strong></p>
+<p>Hive算是数据仓库工具，安装不难，网上有很多教程，配置完成后，可以正常进入Hive命令行。</p>
+<p><strong>2.4 试试使用Hive</strong></p>
+<p>尝试在Hive中创建wordcount表，并运行2.2中的SQL语句。在Hadoop WEB界面中找到刚才运行的SQL任务。看SQL查询结果是否和1.4中MapReduce中的结果一致。</p>
+<p>明明写的是SQL，为什么Hadoop WEB界面中看到的是MapReduce任务？</p>
+<p><strong>2.5 学会Hive的基本命令</strong></p>
+<p>创建、删除表；加载数据到表；下载Hive表的数据；并学习更多关于Hive的语法和命令。</p>
+<p>以上如果按照第一章和第二章的流程认真完整的走了一遍后，应该已经具备以下技能和知识点：</p>
+<p><strong>2.6 和Hadoop2.0的区别</strong></p>
+<p>MapReduce的原理（还是那个经典的题目，一个10G大小的文件，给定1G大小的内存，如何使用Java程序统计出现次数最多的10个单词及次数）；</p>
+<p>HDFS读写数据的流程；向HDFS中PUT数据；从HDFS中下载数据；</p>
+<p>自己会写简单的MapReduce程序，运行出现问题，知道在哪里查看日志；</p>
+<p>会写简单的SELECT、WHERE、GROUP BY等SQL语句；</p>
+<p>Hive SQL转换成MapReduce的大致流程；</p>
+<p>Hive中常见的语句：创建表、删除表、往表中加载数据、分区、将表中数据下载到本地；</p>
+<p>从上面的学习，你已经了解到，HDFS是Hadoop提供的分布式存储框架，它可以用来存储海量数据，MapReduce是Hadoop提供的分布式计算框架，它可以用来统计和分析HDFS上的海量数据，而Hive则是SQL On Hadoop，Hive提供了SQL接口，开发人员只需要编写简单易上手的SQL语句，Hive负责把SQL翻译成MapReduce，提交运行。</p>
+<p>此时，你的认知中“大数据平台”是这样的：</p>
+<p><img src="https://pic3.zhimg.com/80/v2-5546474ac146f6355ffe3ff7502330b2_1440w.png" alt="img"></p>
+<p>那么问题来了，海量数据如何到HDFS上呢？</p>
+<h1 id="第三章：把别处的数据搞到Hadoop上"><a href="#第三章：把别处的数据搞到Hadoop上" class="headerlink" title="第三章：把别处的数据搞到Hadoop上"></a>第三章：把别处的数据搞到Hadoop上</h1><p>此处也可以叫做数据采集，把各个数据源的数据采集到Hadoop上。</p>
+<p><strong>3.1 HDFS PUT命令</strong></p>
+<p>put命令在实际环境中也比较常用，通常配合shell、python等脚本语言来使用。建议需熟练掌握。</p>
+<p><strong>3.2 HDFS API</strong></p>
+<p>HDFS提供了写数据的API，自己用编程语言将数据写入HDFS，put命令本身也是使用API。</p>
+<p>实际环境中一般自己较少编写程序使用API来写数据到HDFS，通常都是使用其他框架封装好的方法。比如：Hive中的INSERT语句，Spark中的saveAsTextfile等。</p>
+<p>可以尝试了解原理，试着写几个Demo。</p>
+<p><strong>3.3 Sqoop</strong></p>
+<p>Sqoop是一个主要用于Hadoop/Hive与传统关系型数据库Oracle/MySQL/SQLServer等之间进行数据交换的开源框架。</p>
+<p>就像Hive把SQL翻译成MapReduce一样，Sqoop把你指定的参数翻译成MapReduce，提交到Hadoop运行，完成Hadoop与其他数据库之间的数据交换。</p>
+<p>自己下载和配置Sqoop（建议先使用Sqoop1，Sqoop2比较复杂）。</p>
+<p>了解Sqoop常用的配置参数和方法。</p>
+<p>使用Sqoop完成从MySQL同步数据到HDFS；</p>
+<p>使用Sqoop完成从MySQL同步数据到Hive表；</p>
+<p>PS：如果后续选型确定使用Sqoop作为数据交换工具，那么建议熟练掌握，否则，了解和会用Demo即可。</p>
+<p><strong>3.4 Flume</strong></p>
+<p>Flume是一个分布式的海量日志采集和传输框架，因为“采集和传输框架”，所以它并不适合关系型数据库的数据采集和传输。Flume可以实时的从网络协议、消息系统、文件系统采集日志，并传输到HDFS上。因此，如果你的业务有这些数据源的数据，并且需要实时的采集，那么就应该考虑使用Flume。</p>
+<p>下载和配置Flume。使用Flume监控一个不断追加数据的文件，并将数据传输到HDFS；</p>
+<p><strong>PS：</strong>Flume的配置和使用较为复杂，如果你没有足够的兴趣和耐心，可以先跳过Flume。</p>
+<p><strong>3.5 阿里开源的DataX</strong></p>
+<p>之所以介绍这个，是因为以前某公司客户目前使用的Hadoop与关系型数据库数据交换的工具，就是之前基于DataX开发的，个人感觉非常好用。现在DataX已经是3.0版本，支持很多数据源。你也可以在其之上做二次开发。</p>
+<p><strong>PS：</strong>有兴趣的可以研究和使用一下，对比一下它与Sqoop。</p>
+<p>至此，你的“大数据平台”应该是这样的：</p>
+<p><img src="https://pic2.zhimg.com/80/v2-c42f1f976de511248895ed665601bcb9_1440w.png" alt="img"></p>
+<h1 id="第四章：把Hadoop上的数据搞到别处去"><a href="#第四章：把Hadoop上的数据搞到别处去" class="headerlink" title="第四章：把Hadoop上的数据搞到别处去"></a>第四章：把Hadoop上的数据搞到别处去</h1><p>前面介绍了如何把数据源的数据采集到Hadoop上，数据到Hadoop上之后，便可以使用Hive和MapReduce进行分析了。那么接下来的问题是，分析完的结果如何从Hadoop上同步到其他系统和应用中去呢？</p>
+<p>其实此处的方法和第三章基本一致的。</p>
+<p><strong>4.1 HDFS GET命令</strong></p>
+<p>把HDFS上的文件GET到本地。需要熟练掌握。</p>
+<p><strong>4.2 HDFS API</strong></p>
+<p>原理同3.2.</p>
+<p><strong>4.3 Sqoop</strong></p>
+<p>原理同3.3。</p>
+<p>使用Sqoop完成将HDFS上的文件同步到MySQL；</p>
+<p>使用Sqoop完成将Hive表中的数据同步到MySQL；</p>
+<p><strong>4.4 DataX</strong></p>
+<p>原理同3.4</p>
+<p>此时，“你的大数据平台”应该是这样的：</p>
+<p><img src="https://pic2.zhimg.com/80/v2-74d7ce07598d2169d4cbf8c845f1469d_1440w.png" alt="img"></p>
+<p>走完第三章和第四章的流程，那么你应该已经具备以下技能和知识点：</p>
+<ul>
+<li>知道如何把已有的数据采集到HDFS上，包括离线采集和实时采集；</li>
+<li>知道sqoop（或者还有DataX）是HDFS和其他数据源之间的数据交换工具；</li>
+<li>知道flume可以用作实时的日志采集；</li>
+</ul>
+<p>至此，对于大数据平台，应该已经掌握如何搭建Hadoop集群，把数据采集到Hadoop上，使用Hive和MapReduce来分析数据，把分析结果同步到其他数据源。</p>
+<p>接下来的问题就是，Hive使用的越来越多，你会发现很多不愉快的地方，特别是速度慢，</p>
+<p>大多情况下，明明我的数据量很小，它都要申请资源，启动MapReduce来执行。</p>
+<h1 id="第五章：快一点吧，我的SQL"><a href="#第五章：快一点吧，我的SQL" class="headerlink" title="第五章：快一点吧，我的SQL"></a>第五章：快一点吧，我的SQL</h1><p>其实大家都已经发现Hive后台使用MapReduce作为执行引擎，实在是有点慢。因此SQL On Hadoop的框架越来越多，按我的了解，最常用的按照流行度依次为SparkSQL、Impala和Presto.这三种框架基于半内存或者全内存，提供了SQL接口来快速查询分析Hadoop上的数据。</p>
+<p>目前我们的方案使用的是SparkSQL，至于为什么用SparkSQL，原因大概如下：</p>
+<ul>
+<li>使用Spark还做了其他事情，不想引入过多的框架；</li>
+<li>Impala对内存的需求太大，没有过多资源部署；</li>
+</ul>
+<p><strong>5.1 关于Spark和SparkSQL</strong></p>
+<p>什么是Spark，什么是SparkSQL。</p>
+<p>Spark有的核心概念及名词解释。</p>
+<p>SparkSQL和Spark是什么关系，SparkSQL和Hive是什么关系。</p>
+<p>SparkSQL为什么比Hive跑的快。</p>
+<p>可参考：<a target="_blank" rel="noopener" href="https://blog.csdn.net/yeruby/article/details/51448188">SparkSQL与Hive on Spark的比较</a></p>
+<p><strong>5.2 如何部署和运行SparkSQL</strong></p>
+<p>Spark有哪些部署模式？</p>
+<p>如何在Yarn上运行SparkSQL？</p>
+<p>使用SparkSQL查询Hive中的表。</p>
+<p>可参考：<a target="_blank" rel="noopener" href="http://lxw1234.com/archives/category/spark">Spark - lxw的大数据田地</a></p>
+<p><strong>PS:</strong> Spark不是一门短时间内就能掌握的技术，因此建议在了解了Spark之后，可以先从SparkSQL入手，循序渐进。</p>
+<p>如果认真完成了上面的学习和实践，此时，你的”大数据平台”应该是这样的：</p>
+<p><img src="https://pic3.zhimg.com/80/v2-a50550da5caff3510b280d4c72d48d5e_1440w.png" alt="img"></p>
+<h1 id="第六章：一夫多妻制"><a href="#第六章：一夫多妻制" class="headerlink" title="第六章：一夫多妻制"></a>第六章：一夫多妻制</h1><p>其实我想说的是数据的一次采集、多次消费。</p>
+<p>在实际业务场景下，特别是对于一些监控日志，想即时的从日志中了解一些指标（关于实时计算，后面章节会有介绍），这时候，从HDFS上分析就太慢了，尽管是通过Flume采集的，但Flume也不能间隔很短就往HDFS上滚动文件，这样会导致小文件特别多。</p>
+<p>为了满足数据的一次采集、多次消费的需求，这里要说的便是Kafka。</p>
+<p><strong>6.1 关于Kafka</strong></p>
+<p>Kafka是一种高吞吐量的分布式发布订阅消息系统，它可以处理消费者规模的网站中的所有动作流数据。这种动作（网页浏览，搜索和其他用户的行动）是在现代网络上的许多社会功能的一个关键因素。这些数据通常是由于吞吐量的要求而通过处理日志和日志聚合来解决。</p>
+<p><strong>6.2 如何部署和使用Kafka</strong></p>
+<p>使用单机部署Kafka，并成功运行自带的生产者和消费者例子。</p>
+<p>使用Java程序自己编写并运行生产者和消费者程序。</p>
+<p>Flume和Kafka的集成，使用Flume监控日志，并将日志数据实时发送至Kafka。</p>
+<p>关于Kafka，可以参考 ：<a target="_blank" rel="noopener" href="http://lxw1234.com/archives/category/kafka">Kafka - lxw的大数据田地</a></p>
+<p>至此，“大数据平台”应该扩充成这样：</p>
+<p><img src="https://pic4.zhimg.com/80/v2-5cef49fa56004ea71ebcf9645a3d5c23_1440w.png" alt="img"></p>
+<p>这时，使用Flume采集的数据，不是直接到HDFS上，而是先到Kafka，Kafka中的数据可以由多个消费者同时消费，其中一个消费者，就是将数据同步到HDFS。</p>
+<p><strong>总结：</strong></p>
+<p>为什么Spark比MapReduce快。</p>
+<p>使用SparkSQL代替Hive，更快的运行SQL。</p>
+<p>使用Kafka完成数据的一次收集，多次消费架构。</p>
+<p>自己可以写程序完成Kafka的生产者和消费者。</p>
+<p>前面的学习已经掌握了大数据平台中的数据采集、数据存储和计算、数据交换等大部分技能，而这其中的每一步，都需要一个任务（程序）来完成，各个任务之间又存在一定的依赖性，比如，必须等数据采集任务成功完成后，数据计算任务才能开始运行。如果一个任务执行失败，需要给开发运维人员发送告警，同时需要提供完整的日志来方便查错。</p>
+<h1 id="第七章：越来越多的分析任务"><a href="#第七章：越来越多的分析任务" class="headerlink" title="第七章：越来越多的分析任务"></a>第七章：越来越多的分析任务</h1><p>不仅仅是分析任务，数据采集、数据交换同样是一个个的任务。这些任务中，有的是定时触发，有点则需要依赖其他任务来触发。当平台中有几百上千个任务需要维护和运行时候，仅仅靠crontab远远不够了，这时便需要一个调度监控系统来完成这件事。调度监控系统是整个数据平台的中枢系统，类似于AppMaster，负责分配和监控任务。</p>
+<p><strong>7.1 Apache Oozie</strong></p>
+<ol>
+<li><p>Oozie是什么？有哪些功能？</p>
+</li>
+<li><p>Oozie可以调度哪些类型的任务（程序）？</p>
+</li>
+<li><p>Oozie可以支持哪些任务触发方式？</p>
+</li>
+<li><p>安装配置Oozie。</p>
+</li>
+</ol>
+<p><strong>7.2</strong> <strong>其他开源的任务调度系统</strong></p>
+<p><a target="_blank" rel="noopener" href="https://azkaban.github.io/">Azkaban</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/ltsopensource/light-task-scheduler">light-task-scheduler</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/alibaba/zeus">alibaba/zeus</a></p>
+<p>……</p>
+<p>此时：</p>
+<p><img src="https://pic4.zhimg.com/80/v2-516a182ba8eed75b15f40b28d491a103_1440w.png" alt="img"></p>
+<h1 id="第八章：数据要实时"><a href="#第八章：数据要实时" class="headerlink" title="第八章：数据要实时"></a>第八章：数据要实时</h1><p>在第六章介绍Kafka的时候提到了一些需要实时指标的业务场景，实时基本可以分为绝对实时和准实时，绝对实时的延迟要求一般在毫秒级，准实时的延迟要求一般在秒、分钟级。对于需要绝对实时的业务场景，用的比较多的是Storm，对于其他准实时的业务场景，可以是Storm，也可以是Spark Streaming。当然，如果可以的话，也可以自己写程序来做。</p>
+<p><strong>8.1 Storm</strong></p>
+<ol>
+<li><p>什么是Storm？有哪些可能的应用场景？</p>
+</li>
+<li><p>Storm由哪些核心组件构成，各自担任什么角色？</p>
+</li>
+<li><p>Storm的简单安装和部署。</p>
+</li>
+<li><p>自己编写Demo程序，使用Storm完成实时数据流计算。</p>
+</li>
+</ol>
+<p><strong>8.2 Spark Streaming</strong></p>
+<ol>
+<li><p>什么是Spark Streaming，它和Spark是什么关系？</p>
+</li>
+<li><p>Spark Streaming和Storm比较，各有什么优缺点？</p>
+</li>
+<li><p>使用Kafka + Spark Streaming，完成实时计算的Demo程序。</p>
+</li>
+</ol>
+<p>此时：</p>
+<p><img src="https://pic2.zhimg.com/80/v2-03e87e44a3df60bde66242444ead42dd_1440w.png" alt="img"></p>
+<p>至此，大数据平台底层架构已经成型了，其中包括了数据采集、数据存储与计算（离线和实时）、数据同步、任务调度与监控这几大模块。接下来是时候考虑如何更好的对外提供数据了。</p>
+<h1 id="第九章：数据要对外"><a href="#第九章：数据要对外" class="headerlink" title="第九章：数据要对外"></a>第九章：数据要对外</h1><p>通常对外（业务）提供数据访问，大体上包含以下方面：</p>
+<p>离线：比如，每天将前一天的数据提供到指定的数据源（DB、FILE、FTP）等；</p>
+<p>离线数据的提供可以采用Sqoop、DataX等离线数据交换工具。</p>
+<p>实时：比如，在线网站的推荐系统，需要实时从数据平台中获取给用户的推荐数据，这种要求延时非常低（50毫秒以内）。</p>
+<p>根据延时要求和实时数据的查询需要，可能的方案有：HBase、Redis、MongoDB、ElasticSearch等。</p>
+<p>OLAP分析：OLAP除了要求底层的数据模型比较规范，另外，对查询的响应速度要求也越来越高，可能的方案有：Impala、Presto、SparkSQL、Kylin。如果你的数据模型比较规模，那么Kylin是最好的选择。</p>
+<p>即席查询：即席查询的数据比较随意，一般很难建立通用的数据模型，因此可能的方案有：Impala、Presto、SparkSQL。</p>
+<p>这么多比较成熟的框架和方案，需要结合自己的业务需求及数据平台技术架构，选择合适的。原则只有一个：越简单越稳定的，就是最好的。</p>
+<p>如果你已经掌握了如何很好的对外（业务）提供数据，那么你的“大数据平台”应该是这样的：</p>
+<p><img src="https://pic1.zhimg.com/80/v2-dc956422e1cfaa9c6833a1674c78e114_1440w.png" alt="img"></p>
+<h1 id="第十章：牛逼高大上的机器学习"><a href="#第十章：牛逼高大上的机器学习" class="headerlink" title="第十章：牛逼高大上的机器学习"></a>第十章：牛逼高大上的机器学习</h1><p>这里本人也没有接触太多，稍微讲一下我们的业务场景应用，遇到的能用机器学习解决的问题大概这么三类：</p>
+<p>分类问题：包括二分类和多分类，二分类就是解决了预测的问题，就像预测一封邮件是否垃圾邮件；多分类解决的是文本的分类；</p>
+<p>聚类问题：从用户搜索过的关键词，对用户进行大概的归类。</p>
+<p>推荐问题：根据用户的历史浏览和点击行为进行相关推荐。</p>
+<p>大多数行业，使用机器学习解决的，也就是这几类问题。</p>
+<p><strong>入门学习线路：</strong></p>
+<p>数学基础；</p>
+<p>机器学习实战（Machine Learning in Action），懂Python最好；</p>
+<p>SparkMlLib提供了一些封装好的算法，以及特征处理、特征选择的方法。</p>
+<p>那么把机器学习部分加进 “大数据平台”。</p>
+<p><img src="https://pic2.zhimg.com/80/v2-fcf85ebbc1997372ff773d57d98e4f0d_1440w.png" alt="img"></p>
+
+    </div>
+
+    <div>全文完。</div>
+  </article>
+  <div class="fix-container">
+    <div id="toc" class="fix-right">
+      
+<div class="toc-wrapper">
+  <strong class="toc-title">目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E7%AB%A0%EF%BC%9A%E5%88%9D%E8%AF%86Hadoop"><span class="toc-text">第一章：初识Hadoop</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E7%AB%A0%EF%BC%9A%E6%9B%B4%E9%AB%98%E6%95%88%E7%9A%84WordCount"><span class="toc-text">第二章：更高效的WordCount</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E7%AB%A0%EF%BC%9A%E6%8A%8A%E5%88%AB%E5%A4%84%E7%9A%84%E6%95%B0%E6%8D%AE%E6%90%9E%E5%88%B0Hadoop%E4%B8%8A"><span class="toc-text">第三章：把别处的数据搞到Hadoop上</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%AC%AC%E5%9B%9B%E7%AB%A0%EF%BC%9A%E6%8A%8AHadoop%E4%B8%8A%E7%9A%84%E6%95%B0%E6%8D%AE%E6%90%9E%E5%88%B0%E5%88%AB%E5%A4%84%E5%8E%BB"><span class="toc-text">第四章：把Hadoop上的数据搞到别处去</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%AC%AC%E4%BA%94%E7%AB%A0%EF%BC%9A%E5%BF%AB%E4%B8%80%E7%82%B9%E5%90%A7%EF%BC%8C%E6%88%91%E7%9A%84SQL"><span class="toc-text">第五章：快一点吧，我的SQL</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%AC%AC%E5%85%AD%E7%AB%A0%EF%BC%9A%E4%B8%80%E5%A4%AB%E5%A4%9A%E5%A6%BB%E5%88%B6"><span class="toc-text">第六章：一夫多妻制</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%AC%AC%E4%B8%83%E7%AB%A0%EF%BC%9A%E8%B6%8A%E6%9D%A5%E8%B6%8A%E5%A4%9A%E7%9A%84%E5%88%86%E6%9E%90%E4%BB%BB%E5%8A%A1"><span class="toc-text">第七章：越来越多的分析任务</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%AC%AC%E5%85%AB%E7%AB%A0%EF%BC%9A%E6%95%B0%E6%8D%AE%E8%A6%81%E5%AE%9E%E6%97%B6"><span class="toc-text">第八章：数据要实时</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%AC%AC%E4%B9%9D%E7%AB%A0%EF%BC%9A%E6%95%B0%E6%8D%AE%E8%A6%81%E5%AF%B9%E5%A4%96"><span class="toc-text">第九章：数据要对外</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%AC%AC%E5%8D%81%E7%AB%A0%EF%BC%9A%E7%89%9B%E9%80%BC%E9%AB%98%E5%A4%A7%E4%B8%8A%E7%9A%84%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0"><span class="toc-text">第十章：牛逼高大上的机器学习</span></a></li></ol>
+</div>
+
+      
+<div class="ads-banner">
+    <div class="swiper-wrapper">
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/gze2lfYy" title="买云服务器，参与礼品兑换、抽奖，最高送价值8000元IPad，还有Bose耳机、千元京东卡等您来！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E4%BC%81%E4%B8%9A%E7%9B%9B%E5%A4%8F%E6%9C%89%E7%A4%BC-345x200-d2146292109c1c9e1ae000a6c3ecde162d89e493.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/ecs_amd_test-0901?userCode=s4pthvp2" title="云服务器AMD二代火热公测">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/2480630_1634815908.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/LonPwhxX" title="DNSPod解析套餐全面升配降价，更高的套餐配置规格，更优的价格方案，全面提升可用性及响应率，专业版限时99元/年！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%E9%8D%93%EE%88%9B%E6%B9%B0-82de69db27c1e7984b871bdba4ea3dd5d5acda1f.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/7ec01pIF" title="云产品限时秒杀，爆款1核2G云服务器，首年74元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-788d0ee3eed06e913b85ddb6b178f8b9960c4684.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/minisite/goods?userCode=s4pthvp2" title="云小站特惠">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/6421642_1634812338.jpg" />
+            
+            <span>云小站特惠</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/95DUQ4ON" title="境外1核2G服务器低至2折，半价续费券限量免费领取！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A8%E7%90%83%E8%B4%AD_345%20200-dd004d4a4191fcbabcabea4fcd96f67d1e069f58.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SAIuJMWI" title="星星海SA2云服务器，1核2G首年99元起，高性价比首选">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%20%281%29-87905a297b9ba92f411e1e8fefc629b63cca5781.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/3YMiCK6w" title="推广者专属福利，新客户无门槛领取总价值高达2860元代金券，每种代金券限量500张，先到先得。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200--2953d058277cb63c6b1cd127285163335cd6751e.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/activity_selection?userCode=s4pthvp2" title="云服务器 精选特惠 新用户低至0.5折起 爆款免费试用3个月">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9125844_1634816292.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/qbSzF0sM" title="中小企业福利专场，多款刚需产品，满足企业通用场景需求，云服务器2.5折起">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-b28f7dee9552f4241ea6a543f15a9798049701d4.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/H6YmBFC4" title="云开发CloudBase，一站式高效开发平台，新用户选购低至0元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-a1b026a76d4ef2fc73b9fd976759da3a16715b44.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/daily/bestoffer?userCode=s4pthvp2" title="阿里云 爆款特惠 精选爆款产品低至0.5折">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9604134_1634812518.jpg" />
+            
+            <span>阿里云 爆款特惠 精选爆款产品低至0.5折</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/new?userCode=s4pthvp2" title="新人特惠专享 汇聚阿里云爆款云产品，云服务器1核2G n4 72.6元/年">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/3500689_1634812626.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/hDCEkRsS" title="ElasticSearch新用户特惠，快速实现日志分析、应用搜索，首购低至4折">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E8%85%BE%E8%AE%AF%E4%BA%913_345%20200_1-7aeb8eb451fd6de33676444898914b1ff3298996.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/YjfBwRLm" title="腾讯云数据库性能卓越稳定可靠，为您解决数据库运维难题">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A5%E9%97%A8%E4%BA%91%E6%95%B0%E6%8D%AE%E5%BA%93MYSQL-345x200-a68c566987f9bf687433e2cf4fbdc85ece6e2d93.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SDMIWAoV" title="腾讯云图，像PPT一样简单的数据可视化工具。5元搞定数据可视化，模板丰富，拖拖拽拽就能做出好看的可视化大屏。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-89eeba55a2f49008e686e1a51e14bfe79f63af13.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/8DvMAlwF" title="视频通信爆款 9.9 元起， 提供电商、教育、社交娱乐等多行业多场景的一站式解决方案，最快 1 天布局火爆赛道">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200-51cc0ac5a1b375c4269c679987e3bc7c62a2c592.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/care?userCode=s4pthvp2" title="云服务器老用户专享礼遇 实例升级低至 6.3折、续费低至 3.5折 限时折扣！">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/7740487_1634816569.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/VbUAuJ2j" title="即时通信 IM 首购 1 折特惠，仅需99.9元/月，支持直播电商、在线教育等多种热门应用场景">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD-15e14b2502f1e6df9e647ba452416d4a4f3dda04.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/6HS1Q41a" title="9.9元体验2万分钟实时音视频通话,支持1对1或多人音视频通话,单房可支持300人同时在线，10万人同时观看；全平台互通高品质通话">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%202-15a05a841743ffd2dc01731972dd7b3c2b46e357.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/Z3HKwaYY" title="云数据库MySQL基础版1元体验，为中小企业量身打造，单节点架构，保证数据可靠性">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E6%95%B0%E6%8D%AE%E5%BA%93%20SQL%20345x200-0f7c36787bd045c5a201bc29b01deab00bb4a3cd.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/pcReLJBk" title="专业版APP加固特惠5折起，可享免费兼容性测试">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-5d6e2cf6805432934eeb9f7800bd1a5d282906ae.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/xwWYC6oW" title="新客户首购 TPNS 特惠9.8元/万 DAU，新老客户低至6.5折，给您提供快速、稳定、安全、高效的用户促活利器">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%203-9f78293b201220263799ac53f85ae6cd13e0e8a7.png" />
+            
+        </a>
+        
+    </div>
+    <div aria-label="Previous" class="swiper-button-prev"></div>
+    <div aria-label="Next" class="swiper-button-next"></div>
+    <div class="swiper-pagination"></div>
+</div>
+<script>
+    window.addEventListener('load', function () {
+            let options = {"pagination":{"el":".swiper-pagination","type":"progressbar"},"navigation":{"nextEl":".swiper-button-next","prevEl":".swiper-button-prev"},"slidesPerView":1,"spaceBetween":10,"loop":true,"autoplay":{"delay":2000,"disableOnInteraction":false}} ;
+            var swiper = new Swiper(".ads-banner", options);
+        },
+        false);
+</script>
+
+    </div>
+  </div>
+</div>
+<div class="copyright">
+    <span>原文链接：</span>
+    <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/26545566">https://zhuanlan.zhihu.com/p/26545566</a>
+</div>
+<div class="share" style="width: 100%;">
+  <img src="https://www.hufeifei.cn/wechat-public-account.jpg" alt="Holmofy" style="margin: auto; display: block; width: 40%;min-width: 160px;max-width: 400px;"/>
+  <div style="margin: auto; text-align: center; font-size: 0.8em; color: grey;">老铁们关注走一走，不迷路</div>
+</div>
+
+  
+    <div class="post-nav">
+      <div class="post-nav-item post-nav-next">
+        
+          <span>〈 </span>
+          <a href="/db/elasticsearch/" rel="next" title="Elasticsearch对垒8大竞品技术，孰优孰劣？">
+          Elasticsearch对垒8大竞品技术，孰优孰劣？
+          </a>
+        
+      </div>
+  
+      <div class="post-nav-item post-nav-prev">
+          
+          <a href="/basic/regex-basic/" rel="prev" title="我眼里的正则表达式入门教程">
+            我眼里的正则表达式入门教程
+          </a>
+          <span>〉</span>
+        
+      </div>
+    </div>
+  
+
+<div id="vcomments" style="padding: 10px 50px;"></div>
+<script>
+    window.addEventListener('load', function () {
+        new Valine({"el":"#vcomments","enable":true,"appId":"8Yo6tv65sOStsPwvGSOAmOtM-gzGzoHsz","appKey":"IJPXPCV29V5ja34nj1JL3tQe","notify":false,"verify":false,"pageSize":10,"avatar":"mm","lang":"zh-cn","placeholder":"Just go go","visitor":true,"recordIP":true,"requiredFields":["nick"]});
+    });
+</script>
+
+    </div>
+
+    
+
+  </div>
+  <footer class="footer text-center">
+    <div id="bottom-inner">
+        <a class="bottom-item" href="https://www.hufeifei.cn">首页</a> |
+        <a class="bottom-item" href="https://blog.hufeifei.cn" target="_blank">个人博客</a> |
+        <a class="bottom-item" href="https://github.com/holmofy" target="_blank">GitHub</a>
+    </div>
+    
+    <div>
+        <span class="bottom-item">友情链接: </span>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://draveness.me/">draveness</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://coolshell.cn/">CoolShell</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://martin.kleppmann.com/">martin kleppmann</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://www.skywind.me/blog/">skywind</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://duanple.com/">duanple</a>
+        
+    </div>
+    
+</footer>
+
+  
+  <!-- scripts list from theme config.yml -->
+  
+    <script src="//unpkg.com/swiper/swiper-bundle.min.js"></script>
+  
+    <script src="//cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+  
+
+
+<script>
+  (function(window, document, undefined) {
+
+    var timer = null;
+
+    function returnTop() {
+      cancelAnimationFrame(timer);
+      timer = requestAnimationFrame(function fn() {
+        var oTop = document.body.scrollTop || document.documentElement.scrollTop;
+        if (oTop > 0) {
+          document.body.scrollTop = document.documentElement.scrollTop = oTop - 50;
+          timer = requestAnimationFrame(fn);
+        } else {
+          cancelAnimationFrame(timer);
+        }
+      });
+    }
+
+    var hearts = [];
+    window.requestAnimationFrame = (function() {
+      return window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        function(callback) {
+          setTimeout(callback, 1000 / 60);
+        }
+    })();
+    init();
+
+    function init() {
+      css(".heart{z-index:9999;width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+      attachEvent();
+      gameloop();
+      addMenuEvent();
+    }
+
+    function gameloop() {
+      for (var i = 0; i < hearts.length; i++) {
+        if (hearts[i].alpha <= 0) {
+          document.body.removeChild(hearts[i].el);
+          hearts.splice(i, 1);
+          continue;
+        }
+        hearts[i].y--;
+        hearts[i].scale += 0.004;
+        hearts[i].alpha -= 0.013;
+        hearts[i].el.style.cssText = "left:" + hearts[i].x + "px;top:" + hearts[i].y + "px;opacity:" + hearts[i].alpha + ";transform:scale(" + hearts[i].scale + "," + hearts[i].scale + ") rotate(45deg);background:" + hearts[i].color;
+      }
+      requestAnimationFrame(gameloop);
+    }
+
+    /**
+     * 给logo设置点击事件
+     * 
+     * - 回到顶部
+     * - 出现爱心
+     */
+    function attachEvent() {
+      var old = typeof window.onclick === "function" && window.onclick;
+      var logo = document.getElementById("logo");
+      if (logo) {
+        logo.onclick = function(event) {
+          returnTop();
+          old && old();
+          createHeart(event);
+        }
+      }
+      
+    }
+
+    function createHeart(event) {
+      var d = document.createElement("div");
+      d.className = "heart";
+      hearts.push({
+        el: d,
+        x: event.clientX - 5,
+        y: event.clientY - 5,
+        scale: 1,
+        alpha: 1,
+        color: randomColor()
+      });
+      document.body.appendChild(d);
+    }
+
+    function css(css) {
+      var style = document.createElement("style");
+      style.type = "text/css";
+      try {
+        style.appendChild(document.createTextNode(css));
+      } catch (ex) {
+        style.styleSheet.cssText = css;
+      }
+      document.getElementsByTagName('head')[0].appendChild(style);
+    }
+
+    function randomColor() {
+      // return "rgb(" + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + ")";
+      return "#F44336";
+    }
+
+    function addMenuEvent() {
+      var menu = document.getElementById('menu-main-post');
+      if (menu) {
+        var toc = document.getElementById('toc');
+        if (toc) {
+          menu.onclick = function() {
+            if (toc) {
+              if (toc.style.display == 'block') {
+                toc.style.display = 'none';
+              } else {
+                toc.style.display = 'block';
+              }
+            }
+          };
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+    }
+
+  })(window, document);
+</script>
+
+  
+
+
+
+<script>(function (w, d, s, id) {
+            if (typeof (w.webpushr) !== 'undefined') return; w.webpushr = w.webpushr || function () { (w.webpushr.q = w.webpushr.q || []).push(arguments) }; var js, fjs = d.getElementsByTagName(s)[0]; js = d.createElement(s); js.id = id; js.async = 1; js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window, document, 'script', 'webpushr-jssdk'));webpushr('setup', { 'key': 'BPOxQK5zO7VR8Ja1xRzI_E6lKWqJqwAMSNJozmybmGC6-aujLX8k-lHdIAdb_BcX9po-j5bpVTyEEA6f9Kz0bqU' });</script></body>
+</html>
