@@ -169,6 +169,7 @@ nofollow:
     - "*.zhiimg.com"
     - "*.cdn.sohucs.com"
     - "*.infoq.cn"
+    - "*.alicdn.com"
   rel:
     - 'external'
     - 'noreferrer'
