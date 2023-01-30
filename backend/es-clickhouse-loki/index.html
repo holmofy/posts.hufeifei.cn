@@ -1,0 +1,778 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#202020"/>
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta name="keywords" content="DB,ElasticSearch,ClickHouse,Loki," />
+  
+
+  
+    <meta name="description" content="各大平台上精选优质文章进行汇总" />
+  
+  
+  <link rel="icon" type="image/x-icon" href="/logo.png">
+  <title>日志分析下ES/ClickHouse/Loki比较与思考 [ 站在巨人的肩膀上 ]</title>
+  
+    <!-- stylesheets list from config.yml -->
+    
+      <link rel="stylesheet" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css">
+    
+      <link rel="stylesheet" href="//unpkg.com/swiper/swiper-bundle.min.css">
+    
+      <link rel="stylesheet" href="/css/xoxo.css">
+    
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-H58NSPXYPF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'G-H58NSPXYPF');
+  </script>
+<meta name="generator" content="Hexo 5.4.0"><style>mjx-container[jax="SVG"] {
+  direction: ltr;
+}
+
+mjx-container[jax="SVG"] > svg {
+  overflow: visible;
+}
+
+mjx-container[jax="SVG"][display="true"] {
+  display: block;
+  text-align: center;
+  margin: 1em 0;
+}
+
+mjx-container[jax="SVG"][justify="left"] {
+  text-align: left;
+}
+
+mjx-container[jax="SVG"][justify="right"] {
+  text-align: right;
+}
+
+g[data-mml-node="merror"] > g {
+  fill: red;
+  stroke: red;
+}
+
+g[data-mml-node="merror"] > rect[data-background] {
+  fill: yellow;
+  stroke: none;
+}
+
+g[data-mml-node="mtable"] > line[data-line] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > rect[data-frame] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > .mjx-dashed {
+  stroke-dasharray: 140;
+}
+
+g[data-mml-node="mtable"] > .mjx-dotted {
+  stroke-linecap: round;
+  stroke-dasharray: 0,140;
+}
+
+g[data-mml-node="mtable"] > svg {
+  overflow: visible;
+}
+
+[jax="SVG"] mjx-tool {
+  display: inline-block;
+  position: relative;
+  width: 0;
+  height: 0;
+}
+
+[jax="SVG"] mjx-tool > mjx-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+mjx-tool > mjx-tip {
+  display: inline-block;
+  padding: .2em;
+  border: 1px solid #888;
+  font-size: 70%;
+  background-color: #F8F8F8;
+  color: black;
+  box-shadow: 2px 2px 5px #AAAAAA;
+}
+
+g[data-mml-node="maction"][data-toggle] {
+  cursor: pointer;
+}
+
+mjx-status {
+  display: block;
+  position: fixed;
+  left: 1em;
+  bottom: 1em;
+  min-width: 25%;
+  padding: .2em .4em;
+  border: 1px solid #888;
+  font-size: 90%;
+  background-color: #F8F8F8;
+  color: black;
+}
+
+foreignObject[data-mjx-xml] {
+  font-family: initial;
+  line-height: normal;
+  overflow: visible;
+}
+
+.MathJax path {
+  stroke-width: 3;
+}
+
+mjx-container[display="true"] {
+  overflow: auto hidden;
+}
+
+mjx-container[display="true"] + br {
+  display: none;
+}
+</style><link rel="alternate" href="/atom.xml" title="站在巨人的肩膀上" type="application/atom+xml">
+</head>
+
+
+<body>
+  <div class="nav-container">
+    <nav class="home-menu pure-menu pure-menu-horizontal">
+  <a class="pure-menu-heading" href="/">
+    <img class="avatar" src="https://www.hufeifei.cn/favicon.jpg">
+    <span class="title">站在巨人的肩膀上</span>
+  </a>
+
+  <ul class="pure-menu-list clearfix">
+      
+          
+            <li class="pure-menu-item"><a href="/" class="pure-menu-link">首页</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/tags" class="pure-menu-link">标签</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/atom.xml" class="pure-menu-link">RSS</a></li>
+          
+      
+  </ul>
+   
+</nav>
+  </div>
+
+  <div class="container" id="content-outer">
+    <div class="inner" id="content-inner">
+      <div class="post-container">
+  <article class="post" id="post">
+    <header class="post-header text-center">
+      <h1 class="title">
+        日志分析下ES/ClickHouse/Loki比较与思考
+      </h1>
+      <span>
+        
+        <time class="time" datetime="2021-08-04T00:00:00.000Z">
+          2021-08-04
+        </time>
+        
+      </span>
+      <span class="slash">/</span>
+      <span class="post-meta">
+        <span class="post-tags">
+          <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ClickHouse/" rel="tag">ClickHouse</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/DB/" rel="tag">DB</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ElasticSearch/" rel="tag">ElasticSearch</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Loki/" rel="tag">Loki</a></li></ul>
+        </span>
+      </span>
+      <span class="slash">/</span>
+      <span id="/backend/es-clickhouse-loki/" class="read leancloud_visitors" data-flag-title="日志分析下ES/ClickHouse/Loki比较与思考">
+        <span class="leancloud-visitors-count"></span> 点击
+      </span>
+      <span class="slash">/</span>
+      <span class="read">阅读耗时 26 分钟</span>
+    </header>
+
+    <div class="post-content">
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><h1 id="背景与历史"><a href="#背景与历史" class="headerlink" title="背景与历史"></a>背景与历史</h1><p>ES和ClickHouse都是开源火得不行的软件，日志分析究竟该用哪个一直争论不休。这篇文章我们不比较哪个更牛，应该选哪个，而是从软件背后去分析用户需求是什么？有没有更好的方法来解这个问题。</p>
+<h1 id="先科普一下日志分析软件历史："><a href="#先科普一下日志分析软件历史：" class="headerlink" title="先科普一下日志分析软件历史："></a>先科普一下日志分析软件历史：</h1><p>方案A：Local Storage + Pssh扫描派（代表作：跳板机上各种脚本）</p>
+<p>在Unix设计哲学中，没有什么是不能用管道完成的。十年前没有大数据概念的时候，日志对研发而言就是随时抛弃，偶尔查问题需用一用。因此设定一定大小回滚策略+Pssh就是最不折腾的选择，所以我们在跳板机上经常能看到各种封装的shell脚本，只需要几个参数就能快速检索。方法简单粗暴，带来的局限性也挺多，例如磁盘坏数据丢失、速度慢、对线上有性能影响等。非集中式日志检索技术随着大数据兴起，使用场景逐步在萎缩。</p>
+<p>方案B：Central Storage + Inverted Index派（代表作：ES）</p>
+<p>说起ES不得不提到背后Lucene，Lucene实际是一个比Hadoop还早的爷爷辈软件，因为他们的作者是同一个人。Lucene是一个面向搜索引擎的倒排库，可以直接用来索引文档并提供接口来进行查询。但Lucene本身是一个Lib，离直接使用还有部分集成工作，之后Apache陆续有了Solr、Nutch等项目来帮助Lucene发展，但依然是不温不火好几年。2012年ES诞生后，通过优秀Restful API，分布式部署等机制把Lucene使用推向一个新高度。而之后 ELK（Logstash + Kibana）组合把在日志易用性上大大加速。ES 特点是通过O（1）索引，快速在海量数据上拿到结构，相比暴力扫描的方法，倒排索引速度和扫描数据量不是线性相关的。</p>
+<p>我们来看看ES成本模型，ES 模式是通过预处理生成索引，把之后检索变成常数级操作。ES存储构成为：原始数据（正排）、倒排索引（Inverted Index）、列存储（DocValue）3种类型。数据流入时需要消耗部分机器来对数据进行编码，但在查询时只需要消耗少量的资源便可快速找到数据。之后无论多少次查询，实际成本几乎是不变的。但带来的副作用是数据膨胀，例如AWS在<a href="https://link.zhihu.com/?target=https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/sizing-domains.html">ES使用建议</a>上，一般推荐预留2-3倍的空间来应对数据存储（在2 Replica情况下）。</p>
+<p><img src="https://pic1.zhimg.com/80/v2-640e19e906c314706d8478a955342220_1440w.jpg" alt="img"></p>
+<p>方案C：Central Storage + Column Storage + MR派（代表作：Hive）</p>
+<p>Hadoop出现提供了HDFS分布式存储引擎，而Hive/Spark等MR引擎为了加快执行速度，天然集成了Column Storage（列存储类型），Column Storage对于类型固定的列有良好的压缩率，例如可以通过Delta、Dictionary等编码技术压缩原始数据大小，当查询时通过Histogram进行快速跳转。Column Storage对OLAP计算很友好，数据量小又能做启发式搜索。ES在五年前也推出了Column Storage类似的Doc Value技术，可以通过ES API来对列数据进行分析。</p>
+<p>Column Storage一般会搭配一个计算引擎，基于MR的Hive、Spark提供基于磁盘的外排能力，除了执行速度慢一些之外，几乎能够胜任所有的SQL92查询分析需求。</p>
+<p>方案D：Central Storage + Column Storage + MPP派（代表作：ClickHouse）</p>
+<p>MR方案可以通吃从小到大的各类场景，但带来的缺点是速度不够快，并发不高，不适合实时性高的场景。之后Druid、Presto等MPP引擎诞生通过内存来代替磁盘交换，把Query执行速度大大提升。最近2年ClickHouse横空出世吸引了不少粉丝，ClickHouse秉承俄罗斯人的简单粗暴出奇迹特点，把用Hand Craft计算发挥得淋漓尽致。虽然ES也在向OLAP领域进军，ClickHouse未来也会做倒排索引，但这背后存在一个不争的事实。日志分析除了日志的TP，也会有少量的AP情况需要混合考虑。</p>
+<p>Hive和MPP成本模型如下，数据写入一般需要前端机对数据进行转换，在读取时需要对数据进行排序过滤等，消耗一部分计算资源。</p>
+<p><img src="https://pic2.zhimg.com/80/v2-e8461891e72c3be7e8de3b86c3ca8e41_1440w.jpg" alt="img"></p>
+<p>方案E：Central Storage + 扫描类（代表作：Grafana-Loki）</p>
+<p>扫描压缩后的原始数据，看起来像是“返璞归真”的技术退化。但似乎又是一种顺应时代的做法。这个方案典型的代表是Grafana旗下Loki。Grafana因为没有存储技术的积累，因此光脚不怕穿鞋的，直接出了一个将日志直存对象存储 + 扫描方案。这个背后的理由也说的过去，云存储是未来是能够保证持续间隔竞争力的，而大部分日志是写多读少的，在一些场景下慢一些似乎也没什么差别。</p>
+<p><img src="https://pic4.zhimg.com/80/v2-0908998f60651daa8a1cb2e6d409a8fb_1440w.jpg" alt="img"></p>
+<p>Loki方案占据存储成本极少，原始数据会以压缩方式写入，同时也可以通过列存(Parquet)来存储数据，以加快分析速度。当查询时解压缩原始数据，进行过滤，最后拿到结果。由于受限单机引擎，在查询速度、分析能力上比不过ES、Hive、ClickHouse等方案，但胜在便宜。如果数据只是偶尔查一查，要啥自行车呢。</p>
+<p><strong>综合对比</strong></p>
+<p>我们把上述方案做一个对比，如下：</p>
+<ul>
+<li>存储成本：Loki存储是裸数据，经过压缩后理论上空间是最小的。ES存储内容最多，因此存储成本比较高。而Hive、ClickHouse因只有列存，相对较小（对于比较随机的纯文本数据，列存理论上和字符串压缩接近）。</li>
+<li>分析能力：Hive支持完整SQL92，并且没有计算量的限制，分析能力最强。ClickHouse支持的是有限SQL集，对常见的场景足够用。接下来是ES、Loki最弱。</li>
+<li>查询速度：在建立索引情况下，ES是当之无愧的王者。基于MPP引擎的ClickHouse次之（对于带计算的分析，ClickHouse是最强的）。</li>
+<li>分析成本：Loki最高，读取数据后大部分工作都需要外围完成。</li>
+<li>查询成本：ES读取数据量最少，因此最优，接下来是ClickHouse，Hive和Loki。</li>
+</ul>
+<p><img src="https://pic2.zhimg.com/80/v2-371eac7c4ee7d3fa568f5e1b0c1e84f9_1440w.jpg" alt="img"></p>
+<p>从需求角度而言，是否有一种更综合架构？</p>
+<p>为什么会有这么多的选择呢？主要是由二个因素决定的：<strong>处理需求</strong> vs <strong>实现成本</strong>。我们先从需求出发，看看业务需要什么？</p>
+<h1 id="处理需求"><a href="#处理需求" class="headerlink" title="处理需求"></a>处理需求</h1><p>对Nginx、App访问日志而言，一般有如下典型用途：</p>
+<ul>
+<li>第一阶段（数据产生1分钟内）：程序要看到实时业务，运营客服人员需要查看轨迹定位问题。这种场景一般都在小时内， 查询频率比较高。</li>
+<li>第二阶段（数据产生1-2小时左右）：业务需要洞察数据，一般都是小时级或天级别。查询频率一般，往往也都是针对于聚合后的数据。</li>
+<li>第三阶段（一天后）：审计需要，业务需要看趋势数据。查询频率比较低，往往是点查（例如回溯一个历史问题）。</li>
+</ul>
+<p><img src="https://pic3.zhimg.com/80/v2-1bc5f57713554c81c363d16f93bf04f2_1440w.jpg" alt="img"></p>
+<p><strong>第一阶段：实时性和延时更重要</strong></p>
+<p>这个阶段数据实时性变得无比重要，例如用户付款投诉时，我们需要快速通过TraceId来定位后台的用户行为。我们需要根据业务访问的QPS、下单率等快速在日志中找到错误日志。需要根据业务流量情况、趋势来调度资源。</p>
+<p>典型的访问如下：</p>
+<table>
+<thead>
+<tr>
+<th>访问模式</th>
+<th>对实时性的要求</th>
+<th>对延时的要求</th>
+<th>访问频率</th>
+<th>技术选型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>查询所有访问记录中，负责某些条件的请求Latency&gt;5000 and Host:<a target="_blank" rel="noopener" href="http://www.example.com/">http://www.example.com</a></td>
+<td>&lt;1 分钟</td>
+<td>秒级</td>
+<td>出问题后较高</td>
+<td>ES</td>
+</tr>
+<tr>
+<td>对查询结果进一步Drill Down，进行统计分析Latency&gt;5000 and Host:<a target="_blank" rel="noopener" href="http://www.example.com/">http://www.example.com</a> | select top10 userid</td>
+<td>&lt;1 分钟</td>
+<td>秒级</td>
+<td>出问题后较高</td>
+<td>ES、ClickHouse</td>
+</tr>
+<tr>
+<td>统计当前访问量的趋势，并对异常情况做告警select sum(1) as qps, avg(Latency) as l, p99(Latency) as p, time_windows(t, ‘second’) as t group by t desc</td>
+<td>&lt;5 秒</td>
+<td>&lt;秒级</td>
+<td>较高</td>
+<td>TSDB，ClickHouse</td>
+</tr>
+<tr>
+<td>查询某个用户，或某个TraceId情况TraceId:12345</td>
+<td>分钟级</td>
+<td>&lt;秒级</td>
+<td>较高</td>
+<td>ES</td>
+</tr>
+</tbody></table>
+<p>这个阶段大部分分析都是集中在最近5分钟时间内的数据，这些数据会被频繁访问到，并且Query条件变化范围会非常大。比较典型组合是TSDB/NoSQL/SQL + ES + ClickHouse，存储和计算成本会稍微大一些，但比起线上关键业务而言花一些钱还是值得的。</p>
+<p><strong>第二阶段（天级）：比拼分析能力</strong></p>
+<p>第二个阶段业务需求会更复杂，这个阶段主要面向的是精细化需求。例如从延时、成功率等指标去度量接口稳定性，服务质量等。运营根据数据对比来发现群体特征，用来构筑质量体系等。运营会根据数据来确定投放、牵引等策略。</p>
+<p>这个阶段访问模式包含两种：</p>
+<table>
+<thead>
+<tr>
+<th>访问模式</th>
+<th>对延时的要求</th>
+<th>访问频率</th>
+<th>技术选型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>根据某个Key查询已计算好的数据，例如用户特征等</td>
+<td>越快越好，秒级</td>
+<td>百万次</td>
+<td>计算后存储ClickHouse、Hbase、MySQL等进行访问</td>
+</tr>
+<tr>
+<td>根据灵活需求透视数据</td>
+<td>秒级、分钟级</td>
+<td>几十次/天</td>
+<td>ClickHouse，Hive</td>
+</tr>
+</tbody></table>
+<p><strong>第三阶段（月级）：比拼成本</strong></p>
+<p>这个阶段数据的访问往往两极分化：趋势型分析，一般可以通过预处理技术提前降低数据量来解决。大规模数据的统计、大规模数据中查找极小部分数据。后者一般发生的概率非常低，但每次几乎都是突发需求，如果能在较短的延时内获得结果对体验是最好的。</p>
+<table>
+<thead>
+<tr>
+<th>访问模式</th>
+<th>对处理延时的要求</th>
+<th>访问频率</th>
+<th>技术选型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>对长时间、大数据进行分析</td>
+<td>无</td>
+<td>几次/天</td>
+<td>Hive</td>
+</tr>
+<tr>
+<td>查看长时间趋势性数据</td>
+<td>秒级</td>
+<td>十几次/天</td>
+<td>预计算后存储Hbase、MySQL后访问</td>
+</tr>
+<tr>
+<td>应对突发查询需求，例如查询某个用户长时间行为</td>
+<td>分钟基-小时级</td>
+<td>较低</td>
+<td>ES、写程序Scan</td>
+</tr>
+<tr>
+<td>应对突发导数据需求，将某些数据导出到其他位置</td>
+<td>小时级</td>
+<td>极低</td>
+<td>Hive、写程序Scan</td>
+</tr>
+<tr>
+<td>定量分析</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h1 id="实现成本"><a href="#实现成本" class="headerlink" title="实现成本"></a>实现成本</h1><ol>
+<li><p>存储成本<br>原始数据量为X，倒排索引的数据量为原始数据的a倍，列存储空间为原始数据的b倍，需要预留的空间（例如redo log、reserved space）为c倍，每GB介质成本是e，为了保证可靠性，需要的副本是d。</p>
+<p>存储成本为 <mjx-container class="MathJax" jax="SVG"><svg style="vertical-align: -0.566ex" xmlns="http://www.w3.org/2000/svg" width="27.638ex" height="2.262ex" role="img" focusable="false" viewBox="0 -750 12215.8 1000"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="mi"><path data-c="1D44C" d="M66 637Q54 637 49 637T39 638T32 641T30 647T33 664T42 682Q44 683 56 683Q104 680 165 680Q288 680 306 683H316Q322 677 322 674T320 656Q316 643 310 637H298Q242 637 242 624Q242 619 292 477T343 333L346 336Q350 340 358 349T379 373T411 410T454 461Q546 568 561 587T577 618Q577 634 545 637Q528 637 528 647Q528 649 530 661Q533 676 535 679T549 683Q551 683 578 682T657 680Q684 680 713 681T746 682Q763 682 763 673Q763 669 760 657T755 643Q753 637 734 637Q662 632 617 587Q608 578 477 424L348 273L322 169Q295 62 295 57Q295 46 363 46Q379 46 384 45T390 35Q390 33 388 23Q384 6 382 4T366 1Q361 1 324 1T232 2Q170 2 138 2T102 1Q84 1 84 9Q84 14 87 24Q88 27 89 30T90 35T91 39T93 42T96 44T101 45T107 45T116 46T129 46Q168 47 180 50T198 63Q201 68 227 171L252 274L129 623Q128 624 127 625T125 627T122 629T118 631T113 633T105 634T96 635T83 636T66 637Z"></path></g><g data-mml-node="mo" transform="translate(1040.8,0)"><path data-c="3D" d="M56 347Q56 360 70 367H707Q722 359 722 347Q722 336 708 328L390 327H72Q56 332 56 347ZM56 153Q56 168 72 173H708Q722 163 722 153Q722 140 707 133H70Q56 140 56 153Z"></path></g><g data-mml-node="mi" transform="translate(2096.6,0)"><path data-c="1D44B" d="M42 0H40Q26 0 26 11Q26 15 29 27Q33 41 36 43T55 46Q141 49 190 98Q200 108 306 224T411 342Q302 620 297 625Q288 636 234 637H206Q200 643 200 645T202 664Q206 677 212 683H226Q260 681 347 681Q380 681 408 681T453 682T473 682Q490 682 490 671Q490 670 488 658Q484 643 481 640T465 637Q434 634 411 620L488 426L541 485Q646 598 646 610Q646 628 622 635Q617 635 609 637Q594 637 594 648Q594 650 596 664Q600 677 606 683H618Q619 683 643 683T697 681T738 680Q828 680 837 683H845Q852 676 852 672Q850 647 840 637H824Q790 636 763 628T722 611T698 593L687 584Q687 585 592 480L505 384Q505 383 536 304T601 142T638 56Q648 47 699 46Q734 46 734 37Q734 35 732 23Q728 7 725 4T711 1Q708 1 678 1T589 2Q528 2 496 2T461 1Q444 1 444 10Q444 11 446 25Q448 35 450 39T455 44T464 46T480 47T506 54Q523 62 523 64Q522 64 476 181L429 299Q241 95 236 84Q232 76 232 72Q232 53 261 47Q262 47 267 47T273 46Q276 46 277 46T280 45T283 42T284 35Q284 26 282 19Q279 6 276 4T261 1Q258 1 243 1T201 2T142 2Q64 2 42 0Z"></path></g><g data-mml-node="mo" transform="translate(3170.8,0)"><path data-c="D7" d="M630 29Q630 9 609 9Q604 9 587 25T493 118L389 222L284 117Q178 13 175 11Q171 9 168 9Q160 9 154 15T147 29Q147 36 161 51T255 146L359 250L255 354Q174 435 161 449T147 471Q147 480 153 485T168 490Q173 490 175 489Q178 487 284 383L389 278L493 382Q570 459 587 475T609 491Q630 491 630 471Q630 464 620 453T522 355L418 250L522 145Q606 61 618 48T630 29Z"></path></g><g data-mml-node="mo" transform="translate(4171,0)"><path data-c="28" d="M94 250Q94 319 104 381T127 488T164 576T202 643T244 695T277 729T302 750H315H319Q333 750 333 741Q333 738 316 720T275 667T226 581T184 443T167 250T184 58T225 -81T274 -167T316 -220T333 -241Q333 -250 318 -250H315H302L274 -226Q180 -141 137 -14T94 250Z"></path></g><g data-mml-node="mi" transform="translate(4560,0)"><path data-c="1D44E" d="M33 157Q33 258 109 349T280 441Q331 441 370 392Q386 422 416 422Q429 422 439 414T449 394Q449 381 412 234T374 68Q374 43 381 35T402 26Q411 27 422 35Q443 55 463 131Q469 151 473 152Q475 153 483 153H487Q506 153 506 144Q506 138 501 117T481 63T449 13Q436 0 417 -8Q409 -10 393 -10Q359 -10 336 5T306 36L300 51Q299 52 296 50Q294 48 292 46Q233 -10 172 -10Q117 -10 75 30T33 157ZM351 328Q351 334 346 350T323 385T277 405Q242 405 210 374T160 293Q131 214 119 129Q119 126 119 118T118 106Q118 61 136 44T179 26Q217 26 254 59T298 110Q300 114 325 217T351 328Z"></path></g><g data-mml-node="mo" transform="translate(5311.2,0)"><path data-c="2B" d="M56 237T56 250T70 270H369V420L370 570Q380 583 389 583Q402 583 409 568V270H707Q722 262 722 250T707 230H409V-68Q401 -82 391 -82H389H387Q375 -82 369 -68V230H70Q56 237 56 250Z"></path></g><g data-mml-node="mi" transform="translate(6311.4,0)"><path data-c="1D44F" d="M73 647Q73 657 77 670T89 683Q90 683 161 688T234 694Q246 694 246 685T212 542Q204 508 195 472T180 418L176 399Q176 396 182 402Q231 442 283 442Q345 442 383 396T422 280Q422 169 343 79T173 -11Q123 -11 82 27T40 150V159Q40 180 48 217T97 414Q147 611 147 623T109 637Q104 637 101 637H96Q86 637 83 637T76 640T73 647ZM336 325V331Q336 405 275 405Q258 405 240 397T207 376T181 352T163 330L157 322L136 236Q114 150 114 114Q114 66 138 42Q154 26 178 26Q211 26 245 58Q270 81 285 114T318 219Q336 291 336 325Z"></path></g><g data-mml-node="mo" transform="translate(6962.7,0)"><path data-c="2B" d="M56 237T56 250T70 270H369V420L370 570Q380 583 389 583Q402 583 409 568V270H707Q722 262 722 250T707 230H409V-68Q401 -82 391 -82H389H387Q375 -82 369 -68V230H70Q56 237 56 250Z"></path></g><g data-mml-node="mi" transform="translate(7962.9,0)"><path data-c="1D450" d="M34 159Q34 268 120 355T306 442Q362 442 394 418T427 355Q427 326 408 306T360 285Q341 285 330 295T319 325T330 359T352 380T366 386H367Q367 388 361 392T340 400T306 404Q276 404 249 390Q228 381 206 359Q162 315 142 235T121 119Q121 73 147 50Q169 26 205 26H209Q321 26 394 111Q403 121 406 121Q410 121 419 112T429 98T420 83T391 55T346 25T282 0T202 -11Q127 -11 81 37T34 159Z"></path></g><g data-mml-node="mo" transform="translate(8395.9,0)"><path data-c="29" d="M60 749L64 750Q69 750 74 750H86L114 726Q208 641 251 514T294 250Q294 182 284 119T261 12T224 -76T186 -143T145 -194T113 -227T90 -246Q87 -249 86 -250H74Q66 -250 63 -250T58 -247T55 -238Q56 -237 66 -225Q221 -64 221 250T66 725Q56 737 55 738Q55 746 60 749Z"></path></g><g data-mml-node="mo" transform="translate(9007.1,0)"><path data-c="D7" d="M630 29Q630 9 609 9Q604 9 587 25T493 118L389 222L284 117Q178 13 175 11Q171 9 168 9Q160 9 154 15T147 29Q147 36 161 51T255 146L359 250L255 354Q174 435 161 449T147 471Q147 480 153 485T168 490Q173 490 175 489Q178 487 284 383L389 278L493 382Q570 459 587 475T609 491Q630 491 630 471Q630 464 620 453T522 355L418 250L522 145Q606 61 618 48T630 29Z"></path></g><g data-mml-node="mi" transform="translate(10007.3,0)"><path data-c="1D451" d="M366 683Q367 683 438 688T511 694Q523 694 523 686Q523 679 450 384T375 83T374 68Q374 26 402 26Q411 27 422 35Q443 55 463 131Q469 151 473 152Q475 153 483 153H487H491Q506 153 506 145Q506 140 503 129Q490 79 473 48T445 8T417 -8Q409 -10 393 -10Q359 -10 336 5T306 36L300 51Q299 52 296 50Q294 48 292 46Q233 -10 172 -10Q117 -10 75 30T33 157Q33 205 53 255T101 341Q148 398 195 420T280 442Q336 442 364 400Q369 394 369 396Q370 400 396 505T424 616Q424 629 417 632T378 637H357Q351 643 351 645T353 664Q358 683 366 683ZM352 326Q329 405 277 405Q242 405 210 374T160 293Q131 214 119 129Q119 126 119 118T118 106Q118 61 136 44T179 26Q233 26 290 98L298 109L352 326Z"></path></g><g data-mml-node="mo" transform="translate(10749.6,0)"><path data-c="D7" d="M630 29Q630 9 609 9Q604 9 587 25T493 118L389 222L284 117Q178 13 175 11Q171 9 168 9Q160 9 154 15T147 29Q147 36 161 51T255 146L359 250L255 354Q174 435 161 449T147 471Q147 480 153 485T168 490Q173 490 175 489Q178 487 284 383L389 278L493 382Q570 459 587 475T609 491Q630 491 630 471Q630 464 620 453T522 355L418 250L522 145Q606 61 618 48T630 29Z"></path></g><g data-mml-node="mi" transform="translate(11749.8,0)"><path data-c="1D452" d="M39 168Q39 225 58 272T107 350T174 402T244 433T307 442H310Q355 442 388 420T421 355Q421 265 310 237Q261 224 176 223Q139 223 138 221Q138 219 132 186T125 128Q125 81 146 54T209 26T302 45T394 111Q403 121 406 121Q410 121 419 112T429 98T420 82T390 55T344 24T281 -1T205 -11Q126 -11 83 42T39 168ZM373 353Q367 405 305 405Q272 405 244 391T199 357T170 316T154 280T149 261Q149 260 169 260Q282 260 327 284T373 353Z"></path></g></g></g></svg></mjx-container>，经过我们对不同存储计算，每GB成本范围在每月0.05 元/GB到3.12元/GB之间。当然这个背后查询延时与IOPS也是不同的，例如成本更高方案可以支持1000次/S IOPS，而低成本方案只能做到5次/S，在多人使用情况下可能会被打爆。</p>
+</li>
+</ol>
+<p><img src="https://pic3.zhimg.com/80/v2-099e9b1bd153cfb40f4fc0ea58126b8a_1440w.jpg" alt="img"></p>
+<ol start="2">
+<li><p>计算/处理成本<br>做个简单的计算，可以分解为，需要处理X GB原始数据，需要消耗的资源。在业务模式固定场景下，我们可以根据处理费用，查询费用计算出需要消耗的计算资源，例如100Core、50GB内存，最大化降低计算成本。<br>在有一些特殊场景下，例如突然遍历几个TB数据，计算、查询某个结果情况下，需要额外计算机器+提供额外IOPS能力。</p>
+<p><img src="https://pic4.zhimg.com/80/v2-8bb266088ee55b46fe333c1ff2ff968b_1440w.jpg" alt="img"></p>
+<p>从以上定量分析我们可以得到：</p>
+<ol>
+<li><p>不同类型的方案，本质上是IOPS、Latency、成本三个因素的平衡。</p>
+</li>
+<li><p>三个因素不同的比例，满足各个阶段业务需求，是否需要实时性、访问频率如何、IOPS如何，突发性怎么样。</p>
+</li>
+<li><p>不同方案之间，可以通过数据同步工具（例如Kafka）来迁移。</p>
+</li>
+</ol>
+<p><img src="https://pic3.zhimg.com/80/v2-343d2c08d13734b7efd5bb75a0b2ae02_1440w.jpg" alt="img"></p>
+</li>
+</ol>
+<p>阿里云如何解决这个问题？</p>
+<p>日志分析是一个如此通用的需求，在阿里、蚂蚁金服内部也有这样一套基础设施-SLS（日志服务），支撑数万工程师每日十几亿次的分析需求，涉及研发支撑（DevOps）、大数据运维（AIOps）、大数据安全（SecOps）、成本分析与增长（BusinessOps）等场景。</p>
+<p>SLS解决以上问题主要思路如下：</p>
+<ol>
+<li>一套统一数据访问接口</li>
+</ol>
+<p>ES、Hbase、MySQL、ClickHouse、Hive都有自己的API，为了能够对接不同的应用场景，为了使用得在上层做大量的开发工作。当目标系统发生变化时，我们需要数据迁移工具，例如Kafka、Flink等进行数据ETL与转化。</p>
+<p>而在SLS设计中，数据的查询分析都通过SQL进行（也能通过标准JDBC访问），这样无论是查询时序数据、Log、Trace数据都能快速拿到结果，最大程度上支持DevOps工具、上层业务创新。</p>
+<p>更多参考：</p>
+<ul>
+<li><a href="https://link.zhihu.com/?target=https://mp.weixin.qq.com/s/nlWrWujHNUPloOuqtqQ3Jg">从运维和SRE角度看监控分析平台建设</a></li>
+</ul>
+<p><img src="https://pic4.zhimg.com/80/v2-f06b7c3a0da3ffba9a15d3d4e3ae98cb_1440w.jpg" alt="img"></p>
+<ol start="2">
+<li>Serverless存储+计算设计，低成本弹性能力</li>
+</ol>
+<p>SLS 提供统一存储与计算能力，相对其他方案：</p>
+<ul>
+<li>默认提供N副本（对用户透明），保证可靠性。热数据存储单价为0.35元/GB*Month，冷数据存储单价仅为1/3（即将上线），超过6个月数据，在使用不变情况下可以设置为冷存储降低成本。</li>
+<li>写入按量收费，无预留收费，可以精确规划成本。</li>
+<li>查询分析免费（99.9%情况下），每秒钟可以提供千级IOPS查询能力，几十IOPS分析能力（相当于能并发Hive/ClickHouse查询），无需预留资源。</li>
+<li>当因业务需要突发大数据查询场景时（0.1%情况），可以申请独立计算资源加速，而无需数仓方案等待几十分钟出结果。</li>
+</ul>
+<p>更多参考：</p>
+<ul>
+<li><a href="https://link.zhihu.com/?target=https://mp.weixin.qq.com/s/UUleLY3CV_I1NwHA6770hQ">SLS SQL：融合ElasticSearch和ClickHouse的极速查询分析能力</a></li>
+</ul>
+<p><img src="https://pic4.zhimg.com/80/v2-553515111f77016472e54e4104c3ad4f_1440w.jpg" alt="img"></p>
+<ol start="3">
+<li>提供BuildIn内部数据流动，降低成本</li>
+</ol>
+<p>SLS提供Schedule SQL、ETL等批处理、流处理机制，帮助应用在不同数据源之间流动。</p>
+<p>参考：</p>
+<ul>
+<li><a href="https://link.zhihu.com/?target=https://mp.weixin.qq.com/s/hGQ7H1x5HisCG8879PhN3A">阿里云实时数据加工服务设计与实践</a></li>
+<li><a href="https://link.zhihu.com/?target=https://mp.weixin.qq.com/s/jgQA0dHsIC8iV4FN4uqnqg">使用数据加工将Log转化为Metric</a></li>
+<li><a href="https://link.zhihu.com/?target=https://mp.weixin.qq.com/s/2W52SOGW63n5cpkm5SAYHg">定时后台任务（Schedule SQL）介绍</a></li>
+</ul>
+
+    </div>
+
+    <div>全文完。</div>
+  </article>
+  <div class="fix-container">
+    <div id="toc" class="fix-right">
+      
+<div class="toc-wrapper">
+  <strong class="toc-title">目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%83%8C%E6%99%AF%E4%B8%8E%E5%8E%86%E5%8F%B2"><span class="toc-text">背景与历史</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%88%E7%A7%91%E6%99%AE%E4%B8%80%E4%B8%8B%E6%97%A5%E5%BF%97%E5%88%86%E6%9E%90%E8%BD%AF%E4%BB%B6%E5%8E%86%E5%8F%B2%EF%BC%9A"><span class="toc-text">先科普一下日志分析软件历史：</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%A4%84%E7%90%86%E9%9C%80%E6%B1%82"><span class="toc-text">处理需求</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E6%88%90%E6%9C%AC"><span class="toc-text">实现成本</span></a></li></ol>
+</div>
+
+      
+<div class="ads-banner">
+    <div class="swiper-wrapper">
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/gze2lfYy" title="买云服务器，参与礼品兑换、抽奖，最高送价值8000元IPad，还有Bose耳机、千元京东卡等您来！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E4%BC%81%E4%B8%9A%E7%9B%9B%E5%A4%8F%E6%9C%89%E7%A4%BC-345x200-d2146292109c1c9e1ae000a6c3ecde162d89e493.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/ecs_amd_test-0901?userCode=s4pthvp2" title="云服务器AMD二代火热公测">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/2480630_1634815908.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/LonPwhxX" title="DNSPod解析套餐全面升配降价，更高的套餐配置规格，更优的价格方案，全面提升可用性及响应率，专业版限时99元/年！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%E9%8D%93%EE%88%9B%E6%B9%B0-82de69db27c1e7984b871bdba4ea3dd5d5acda1f.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/7ec01pIF" title="云产品限时秒杀，爆款1核2G云服务器，首年74元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-788d0ee3eed06e913b85ddb6b178f8b9960c4684.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/minisite/goods?userCode=s4pthvp2" title="云小站特惠">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/6421642_1634812338.jpg" />
+            
+            <span>云小站特惠</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/95DUQ4ON" title="境外1核2G服务器低至2折，半价续费券限量免费领取！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A8%E7%90%83%E8%B4%AD_345%20200-dd004d4a4191fcbabcabea4fcd96f67d1e069f58.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SAIuJMWI" title="星星海SA2云服务器，1核2G首年99元起，高性价比首选">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%20%281%29-87905a297b9ba92f411e1e8fefc629b63cca5781.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/3YMiCK6w" title="推广者专属福利，新客户无门槛领取总价值高达2860元代金券，每种代金券限量500张，先到先得。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200--2953d058277cb63c6b1cd127285163335cd6751e.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/activity_selection?userCode=s4pthvp2" title="云服务器 精选特惠 新用户低至0.5折起 爆款免费试用3个月">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9125844_1634816292.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/qbSzF0sM" title="中小企业福利专场，多款刚需产品，满足企业通用场景需求，云服务器2.5折起">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-b28f7dee9552f4241ea6a543f15a9798049701d4.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/H6YmBFC4" title="云开发CloudBase，一站式高效开发平台，新用户选购低至0元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-a1b026a76d4ef2fc73b9fd976759da3a16715b44.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/daily/bestoffer?userCode=s4pthvp2" title="阿里云 爆款特惠 精选爆款产品低至0.5折">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9604134_1634812518.jpg" />
+            
+            <span>阿里云 爆款特惠 精选爆款产品低至0.5折</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/new?userCode=s4pthvp2" title="新人特惠专享 汇聚阿里云爆款云产品，云服务器1核2G n4 72.6元/年">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/3500689_1634812626.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/hDCEkRsS" title="ElasticSearch新用户特惠，快速实现日志分析、应用搜索，首购低至4折">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E8%85%BE%E8%AE%AF%E4%BA%913_345%20200_1-7aeb8eb451fd6de33676444898914b1ff3298996.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/YjfBwRLm" title="腾讯云数据库性能卓越稳定可靠，为您解决数据库运维难题">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A5%E9%97%A8%E4%BA%91%E6%95%B0%E6%8D%AE%E5%BA%93MYSQL-345x200-a68c566987f9bf687433e2cf4fbdc85ece6e2d93.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SDMIWAoV" title="腾讯云图，像PPT一样简单的数据可视化工具。5元搞定数据可视化，模板丰富，拖拖拽拽就能做出好看的可视化大屏。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-89eeba55a2f49008e686e1a51e14bfe79f63af13.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/8DvMAlwF" title="视频通信爆款 9.9 元起， 提供电商、教育、社交娱乐等多行业多场景的一站式解决方案，最快 1 天布局火爆赛道">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200-51cc0ac5a1b375c4269c679987e3bc7c62a2c592.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/care?userCode=s4pthvp2" title="云服务器老用户专享礼遇 实例升级低至 6.3折、续费低至 3.5折 限时折扣！">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/7740487_1634816569.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/VbUAuJ2j" title="即时通信 IM 首购 1 折特惠，仅需99.9元/月，支持直播电商、在线教育等多种热门应用场景">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD-15e14b2502f1e6df9e647ba452416d4a4f3dda04.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/6HS1Q41a" title="9.9元体验2万分钟实时音视频通话,支持1对1或多人音视频通话,单房可支持300人同时在线，10万人同时观看；全平台互通高品质通话">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%202-15a05a841743ffd2dc01731972dd7b3c2b46e357.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/Z3HKwaYY" title="云数据库MySQL基础版1元体验，为中小企业量身打造，单节点架构，保证数据可靠性">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E6%95%B0%E6%8D%AE%E5%BA%93%20SQL%20345x200-0f7c36787bd045c5a201bc29b01deab00bb4a3cd.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/pcReLJBk" title="专业版APP加固特惠5折起，可享免费兼容性测试">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-5d6e2cf6805432934eeb9f7800bd1a5d282906ae.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/xwWYC6oW" title="新客户首购 TPNS 特惠9.8元/万 DAU，新老客户低至6.5折，给您提供快速、稳定、安全、高效的用户促活利器">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%203-9f78293b201220263799ac53f85ae6cd13e0e8a7.png" />
+            
+        </a>
+        
+    </div>
+    <div aria-label="Previous" class="swiper-button-prev"></div>
+    <div aria-label="Next" class="swiper-button-next"></div>
+    <div class="swiper-pagination"></div>
+</div>
+<script>
+    window.addEventListener('load', function () {
+            let options = {"pagination":{"el":".swiper-pagination","type":"progressbar"},"navigation":{"nextEl":".swiper-button-next","prevEl":".swiper-button-prev"},"slidesPerView":1,"spaceBetween":10,"loop":true,"autoplay":{"delay":2000,"disableOnInteraction":false}} ;
+            var swiper = new Swiper(".ads-banner", options);
+        },
+        false);
+</script>
+
+    </div>
+  </div>
+</div>
+<div class="copyright">
+    <span>原文链接：</span>
+    <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/396211457">https://zhuanlan.zhihu.com/p/396211457</a>
+</div>
+<div class="share" style="width: 100%;">
+  <img src="https://www.hufeifei.cn/wechat-public-account.jpg" alt="Holmofy" style="margin: auto; display: block; width: 40%;min-width: 160px;max-width: 400px;"/>
+  <div style="margin: auto; text-align: center; font-size: 0.8em; color: grey;">老铁们关注走一走，不迷路</div>
+</div>
+
+  
+    <div class="post-nav">
+      <div class="post-nav-item post-nav-next">
+        
+          <span>〈 </span>
+          <a href="/db/db-index/" rel="next" title="关于数据存储引擎结构，没有比这篇更详细的">
+          关于数据存储引擎结构，没有比这篇更详细的
+          </a>
+        
+      </div>
+  
+      <div class="post-nav-item post-nav-prev">
+          
+          <a href="/db/elasticsearch/" rel="prev" title="Elasticsearch对垒8大竞品技术，孰优孰劣？">
+            Elasticsearch对垒8大竞品技术，孰优孰劣？
+          </a>
+          <span>〉</span>
+        
+      </div>
+    </div>
+  
+
+<div id="vcomments" style="padding: 10px 50px;"></div>
+<script>
+    window.addEventListener('load', function () {
+        new Valine({"el":"#vcomments","enable":true,"appId":"8Yo6tv65sOStsPwvGSOAmOtM-gzGzoHsz","appKey":"IJPXPCV29V5ja34nj1JL3tQe","notify":false,"verify":false,"pageSize":10,"avatar":"mm","lang":"zh-cn","placeholder":"Just go go","visitor":true,"recordIP":true,"requiredFields":["nick"]});
+    });
+</script>
+
+    </div>
+
+    
+
+  </div>
+  <footer class="footer text-center">
+    <div id="bottom-inner">
+        <a class="bottom-item" href="https://www.hufeifei.cn">首页</a> |
+        <a class="bottom-item" href="https://blog.hufeifei.cn" target="_blank">个人博客</a> |
+        <a class="bottom-item" href="https://github.com/holmofy" target="_blank">GitHub</a>
+    </div>
+    
+    <div>
+        <span class="bottom-item">友情链接: </span>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://draveness.me/">draveness</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://coolshell.cn/">CoolShell</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://martin.kleppmann.com/">martin kleppmann</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://www.skywind.me/blog/">skywind</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://duanple.com/">duanple</a>
+        
+    </div>
+    
+</footer>
+
+  
+  <!-- scripts list from theme config.yml -->
+  
+    <script src="//unpkg.com/swiper/swiper-bundle.min.js"></script>
+  
+    <script src="//cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+  
+
+
+<script>
+  (function(window, document, undefined) {
+
+    var timer = null;
+
+    function returnTop() {
+      cancelAnimationFrame(timer);
+      timer = requestAnimationFrame(function fn() {
+        var oTop = document.body.scrollTop || document.documentElement.scrollTop;
+        if (oTop > 0) {
+          document.body.scrollTop = document.documentElement.scrollTop = oTop - 50;
+          timer = requestAnimationFrame(fn);
+        } else {
+          cancelAnimationFrame(timer);
+        }
+      });
+    }
+
+    var hearts = [];
+    window.requestAnimationFrame = (function() {
+      return window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        function(callback) {
+          setTimeout(callback, 1000 / 60);
+        }
+    })();
+    init();
+
+    function init() {
+      css(".heart{z-index:9999;width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+      attachEvent();
+      gameloop();
+      addMenuEvent();
+    }
+
+    function gameloop() {
+      for (var i = 0; i < hearts.length; i++) {
+        if (hearts[i].alpha <= 0) {
+          document.body.removeChild(hearts[i].el);
+          hearts.splice(i, 1);
+          continue;
+        }
+        hearts[i].y--;
+        hearts[i].scale += 0.004;
+        hearts[i].alpha -= 0.013;
+        hearts[i].el.style.cssText = "left:" + hearts[i].x + "px;top:" + hearts[i].y + "px;opacity:" + hearts[i].alpha + ";transform:scale(" + hearts[i].scale + "," + hearts[i].scale + ") rotate(45deg);background:" + hearts[i].color;
+      }
+      requestAnimationFrame(gameloop);
+    }
+
+    /**
+     * 给logo设置点击事件
+     * 
+     * - 回到顶部
+     * - 出现爱心
+     */
+    function attachEvent() {
+      var old = typeof window.onclick === "function" && window.onclick;
+      var logo = document.getElementById("logo");
+      if (logo) {
+        logo.onclick = function(event) {
+          returnTop();
+          old && old();
+          createHeart(event);
+        }
+      }
+      
+    }
+
+    function createHeart(event) {
+      var d = document.createElement("div");
+      d.className = "heart";
+      hearts.push({
+        el: d,
+        x: event.clientX - 5,
+        y: event.clientY - 5,
+        scale: 1,
+        alpha: 1,
+        color: randomColor()
+      });
+      document.body.appendChild(d);
+    }
+
+    function css(css) {
+      var style = document.createElement("style");
+      style.type = "text/css";
+      try {
+        style.appendChild(document.createTextNode(css));
+      } catch (ex) {
+        style.styleSheet.cssText = css;
+      }
+      document.getElementsByTagName('head')[0].appendChild(style);
+    }
+
+    function randomColor() {
+      // return "rgb(" + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + ")";
+      return "#F44336";
+    }
+
+    function addMenuEvent() {
+      var menu = document.getElementById('menu-main-post');
+      if (menu) {
+        var toc = document.getElementById('toc');
+        if (toc) {
+          menu.onclick = function() {
+            if (toc) {
+              if (toc.style.display == 'block') {
+                toc.style.display = 'none';
+              } else {
+                toc.style.display = 'block';
+              }
+            }
+          };
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+    }
+
+  })(window, document);
+</script>
+
+  
+
+
+
+<script>(function (w, d, s, id) {
+            if (typeof (w.webpushr) !== 'undefined') return; w.webpushr = w.webpushr || function () { (w.webpushr.q = w.webpushr.q || []).push(arguments) }; var js, fjs = d.getElementsByTagName(s)[0]; js = d.createElement(s); js.id = id; js.async = 1; js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window, document, 'script', 'webpushr-jssdk'));webpushr('setup', { 'key': 'BPOxQK5zO7VR8Ja1xRzI_E6lKWqJqwAMSNJozmybmGC6-aujLX8k-lHdIAdb_BcX9po-j5bpVTyEEA6f9Kz0bqU' });</script></body>
+</html>

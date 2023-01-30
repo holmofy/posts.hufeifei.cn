@@ -1,0 +1,507 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#202020"/>
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta name="keywords" content="algorithm,图像识别," />
+  
+
+  
+    <meta name="description" content="各大平台上精选优质文章进行汇总" />
+  
+  
+  <link rel="icon" type="image/x-icon" href="/logo.png">
+  <title>基于内容的图像搜索实现 [ 站在巨人的肩膀上 ]</title>
+  
+    <!-- stylesheets list from config.yml -->
+    
+      <link rel="stylesheet" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css">
+    
+      <link rel="stylesheet" href="//unpkg.com/swiper/swiper-bundle.min.css">
+    
+      <link rel="stylesheet" href="/css/xoxo.css">
+    
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-H58NSPXYPF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'G-H58NSPXYPF');
+  </script>
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="站在巨人的肩膀上" type="application/atom+xml">
+</head>
+
+
+<body>
+  <div class="nav-container">
+    <nav class="home-menu pure-menu pure-menu-horizontal">
+  <a class="pure-menu-heading" href="/">
+    <img class="avatar" src="https://www.hufeifei.cn/favicon.jpg">
+    <span class="title">站在巨人的肩膀上</span>
+  </a>
+
+  <ul class="pure-menu-list clearfix">
+      
+          
+            <li class="pure-menu-item"><a href="/" class="pure-menu-link">首页</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/tags" class="pure-menu-link">标签</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/atom.xml" class="pure-menu-link">RSS</a></li>
+          
+      
+  </ul>
+   
+</nav>
+  </div>
+
+  <div class="container" id="content-outer">
+    <div class="inner" id="content-inner">
+      <div class="post-container">
+  <article class="post" id="post">
+    <header class="post-header text-center">
+      <h1 class="title">
+        基于内容的图像搜索实现
+      </h1>
+      <span>
+        
+        <time class="time" datetime="2022-02-27T00:00:00.000Z">
+          2022-02-27
+        </time>
+        
+      </span>
+      <span class="slash">/</span>
+      <span class="post-meta">
+        <span class="post-tags">
+          <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB/" rel="tag">图像识别</a></li></ul>
+        </span>
+      </span>
+      <span class="slash">/</span>
+      <span id="/algorithm/image-hash/" class="read leancloud_visitors" data-flag-title="基于内容的图像搜索实现">
+        <span class="leancloud-visitors-count"></span> 点击
+      </span>
+      <span class="slash">/</span>
+      <span class="read">阅读耗时 24 分钟</span>
+    </header>
+
+    <div class="post-content">
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><h2 id="图像搜索引擎一般有三种实现方式"><a href="#图像搜索引擎一般有三种实现方式" class="headerlink" title="图像搜索引擎一般有三种实现方式"></a>图像搜索引擎一般有三种实现方式</h2><p>1、Search By Metadata，这种方式不会考虑图片本身内容（图片包含物体，以及图像像素分布等），纯粹根据图像标签来进行检索。如果某个网页中有一张赛马的图片，并且网页文本内容中包含“赛马”（或者相关词汇）的文字，当用户搜索“赛马”、“马”、“horse”等关键字时，搜索引擎就会把这张图当作检索结果返回给用户。换句话说，此时的图像搜索引擎干的事情跟普通搜索引擎差不多，匹配关键词，并将对应图片返回给用户。这种工作方式的优点是速度快，在普通搜索引擎的技术基础之上很容易改进去实现。缺点也很明显，它完全依赖于描述图片的文字（标签），如果描述图片的文字不对或者相关性不大时，搜索准确性可想而知，比如我这篇博客中如果插入一张“猫”的照片，但是整篇博客文章对“猫”只字不提，那么基于Search By Metadata的搜索引擎很难找到博客中猫的图片。有一类图片分享网站要求用户在上传图片时，人工用几个词汇描述图片中有什么（标签），便于后面基于Metadata的搜索。当然也不排除一些基于深度学习的图片分类自动打标签的方式。</p>
+<p>2、Search By Example，这种方式考虑图片本身内容（图片包含物体，以及图片像素分布等等），用户输入图片，搜索引擎根据图片内容，返回与该图片相似的图片结果。这种方式相比Search By Metadata要复杂一些，当然如果实现恰当，准确性也更能得到保障。如果用户上传一张包含“马”的图片，那么搜索引擎会返回包含马的其他图片，或者，当用户上传一张“沙滩”的风景图片，搜索引擎会返回一堆海边沙滩的图片，这些图片包含类似的内容：沙滩、天空、大海、游客。Search By Example的方式就是我们熟知的“以图搜图”，通过一张图找出网上相似的其他图片。实现方式有很多，有基于深度学习的方式，也有传统的图像分析算法，后者也是本篇文章后面会详细介绍的部分。</p>
+<p>3、第三种就是前两种的结合体，具体就不多说了，技术互补，到达最佳效果。</p>
+<p>本篇文章主要介绍利用传统图像分析算法如何实现Search By Example的搜索引擎（以图搜索）。</p>
+<blockquote>
+<p>源码地址：<a target="_blank" rel="noopener" href="https://github.com/sherlockchou86/cbir-image-search">https://github.com/sherlockchou86/cbir-image-search</a></p>
+</blockquote>
+<h2 id="图像指纹"><a href="#图像指纹" class="headerlink" title="图像指纹"></a>图像指纹</h2><p>人类有指纹，通过指纹对比可以判断两个人是否是同一个人，换句话说，指纹可以当作人类独一无二的标识符。图片也有类似的概念，成千上万的图片中，每张都有自己的特点，通过某种方式提取它的特征，可以作为图像对比时的关键依据。</p>
+<p><img src="https://pic3.zhimg.com/80/v2-a76d2ccf73e824b217dbb38569e282c6_1440w.jpg"></p>
+<p>图像指纹提取通常称为“特征提取”，在程序代码中，提取到的图像特征通常用一个多维向量或者一串64/126位二进制数字表示。特征提取的方式有很多种（后面会介绍三类），不管通过哪种方式提取图像特征，都应该保证：通过特征对比，我们可以反推原始图片的相似度。</p>
+<h3 id="通过图像特征评价图片相似度"><a href="#通过图像特征评价图片相似度" class="headerlink" title="通过图像特征评价图片相似度"></a>通过图像特征评价图片相似度</h3><p>假设我们已经为两张图片提取到了合适的图像特征，如何操作我们可以通过特征来反应原始图片的相似度呢？一般我们计算两个特征之前的距离，通过距离反映原始图像的相似度，如果距离越近，两张原始图片相似度更高，反之亦然。</p>
+<p>计算距离的方式有很多，需要根据特征提取的方式来选择不同的距离计算方法，通常有以下几个距离计算方法：</p>
+<p>（1）欧氏距离。就是欧几里德距离，这个距离应该是我们最熟悉的，在小学就接触了。我们在计算直线上两点的距离就是指欧式距离，上初中时计算平面坐标系中两点的直线距离也是指欧式距离，上高中时计算三维坐标系中两点的直线距离同样指欧式距离，四维、五维甚至更高维都是这种计算方式。每个点的坐标用多维向量表示（a1, a2,…, an）和（b1,b2,…,bn），那么两个向量之间的欧式距离为：(a1-b1)^2 + (a2-b2)^2 + … + (an -bn)^2，然后开方。</p>
+<p>（2）汉明距离。这个距离其实普通程序员应该也比较熟悉，它指两个字符串（或者两个位数相同的二进制数）对应位置不相同的字符个数，汉明距离越大，代表两个串不相同的字符越多，两个串相似度越低，反之亦然。如果是两个二进制串计算汉明距离（1001010110）和（1001010100），非常简单，直接使用XOR（异或运算符）即可，1001010110 xor 1001010100，然后计算结果中1的个数。</p>
+<p>（3）余弦距离。余弦距离一般程序员可能用不到，它指两个向量之间夹角的余弦值。二维平面坐标系中，向量（a1,a2）和向量（b1,b2）之间的夹角余弦值很好计算，同理，三维、四维也一样。余弦距离代表两个向量中各个分量的占比程度，比如（3,3）和（5,5）两个向量的余弦距离为0，因为每个向量中各个分量占比都为50%（3/6，3/6 和 5/10，5/10）。同理三维向量（2,3,4）和（4,6,8）之间的余弦距离也是0。两个向量的余弦距离为零，不代表它们之间的欧式距离为零。但是反过来却成立。</p>
+<p>（4）卡方距离。卡方距离主要用于衡量两个概率分布的相似性。可以假设两个多维向量中的每个分量都代表概率（分量的和为1），那么卡方距离就是计算这两个概率分布的相似度。具体内容请网络搜索。</p>
+<h2 id="以图搜图实现原理"><a href="#以图搜图实现原理" class="headerlink" title="以图搜图实现原理"></a>以图搜图实现原理</h2><p>以图搜图的过程其实很简单，跟普通的检索流程差不多。关键有两个：</p>
+<p>（1）一个是特征提取方法，这个是重点，如何合理提取图像特征是保证准确性的第一要素；</p>
+<p>（2）二个就是如何提高特征对比的速度，成千上万张图片源，如何快速从中找出相同/相似的图片？</p>
+<p><img src="https://pic1.zhimg.com/80/v2-cec83068a21385df57a710921244a5ec_1440w.jpg"></p>
+<p>下面介绍三种传统图像特征提取的方式。</p>
+<h3 id="图像特征点"><a href="#图像特征点" class="headerlink" title="图像特征点"></a>图像特征点</h3><p>任何一张数字图片，微观上看，像素之前总是能找到一些规律的，像素分布、像素值、像素密度等等。OpenCV内置很多特征点提取算法，比如ORB、SURF以及SIFT等等。以SIFT举例，输入图片，输出该图片中具有某些特征的点（可以存在多个），从一定程度上讲，这些点可以被当作图片的标识，每个特征点用一个128维的向量表示。如果要比较两张图片的相似度，先分别提取两张图片的SIFT特征点，然后进行特征点匹配，看有多少对特征点能够匹配上，如果能匹配的点超过一定数量，那么认为这两张图片相似。这个匹配的过程可能采用前面提到的各种距离比较。下面两张图通过特征点提取、特征点匹配后得到的结果，可以判断两张图片相似：</p>
+<p><img src="https://pic1.zhimg.com/80/v2-06df9e3a20d1adc8f24949d0348639d0_1440w.jpg"></p>
+<p>可以看到，虽然图片拍摄角度不一样，但是包含的物体一致、场景类似，通过特征点匹配，可以找到很多匹配到的特征点。</p>
+<p>这里的图像特征用128维向量表示，可以包含多个，如果一张图找到了100个特征点，那么每张图有128*100个float数据需要存储。</p>
+<h3 id="图像感知哈希"><a href="#图像感知哈希" class="headerlink" title="图像感知哈希"></a>图像感知哈希</h3><p>哈希算法、哈希函数我们经常听说，对于不同长度的输入，哈希算法可以产生固定长度的输出。那么我们能否直接通过计算图片文件的哈希值来判断图片是否相似/相同呢？答案是不能。这种方式计算出来的哈希值对评价原始图片相似度没有任何参考价值，因为即使是相似的图片通过这种方式计算出来的哈希值之间并不相似（可能相差十万八千里），换句话说，我们不能通过哈希值之间的距离来反推原始图片的相似度是多少。假如在一张图片上修改了一点点，最后生成的哈希值跟原来的哈希值相差很远。</p>
+<p><img src="https://pic1.zhimg.com/80/v2-dbecfcf897a6d3ab874fd086c1def938_1440w.jpg"></p>
+<p>因此我们需要用到图像感知哈希算法，这种方法将图片内容（更准确地讲，应该是像素）考虑进来了。通过这种方式计算得到的哈希值可以反推出原始图片之间的相似度。图像感知哈希算法常见分三类：ahash，phash，dhash。计算方式基本差不多，下面以ahash为例说明如何计算：</p>
+<p>（1）缩放图片。直接将原始图片缩小到8*8的尺寸，不用考虑原始图片的长宽比；</p>
+<p>（2）灰度化。将8*8的图片灰度化，这样处理后，这张图片一共包含64个像素；</p>
+<p>（3）计算平均值。计算这64个像素值的平均值；</p>
+<p>（4）构建哈希。将64个像素值依次与（3）中的平均值进行比较，大于平均值为1，否则为0，这样从左到右、从上到下就可以组合得到一个64位的二进制数（顺序无所谓，只要保证都按这个顺序即可）。这个二进制串就是原始图片计算出来的ahash值，格式为110010001…001001，一共64位，将其转换成16进制，得到的格式为8f373714acfcf4d0。</p>
+<p>如何比较相似度？很简单，计算两张图ahash值的汉明距离，如果距离（不相同的位数）超过10则认为两张原始图片不相似，小于10表示相似，具体阈值需要调整。这种方式非常简单并且很好实现，而且很凑效，尤其是在一堆图片中找相同图片的时候（缩放无所谓），非常适合用缩略图查找原始图。</p>
+<p>三种感知哈希计算方式：<a target="_blank" rel="noopener" href="https://github.com/JohannesBuchner/imagehash">https://github.com/JohannesBuchner/imagehash</a></p>
+<p>三种感知哈希原理说明：<a target="_blank" rel="noopener" href="http://www.hackerfactor.com/blog/index.php?/archives/432-Looks-Like-It.html">http://www.hackerfactor.com/blog/index.php?/archives/432-Looks-Like-It.html</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.hackerfactor.com/blog/index.php?/archives/529-Kind-of-Like-That.html">http://www.hackerfactor.com/blog/index.php?/archives/529-Kind-of-Like-That.html</a></p>
+<p>三种感知哈希区别和优劣势请参照网络。</p>
+<p>这里的图像特征用64位二进制表示，每张图片的特征需要8个字节存储。</p>
+<h3 id="基于区域的颜色直方图"><a href="#基于区域的颜色直方图" class="headerlink" title="基于区域的颜色直方图"></a>基于区域的颜色直方图</h3><p>颜色直方图统计整张图片中各种像素的占比情况，严格来讲它并不考虑颜色分布在图片中的位置。而基于区域的颜色直方图在计算像素占比时，先将整张图片划分成不同的子区域，然后依次计算子区域的颜色占比情况，最后考虑子区域合并之后的结果。这种方式弥补了之前忽略颜色分布位置的缺陷，通过直方图数据评价图片的相似度更加可靠。</p>
+<p><img src="https://pic1.zhimg.com/80/v2-e15d1847cfdb8801fa8705ef29d0e920_1440w.jpg"></p>
+<p>如上图，将原始图片划分成5个子区域，依次计算每个子区域的颜色直方图数据。图片是RGB三通道，每个通道依次分成（8，3，12）个区间，那么每个子区域颜色直方图就可以使用8<em>3</em>12=288维向量表示。而我们又将原始图片划分成了5个子区域，那么整张图的特征就需要用 8<em>3</em>12*5 = 1440维向量来表示了。</p>
+<p>这里如何计算直方图特征距离呢？由于这里288维向量中每个分量代表对应区间像素出现的概率，那么距离计算就要用到前面提到过的卡方距离。通过卡方距离公式计算两个288维特征向量之间的距离，从而反推原始图片之间的相似度。<br>注意：使用颜色直方图的方式提取图像特征的前提是：接受“如果两张图片颜色分布差不多，则认为它们相似”这一假设，这一假设不考虑图片中具体包含内容，比如包含马、狗、人之类的目标，而只考虑颜色。事实上，经过实践，大部分时候该假设确实成立。</p>
+<h2 id="如何提高查询速度"><a href="#如何提高查询速度" class="headerlink" title="如何提高查询速度"></a>如何提高查询速度</h2><p>给定一个图像特征，如何从一堆图像特征中快速找到与之相同、或者与之距离最近的N个、或者与之距离在M之内的所有特征呢？一个个的比较肯定不可接受，我们需要提前给这些特征创建索引，提高查找的速度。</p>
+<p>VP-Tree是一种很好的数据结构，能够解决紧邻搜索的问题，这里是它的Python实现：<a target="_blank" rel="noopener" href="https://github.com/RickardSjogren/vptree%EF%BC%8C%E5%AE%83%E8%83%BD%E5%A4%9F%E5%85%88%E7%94%A8%E5%9B%BE%E5%83%8F%E7%89%B9%E5%BE%81%E6%9E%84%E5%BB%BA%E5%87%BA%E4%B8%80%E4%B8%AA%E4%BA%8C%E5%8F%89%E6%A0%91%EF%BC%8C%E6%8F%90%E9%AB%98%E6%9F%A5%E8%AF%A2%E9%80%9F%E5%BA%A6%E3%80%82%E5%85%B7%E4%BD%93%E5%8E%9F%E7%90%86%E8%AF%B7%E5%8F%82%E7%85%A7%E7%BD%91%E7%BB%9C%E3%80%82">https://github.com/RickardSjogren/vptree，它能够先用图像特征构建出一个二叉树，提高查询速度。具体原理请参照网络。</a></p>
+<h2 id="感知哈希-基于区域的颜色直方图demo"><a href="#感知哈希-基于区域的颜色直方图demo" class="headerlink" title="感知哈希+基于区域的颜色直方图demo"></a>感知哈希+基于区域的颜色直方图demo</h2><p>最后有一个demo，基于图像感知哈希（ahash、phash以及dhash）和基于区域的颜色直方图，完成了一个简单的图片搜索demo。服务端采用Python、Flask开发。</p>
+<p><img src="https://pic4.zhimg.com/80/v2-6d58a808676afee0a578885e8634247b_1440w.jpg"><br><img src="https://pic1.zhimg.com/80/v2-b7c5a3997b9e43253b3e5e1991fc7084_1440w.jpg"><br><img src="https://pic4.zhimg.com/80/v2-ac1fa5971e38f0f2c5d515d50df13c1b_1440w.jpg"></p>
+<p>源码地址：<a target="_blank" rel="noopener" href="https://github.com/sherlockchou86/cbir-image-search">https://github.com/sherlockchou86/cbir-image-search</a></p>
+
+    </div>
+
+    <div>全文完。</div>
+  </article>
+  <div class="fix-container">
+    <div id="toc" class="fix-right">
+      
+<div class="toc-wrapper">
+  <strong class="toc-title">目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%BE%E5%83%8F%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E%E4%B8%80%E8%88%AC%E6%9C%89%E4%B8%89%E7%A7%8D%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F"><span class="toc-text">图像搜索引擎一般有三种实现方式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%BE%E5%83%8F%E6%8C%87%E7%BA%B9"><span class="toc-text">图像指纹</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%9A%E8%BF%87%E5%9B%BE%E5%83%8F%E7%89%B9%E5%BE%81%E8%AF%84%E4%BB%B7%E5%9B%BE%E7%89%87%E7%9B%B8%E4%BC%BC%E5%BA%A6"><span class="toc-text">通过图像特征评价图片相似度</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%A5%E5%9B%BE%E6%90%9C%E5%9B%BE%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="toc-text">以图搜图实现原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%BE%E5%83%8F%E7%89%B9%E5%BE%81%E7%82%B9"><span class="toc-text">图像特征点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%BE%E5%83%8F%E6%84%9F%E7%9F%A5%E5%93%88%E5%B8%8C"><span class="toc-text">图像感知哈希</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E5%8C%BA%E5%9F%9F%E7%9A%84%E9%A2%9C%E8%89%B2%E7%9B%B4%E6%96%B9%E5%9B%BE"><span class="toc-text">基于区域的颜色直方图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E6%8F%90%E9%AB%98%E6%9F%A5%E8%AF%A2%E9%80%9F%E5%BA%A6"><span class="toc-text">如何提高查询速度</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%84%9F%E7%9F%A5%E5%93%88%E5%B8%8C-%E5%9F%BA%E4%BA%8E%E5%8C%BA%E5%9F%9F%E7%9A%84%E9%A2%9C%E8%89%B2%E7%9B%B4%E6%96%B9%E5%9B%BEdemo"><span class="toc-text">感知哈希+基于区域的颜色直方图demo</span></a></li></ol>
+</div>
+
+      
+<div class="ads-banner">
+    <div class="swiper-wrapper">
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/gze2lfYy" title="买云服务器，参与礼品兑换、抽奖，最高送价值8000元IPad，还有Bose耳机、千元京东卡等您来！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E4%BC%81%E4%B8%9A%E7%9B%9B%E5%A4%8F%E6%9C%89%E7%A4%BC-345x200-d2146292109c1c9e1ae000a6c3ecde162d89e493.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/ecs_amd_test-0901?userCode=s4pthvp2" title="云服务器AMD二代火热公测">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/2480630_1634815908.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/LonPwhxX" title="DNSPod解析套餐全面升配降价，更高的套餐配置规格，更优的价格方案，全面提升可用性及响应率，专业版限时99元/年！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%E9%8D%93%EE%88%9B%E6%B9%B0-82de69db27c1e7984b871bdba4ea3dd5d5acda1f.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/7ec01pIF" title="云产品限时秒杀，爆款1核2G云服务器，首年74元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-788d0ee3eed06e913b85ddb6b178f8b9960c4684.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/minisite/goods?userCode=s4pthvp2" title="云小站特惠">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/6421642_1634812338.jpg" />
+            
+            <span>云小站特惠</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/95DUQ4ON" title="境外1核2G服务器低至2折，半价续费券限量免费领取！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A8%E7%90%83%E8%B4%AD_345%20200-dd004d4a4191fcbabcabea4fcd96f67d1e069f58.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SAIuJMWI" title="星星海SA2云服务器，1核2G首年99元起，高性价比首选">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%20%281%29-87905a297b9ba92f411e1e8fefc629b63cca5781.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/3YMiCK6w" title="推广者专属福利，新客户无门槛领取总价值高达2860元代金券，每种代金券限量500张，先到先得。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200--2953d058277cb63c6b1cd127285163335cd6751e.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/activity_selection?userCode=s4pthvp2" title="云服务器 精选特惠 新用户低至0.5折起 爆款免费试用3个月">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9125844_1634816292.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/qbSzF0sM" title="中小企业福利专场，多款刚需产品，满足企业通用场景需求，云服务器2.5折起">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-b28f7dee9552f4241ea6a543f15a9798049701d4.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/H6YmBFC4" title="云开发CloudBase，一站式高效开发平台，新用户选购低至0元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-a1b026a76d4ef2fc73b9fd976759da3a16715b44.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/daily/bestoffer?userCode=s4pthvp2" title="阿里云 爆款特惠 精选爆款产品低至0.5折">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9604134_1634812518.jpg" />
+            
+            <span>阿里云 爆款特惠 精选爆款产品低至0.5折</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/new?userCode=s4pthvp2" title="新人特惠专享 汇聚阿里云爆款云产品，云服务器1核2G n4 72.6元/年">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/3500689_1634812626.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/hDCEkRsS" title="ElasticSearch新用户特惠，快速实现日志分析、应用搜索，首购低至4折">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E8%85%BE%E8%AE%AF%E4%BA%913_345%20200_1-7aeb8eb451fd6de33676444898914b1ff3298996.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/YjfBwRLm" title="腾讯云数据库性能卓越稳定可靠，为您解决数据库运维难题">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A5%E9%97%A8%E4%BA%91%E6%95%B0%E6%8D%AE%E5%BA%93MYSQL-345x200-a68c566987f9bf687433e2cf4fbdc85ece6e2d93.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SDMIWAoV" title="腾讯云图，像PPT一样简单的数据可视化工具。5元搞定数据可视化，模板丰富，拖拖拽拽就能做出好看的可视化大屏。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-89eeba55a2f49008e686e1a51e14bfe79f63af13.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/8DvMAlwF" title="视频通信爆款 9.9 元起， 提供电商、教育、社交娱乐等多行业多场景的一站式解决方案，最快 1 天布局火爆赛道">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200-51cc0ac5a1b375c4269c679987e3bc7c62a2c592.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/care?userCode=s4pthvp2" title="云服务器老用户专享礼遇 实例升级低至 6.3折、续费低至 3.5折 限时折扣！">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/7740487_1634816569.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/VbUAuJ2j" title="即时通信 IM 首购 1 折特惠，仅需99.9元/月，支持直播电商、在线教育等多种热门应用场景">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD-15e14b2502f1e6df9e647ba452416d4a4f3dda04.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/6HS1Q41a" title="9.9元体验2万分钟实时音视频通话,支持1对1或多人音视频通话,单房可支持300人同时在线，10万人同时观看；全平台互通高品质通话">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%202-15a05a841743ffd2dc01731972dd7b3c2b46e357.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/Z3HKwaYY" title="云数据库MySQL基础版1元体验，为中小企业量身打造，单节点架构，保证数据可靠性">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E6%95%B0%E6%8D%AE%E5%BA%93%20SQL%20345x200-0f7c36787bd045c5a201bc29b01deab00bb4a3cd.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/pcReLJBk" title="专业版APP加固特惠5折起，可享免费兼容性测试">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-5d6e2cf6805432934eeb9f7800bd1a5d282906ae.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/xwWYC6oW" title="新客户首购 TPNS 特惠9.8元/万 DAU，新老客户低至6.5折，给您提供快速、稳定、安全、高效的用户促活利器">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%203-9f78293b201220263799ac53f85ae6cd13e0e8a7.png" />
+            
+        </a>
+        
+    </div>
+    <div aria-label="Previous" class="swiper-button-prev"></div>
+    <div aria-label="Next" class="swiper-button-next"></div>
+    <div class="swiper-pagination"></div>
+</div>
+<script>
+    window.addEventListener('load', function () {
+            let options = {"pagination":{"el":".swiper-pagination","type":"progressbar"},"navigation":{"nextEl":".swiper-button-next","prevEl":".swiper-button-prev"},"slidesPerView":1,"spaceBetween":10,"loop":true,"autoplay":{"delay":2000,"disableOnInteraction":false}} ;
+            var swiper = new Swiper(".ads-banner", options);
+        },
+        false);
+</script>
+
+    </div>
+  </div>
+</div>
+<div class="copyright">
+    <span>原文链接：</span>
+    <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/363012578">https://zhuanlan.zhihu.com/p/363012578</a>
+</div>
+<div class="share" style="width: 100%;">
+  <img src="https://www.hufeifei.cn/wechat-public-account.jpg" alt="Holmofy" style="margin: auto; display: block; width: 40%;min-width: 160px;max-width: 400px;"/>
+  <div style="margin: auto; text-align: center; font-size: 0.8em; color: grey;">老铁们关注走一走，不迷路</div>
+</div>
+
+  
+    <div class="post-nav">
+      <div class="post-nav-item post-nav-next">
+        
+          <span>〈 </span>
+          <a href="/backend/multi-stage-build-for-docker/" rel="next" title="Docker 的多阶段构建">
+          Docker 的多阶段构建
+          </a>
+        
+      </div>
+  
+      <div class="post-nav-item post-nav-prev">
+          
+          <a href="/lsm-tree/" rel="prev" title="深入浅出分析LSM树（日志结构合并树）">
+            深入浅出分析LSM树（日志结构合并树）
+          </a>
+          <span>〉</span>
+        
+      </div>
+    </div>
+  
+
+<div id="vcomments" style="padding: 10px 50px;"></div>
+<script>
+    window.addEventListener('load', function () {
+        new Valine({"el":"#vcomments","enable":true,"appId":"8Yo6tv65sOStsPwvGSOAmOtM-gzGzoHsz","appKey":"IJPXPCV29V5ja34nj1JL3tQe","notify":false,"verify":false,"pageSize":10,"avatar":"mm","lang":"zh-cn","placeholder":"Just go go","visitor":true,"recordIP":true,"requiredFields":["nick"]});
+    });
+</script>
+
+    </div>
+
+    
+
+  </div>
+  <footer class="footer text-center">
+    <div id="bottom-inner">
+        <a class="bottom-item" href="https://www.hufeifei.cn">首页</a> |
+        <a class="bottom-item" href="https://blog.hufeifei.cn" target="_blank">个人博客</a> |
+        <a class="bottom-item" href="https://github.com/holmofy" target="_blank">GitHub</a>
+    </div>
+    
+    <div>
+        <span class="bottom-item">友情链接: </span>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://draveness.me/">draveness</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://coolshell.cn/">CoolShell</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://martin.kleppmann.com/">martin kleppmann</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://www.skywind.me/blog/">skywind</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://duanple.com/">duanple</a>
+        
+    </div>
+    
+</footer>
+
+  
+  <!-- scripts list from theme config.yml -->
+  
+    <script src="//unpkg.com/swiper/swiper-bundle.min.js"></script>
+  
+    <script src="//cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+  
+
+
+<script>
+  (function(window, document, undefined) {
+
+    var timer = null;
+
+    function returnTop() {
+      cancelAnimationFrame(timer);
+      timer = requestAnimationFrame(function fn() {
+        var oTop = document.body.scrollTop || document.documentElement.scrollTop;
+        if (oTop > 0) {
+          document.body.scrollTop = document.documentElement.scrollTop = oTop - 50;
+          timer = requestAnimationFrame(fn);
+        } else {
+          cancelAnimationFrame(timer);
+        }
+      });
+    }
+
+    var hearts = [];
+    window.requestAnimationFrame = (function() {
+      return window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        function(callback) {
+          setTimeout(callback, 1000 / 60);
+        }
+    })();
+    init();
+
+    function init() {
+      css(".heart{z-index:9999;width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+      attachEvent();
+      gameloop();
+      addMenuEvent();
+    }
+
+    function gameloop() {
+      for (var i = 0; i < hearts.length; i++) {
+        if (hearts[i].alpha <= 0) {
+          document.body.removeChild(hearts[i].el);
+          hearts.splice(i, 1);
+          continue;
+        }
+        hearts[i].y--;
+        hearts[i].scale += 0.004;
+        hearts[i].alpha -= 0.013;
+        hearts[i].el.style.cssText = "left:" + hearts[i].x + "px;top:" + hearts[i].y + "px;opacity:" + hearts[i].alpha + ";transform:scale(" + hearts[i].scale + "," + hearts[i].scale + ") rotate(45deg);background:" + hearts[i].color;
+      }
+      requestAnimationFrame(gameloop);
+    }
+
+    /**
+     * 给logo设置点击事件
+     * 
+     * - 回到顶部
+     * - 出现爱心
+     */
+    function attachEvent() {
+      var old = typeof window.onclick === "function" && window.onclick;
+      var logo = document.getElementById("logo");
+      if (logo) {
+        logo.onclick = function(event) {
+          returnTop();
+          old && old();
+          createHeart(event);
+        }
+      }
+      
+    }
+
+    function createHeart(event) {
+      var d = document.createElement("div");
+      d.className = "heart";
+      hearts.push({
+        el: d,
+        x: event.clientX - 5,
+        y: event.clientY - 5,
+        scale: 1,
+        alpha: 1,
+        color: randomColor()
+      });
+      document.body.appendChild(d);
+    }
+
+    function css(css) {
+      var style = document.createElement("style");
+      style.type = "text/css";
+      try {
+        style.appendChild(document.createTextNode(css));
+      } catch (ex) {
+        style.styleSheet.cssText = css;
+      }
+      document.getElementsByTagName('head')[0].appendChild(style);
+    }
+
+    function randomColor() {
+      // return "rgb(" + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + ")";
+      return "#F44336";
+    }
+
+    function addMenuEvent() {
+      var menu = document.getElementById('menu-main-post');
+      if (menu) {
+        var toc = document.getElementById('toc');
+        if (toc) {
+          menu.onclick = function() {
+            if (toc) {
+              if (toc.style.display == 'block') {
+                toc.style.display = 'none';
+              } else {
+                toc.style.display = 'block';
+              }
+            }
+          };
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+    }
+
+  })(window, document);
+</script>
+
+  
+
+
+
+<script>(function (w, d, s, id) {
+            if (typeof (w.webpushr) !== 'undefined') return; w.webpushr = w.webpushr || function () { (w.webpushr.q = w.webpushr.q || []).push(arguments) }; var js, fjs = d.getElementsByTagName(s)[0]; js = d.createElement(s); js.id = id; js.async = 1; js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window, document, 'script', 'webpushr-jssdk'));webpushr('setup', { 'key': 'BPOxQK5zO7VR8Ja1xRzI_E6lKWqJqwAMSNJozmybmGC6-aujLX8k-lHdIAdb_BcX9po-j5bpVTyEEA6f9Kz0bqU' });</script></body>
+</html>

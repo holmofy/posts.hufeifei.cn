@@ -1,0 +1,659 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#202020"/>
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta name="keywords" content="Spark,Kafka,Flink," />
+  
+
+  
+    <meta name="description" content="各大平台上精选优质文章进行汇总" />
+  
+  
+  <link rel="icon" type="image/x-icon" href="/logo.png">
+  <title>流计算引擎数据一致性的本质 [ 站在巨人的肩膀上 ]</title>
+  
+    <!-- stylesheets list from config.yml -->
+    
+      <link rel="stylesheet" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css">
+    
+      <link rel="stylesheet" href="//unpkg.com/swiper/swiper-bundle.min.css">
+    
+      <link rel="stylesheet" href="/css/xoxo.css">
+    
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-H58NSPXYPF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'G-H58NSPXYPF');
+  </script>
+<meta name="generator" content="Hexo 5.4.0"><style>mjx-container[jax="SVG"] {
+  direction: ltr;
+}
+
+mjx-container[jax="SVG"] > svg {
+  overflow: visible;
+}
+
+mjx-container[jax="SVG"][display="true"] {
+  display: block;
+  text-align: center;
+  margin: 1em 0;
+}
+
+mjx-container[jax="SVG"][justify="left"] {
+  text-align: left;
+}
+
+mjx-container[jax="SVG"][justify="right"] {
+  text-align: right;
+}
+
+g[data-mml-node="merror"] > g {
+  fill: red;
+  stroke: red;
+}
+
+g[data-mml-node="merror"] > rect[data-background] {
+  fill: yellow;
+  stroke: none;
+}
+
+g[data-mml-node="mtable"] > line[data-line] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > rect[data-frame] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > .mjx-dashed {
+  stroke-dasharray: 140;
+}
+
+g[data-mml-node="mtable"] > .mjx-dotted {
+  stroke-linecap: round;
+  stroke-dasharray: 0,140;
+}
+
+g[data-mml-node="mtable"] > svg {
+  overflow: visible;
+}
+
+[jax="SVG"] mjx-tool {
+  display: inline-block;
+  position: relative;
+  width: 0;
+  height: 0;
+}
+
+[jax="SVG"] mjx-tool > mjx-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+mjx-tool > mjx-tip {
+  display: inline-block;
+  padding: .2em;
+  border: 1px solid #888;
+  font-size: 70%;
+  background-color: #F8F8F8;
+  color: black;
+  box-shadow: 2px 2px 5px #AAAAAA;
+}
+
+g[data-mml-node="maction"][data-toggle] {
+  cursor: pointer;
+}
+
+mjx-status {
+  display: block;
+  position: fixed;
+  left: 1em;
+  bottom: 1em;
+  min-width: 25%;
+  padding: .2em .4em;
+  border: 1px solid #888;
+  font-size: 90%;
+  background-color: #F8F8F8;
+  color: black;
+}
+
+foreignObject[data-mjx-xml] {
+  font-family: initial;
+  line-height: normal;
+  overflow: visible;
+}
+
+.MathJax path {
+  stroke-width: 3;
+}
+
+mjx-container[display="true"] {
+  overflow: auto hidden;
+}
+
+mjx-container[display="true"] + br {
+  display: none;
+}
+</style><link rel="alternate" href="/atom.xml" title="站在巨人的肩膀上" type="application/atom+xml">
+</head>
+
+
+<body>
+  <div class="nav-container">
+    <nav class="home-menu pure-menu pure-menu-horizontal">
+  <a class="pure-menu-heading" href="/">
+    <img class="avatar" src="https://www.hufeifei.cn/favicon.jpg">
+    <span class="title">站在巨人的肩膀上</span>
+  </a>
+
+  <ul class="pure-menu-list clearfix">
+      
+          
+            <li class="pure-menu-item"><a href="/" class="pure-menu-link">首页</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/tags" class="pure-menu-link">标签</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/atom.xml" class="pure-menu-link">RSS</a></li>
+          
+      
+  </ul>
+   
+</nav>
+  </div>
+
+  <div class="container" id="content-outer">
+    <div class="inner" id="content-inner">
+      <div class="post-container">
+  <article class="post" id="post">
+    <header class="post-header text-center">
+      <h1 class="title">
+        流计算引擎数据一致性的本质
+      </h1>
+      <span>
+        
+        <time class="time" datetime="2021-10-12T00:00:00.000Z">
+          2021-10-12
+        </time>
+        
+      </span>
+      <span class="slash">/</span>
+      <span class="post-meta">
+        <span class="post-tags">
+          <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Flink/" rel="tag">Flink</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kafka/" rel="tag">Kafka</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Spark/" rel="tag">Spark</a></li></ul>
+        </span>
+      </span>
+      <span class="slash">/</span>
+      <span id="/db/stream-consistency/" class="read leancloud_visitors" data-flag-title="流计算引擎数据一致性的本质">
+        <span class="leancloud-visitors-count"></span> 点击
+      </span>
+      <span class="slash">/</span>
+      <span class="read">阅读耗时 53 分钟</span>
+    </header>
+
+    <div class="post-content">
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><p>流计算的应用与实践在大数据领域越来越常见，其重要性不言而喻，常见的流计算引擎有 Google DataFlow、Apache Flink，Apache Kafka Streams，Apache Spark Streaming 等。流计算系统中的数据一致性一般是用消息处理语义来定义的，如某引擎声称可以提供「恰好一次（Exactly-once Processing Semantics）流处理语义，表示（或暗示）引擎具备保证数据一致性的能力。事实上，「恰好一次（Exactly-Once）」并不等价于流计算的输出数据就符合一致性的要求，该术语存在很多理解和使用上的误区。</p>
+<p>本篇文章从流计算的本质出发，重点分析流计算领域中数据处理的一致性问题，同时对一致性问题进行简单的形式化定义，提供一个一窥当下流计算引擎发展脉络的视角，让大家对流计算引擎的认识更为深入，为可能的流计算技术选型提供一些参考。文章主要分为三个部分：第一部分，会介绍流计算系统和一致性难题的本质；第二部分，会介绍一致性难题的通用解法以及各种方案间的取舍；第三部分，会介绍主流的流计算引擎是如何对通用解法进行泛化以实现一致性。</p>
+<h1 id="一、流计算中的一致性"><a href="#一、流计算中的一致性" class="headerlink" title="一、流计算中的一致性"></a>一、流计算中的一致性</h1><p>在认识流计算系统一致性之前，我们需要精确定义流计算。流（Streaming）计算是一种在无边界数据（unbounded data）上进行低延迟计算的数据处理过程。相应的，批计算更准确的说法是有界数据（bounded data）的处理，亦即有明确边界的数据处理，流和批只是两种不同数据集的传统数据计算方法，它们并不是泾渭分明的，譬如也可以通过批量的方式（e.g. Spark Streaming 中的 micro-batch）来实现无界数据上的流处理过程。</p>
+<p><img src="https://ucc.alicdn.com/pic/developer-ecology/bf02f1b370814eae9f9ba5d1e4aeb626.png" rel="external noreferrer nofollow noopener" referrerpolicy="no-referrer" alt="图片"></p>
+<h2 id="1-一致性定义及挑战"><a href="#1-一致性定义及挑战" class="headerlink" title="1 一致性定义及挑战"></a>1 一致性定义及挑战</h2><p>如果我们将流计算的过程（获取输入数据、处理数据、输出计算结果）视为数据库的主从同步过程，抑或视为一种从流数据生成衍生数据集（表）的过程，则流计算中的数据一致性同关系型数据库事务 ACID 理论中的 Consistency 有异曲同工之妙，后者指的是在事务开始或结束时，数据库中的记录应该在一致状态，相应地，流计算中的一致性可以定义为：流计算系统在计算过程中，或是出现故障恢复计算后，流系统的内部状态和外部输出的数据应该处在一致的状态。譬如，当故障恢复后开始重新计算，计算的结果是否满足数据的一致性（即用户无法区分恢复前和恢复后的数据）？记录是否会重复/丢失，第三方系统对同一条计算结果的多次获取，是否会存在值上的不一致？对一致性有了清晰的认知和定义后，我们来看看为什么实现一致性这么难。</p>
+<p><img src="https://ucc.alicdn.com/pic/developer-ecology/450ecf154a6940e2bca22c4ee27d84fd.png" rel="external noreferrer nofollow noopener" referrerpolicy="no-referrer" alt="图片"></p>
+<p>在定义一中我们可以看到，流计算输入的数据是无边界的，所以系统中会存在消息抵达流计算系统延迟、顺序错乱、数量/规模未知等不确定因素，这也是流计算系统一致性复杂性远远大于批处理系统的原因：批处理系统中的输入是确定的，计算过程中可以通过计算的原子性来保证数据的一致性（如 Spark 中的 RDD 血缘）。此外，同其他分布式应用一样，流计算系统经常也会受到各类意外因素的影响而发生故障，比如流量激增、网络抖动、云服务资源分配出现问题等，发生故障后重新执行计算，在存在不确定输入的前提下设计健壮的容错机制难度很大。</p>
+<p>除了数据输入带来的挑战，流计算输出的数据会被实时消费，类似这样不同于批处理的应用场景，也给数据的一致性带来的诸多挑战，如出现 FO 后，是撤回之前发出的数据，还是是同下游进行协商实现一致性，都是需要考虑的。</p>
+<h2 id="2-一致性相关概念祛魅"><a href="#2-一致性相关概念祛魅" class="headerlink" title="2 一致性相关概念祛魅"></a>2 一致性相关概念祛魅</h2><p>正确认识流计算系统一致性的内在含义和其能力范畴，对我们构建正确且健壮的流计算任务至关重要。下面我会介绍几组概念，以便于大家更好地理解流计算系统的一致性。</p>
+<p>恰好一次≠恰好一致</p>
+<p>今天大多数流计算引擎用「Exactly-Once」去暗示用户：既然输入的数据不是静态集合而是会连续变化的，那对每一条消息「恰好处理」了一次，输出的数据肯定是一致的。上述逻辑的推导过程是没问题的，但并不严谨，因为 Exactly-Once 作为一个形容词，后面所连接的动词或者宾语被故意抹去了，不同的表达含义也会大相径庭。</p>
+<p>例子1，后接不同的动（名）词：Exactly-once Delivery 和 Exactly-once Process 。前者是对消息传输层面的语义表达，和流计算的一致性关系不是很大，后者是从流计算的应用层面去描述数据处理过程。</p>
+<p>例子2，后接不同的名词：Exactly-once State Consistency 和 Exactly-once Process Consistency。前者是 Flink 在官网中对其一致性的叙述，后者是 Kafka Streaming 的一致性保证，前者的语义约束弱于后者。Exactly-once State Consistency 只是表达了：流计算要求对状态的更新只提交一次到持久后端存储，但这里的状态一般不包括「输出到下游结果」，而仅指引擎内部的状态，譬如各个算子的状态、实时流的消费偏移等，流计算引擎内部状态变更的保证，并不能等价于从输入到输出的一致性，端到端一致性需要你自己关心。</p>
+<p>总之，如何我们后面再看到 Exactly-once XXX，一定要警惕引擎想要透露出什么信息。</p>
+<p>端到端的数据一致性</p>
+<p>端到端一致性（End-To-Ene Consistency），即将数据的输出也作为流计算引擎的一致性设计的一部分，正确的结果贯穿着这整个流计算应用的始终：从输入、处理过程、输出，每一个环节都需要保证其自身的数据一致性，同时在整个流计算流程中，作为整体实现了端到端的一致性。</p>
+<p>下面叙述中，如果不是特意说明，一致性指的是引擎自身状态的一致性，端到端一致指的是包含了输出的一致性。</p>
+<h1 id="二、流计算系统的本质"><a href="#二、流计算系统的本质" class="headerlink" title="二、流计算系统的本质"></a>二、流计算系统的本质</h1><p>前面我们定义了流计算一致性的概念，这一部分将会从概念出发将问题进行形式化拆解，以便得到通用化的解法。</p>
+<h2 id="1-再次认识流计算"><a href="#1-再次认识流计算" class="headerlink" title="1 再次认识流计算"></a>1 再次认识流计算</h2><p>上面提到，流计算的输入数据是没有边界的，这符合我们传统上对流计算认知。在《System Streaming》一书中，作者提出了一个将流批统一考虑的流计算理论抽象，即，任意的数据的处理都是「流（Stream）」 和「表（Table）」间的互相转换，其中流用来表征运动中的数据，表用来表征静止的数据：</p>
+<ol>
+<li>流 -&gt; 流：没有聚合操作的数据处理过程；</li>
+<li>流 -&gt; 表：存在聚合操作的数据处理过程；</li>
+<li>表 -&gt; 流：触发输出表数据变化的情况；</li>
+<li>表 -&gt; 表：不存在这样的数据处理逻辑。</li>
+</ol>
+<p>在这个统一的理论框架下，批处理过程的一致性也可以纳入本文讨论的范畴中来。但无论是纯粹的流计算，还是上面统一的数据处理模型，我们都可以将流（批）数据处理的过程抽象为「读取数据-处理数据-输出数据」这样的三个部分，可用下面的有向无环图来表达，其中点代表数据加工逻辑，边表示数据流向，数据处理过程中的中间状态（State）一般需要做持久化存储。</p>
+<p><img src="https://ucc.alicdn.com/pic/developer-ecology/38d7d8afbccc46e4a7106c7b7b5cf253.png" rel="external noreferrer nofollow noopener" referrerpolicy="no-referrer" alt="图片"></p>
+<h2 id="2-确定性-非确定性计算"><a href="#2-确定性-非确定性计算" class="headerlink" title="2 确定性/非确定性计算"></a>2 确定性/非确定性计算</h2><p>流计算中的确定性指的是，给定相同的一组数据，重复运行多次或者打乱数据进入引擎的顺序，计算完成后将会输出相同的结果，否则就是非确定性计算。常见的非确定性计算包括使用了随机数、使用系统时间、字符串拼接等。如果流计算中存在非确定性的计算，则会给端到端一致性的实现造成很多困难，部分引擎并不能很好地支持此类场景。</p>
+<h2 id="3-一致性问题的形式化定义"><a href="#3-一致性问题的形式化定义" class="headerlink" title="3 一致性问题的形式化定义"></a>3 一致性问题的形式化定义</h2><p>在存在不确定性计算的流计算中，不确定性计算的（中间）结果可视为流计算引擎状态的一部分。从整体上看，任何一个时间点的引擎状态等于之前所有事件计算结果（中间结果和输出结果）的累计。如果定义流计算的输入集合为：E，t 时刻以来的输入集合为 E(t)，输出集合为 Sink(t)，引擎此时状态为 State(t)，State(t) 包括各个算子的状态（包括上面提到的不确定性计算）、数据源的消费偏移量（或文件读取偏移等）等：</p>
+<p>State(t) = OperatorState(t) + SourceState(t)</p>
+<p>则定义流计算引擎的计算过程为，存在计算计算逻辑 F 使得：</p>
+<p>F(E(t), Sink(t), State(t)) = Sink(t+1) + State(t)</p>
+<p>令 O(t) = Sink(t) + State(t)，即将计算对引擎状态的更新视为一种特殊的输出，则流计算过程可简化为：</p>
+<p>F(E(t), O(t)) = O(t+1)</p>
+<p>结合流计算上面流计算一致性的定义，我们希望在引擎发生故障 FailOver 时，存在一种恢复函数 R 使得</p>
+<p>R(E(t), O(t)) = O’(t+1)，且 O’(t+1) = O(t+1)</p>
+<p>我们在这里将引擎状态作为一种特殊输出的考虑有两点。其一，引擎的状态一般也是输出到外部存储如 RocksDB/HDFS，这和计算下游的输出别无二致。其二，通过屏蔽引擎内部的容错机制实现，简化端到端一致性问题的抽象过程，便于更好地理解问题本身。</p>
+<p><img src="https://ucc.alicdn.com/pic/developer-ecology/453ccdd8d2774821bcf692215ca455d2.png" rel="external noreferrer nofollow noopener" referrerpolicy="no-referrer" alt="图片"></p>
+<h1 id="三、一致性的通用解法"><a href="#三、一致性的通用解法" class="headerlink" title="三、一致性的通用解法"></a>三、一致性的通用解法</h1><h2 id="1-通用解法的推导"><a href="#1-通用解法的推导" class="headerlink" title="1 通用解法的推导"></a>1 通用解法的推导</h2><p>我们在上面定义了端到端一致性难题：R(E(t), O(t)) = O(t+1)。从输出结果的使用方（引擎内部和引擎下游数据消费方）的视角来看：对于记录 O(t+1)，当在故障发生的时间小于 t （数据没有输出）或者 大于 t + 1（数据已经输出了），数据肯定是一致的。</p>
+<p>当在 t ~ t + 1 时刻发生故障，恢复函数 R 可以屏蔽此次故障产生的副作用，让使用方认为没有故障发生，可以得到正确的 O(t+1)，显然，解决的思路是：将 E(t) 和 O(t) 作为输入，重新执行计算 F，则可以得到正确的 O(t+1)，具体地，E(t) 可以通过回拨数据偏移量得到，O(t) 需要从持久化存储中获取。O(t) 是否可以通过递归重算得到呢，即 O(t) = F(E(t-1), O(t-1)) ，答案是不可以，因为计算过程中可能存在不确定的计算逻辑，如果重算，则有一定概率 O(t) ≠ F(E(t-1), O(t-1)) 。</p>
+<p>因此，我们得到流计算引擎要实现端到端一致性数据处理语义的充分必要条件：在流计算过程中，需要实时存储每一条中间和最终计算结果，如果考虑吞吐率不能存储每一条，则需定期以事务的方式进行批量存储。对于每一个 O(t) 存储后， 恢复函数 R 的实现就简单多了：任务恢复时，将 O(t) 重新加载，使用 F 执行重算操作。</p>
+<h2 id="2-通用解法的工程实现"><a href="#2-通用解法的工程实现" class="headerlink" title="2 通用解法的工程实现"></a>2 通用解法的工程实现</h2><p>我们将端到端一致性问题的解法结合工程实践，分析一下通用解法下的若干实现场景。</p>
+<p>在通用解法中，我们需要存储每一次计算的中间结果，这对引擎的架构设计、配套基建能力有着很高的要求，如需要高可用、高吞吐的存储后端用于状态存储。因此，我们将条件退化为可以通过事务的方式进行批量存储，这是因为事务的 ACID 特性能保证结果能以原子提交的方式作用于下游算子或者是外部的消息系统/数据库，在保证了结果（状态）一致性的前提下，能达到较高的吞吐率。</p>
+<p>进一步分析，每一次存储或者批量事务存储 O(t) 时，引擎到底做了什么？前面我们定义了 O(t) = Sink(t) + State(t) -&gt; O(t) = Sink(t) + OperatorState(t) + SourceState(t) ，对于引擎来说，当出现 FailOver 时，都会通过 SourceState(t) 回拨数据源偏移量进行部分重算，即消息读取语义是 At-Least-Once 的，当重复计算时，前面存储的结果（每一次计算）或者空的结果（批量事务）可以实现幂等变更的效果：如果结果已经存在了， 则使用已有的结果，消除不确定性计算带来的副作用，如果之前的结果不存在，就更不会对外部系统有影响了。</p>
+<p>如果我们的计算过程都是确定性的，那么上述的充分必要条件会有什么变化呢？在确定性计算的前提下，如果引擎输出结果的接受端是可以实现为幂等，则很多约束条件会有所简化。由于 O(t) = Sink(t) + State(t) ，引擎内部很好实现幂等状态更新，若引擎下游系统也实现了数据幂等，当在 t ~ t + n 间内出现 FailOver 时，引擎可以通过重新计算 t ~ t + n 之间的所有值，直接输出给下游使用。</p>
+<p>因此，在仅有确定性计算的流计算系统中，实现端到端的充分必要条件可退化为：在流计算过程中，需要外部的最终结果接受端实现幂等，实时存储每一条中间和最终计算结果，如果考虑吞吐率不能存储每一条，则需定期批量存储，上述条件中去掉了对「事务」的要求的原因：如果在提交这一批数据的提交过程中又发生了异常，譬如只有部分节点的结果输出了，其他节点发生了故障结果丢失，则可以通过回到上个批次提交的状态，重算此批次数据，重算过程中，由于仅存在确定性计算，所以无论是引擎内还是引擎外，是可以通过幂等来保证数据的的一致性的。</p>
+<p>在实际的流计算引擎实现中，对于结果内容的定义大都是一致的，主要包括输入源的消费偏移 SourceState(t)，e.g. Kafka Offset，算子状态 OperatorState(t)，e.g. Spark RDD 血缘，输出的结果 Sink(t)，e.g. Kafka 事务消息，但是在结果的存储方式上各有所不同，下面我们来看一看目前业界主流的几个流计算引擎的设计考量。</p>
+<h1 id="四-一致性的引擎实现"><a href="#四-一致性的引擎实现" class="headerlink" title="四 一致性的引擎实现"></a>四 一致性的引擎实现</h1><p>目前流计算引擎的种类非常多，不是所有的引擎都可以实现端到端一致的流处理，在具备此能力的引擎中，从技术成本、引擎架构、能力范围考虑，会有不同的取舍和实现，如 Flink 中使用了轻量级的「分布式一致性快照」用于状态管理，Kafka Streams 为何没有使用呢？实现了幂等输出就一定能实现端到端一致么？本章节会一一解答上述问题。</p>
+<h2 id="1-Google-MillWheel"><a href="#1-Google-MillWheel" class="headerlink" title="1 Google MillWheel"></a>1 Google MillWheel</h2><p>Google在2013年发了一篇名为《MillWheel: Fault-Tolerant Stream Processing at. Internet Scale》的文章，论述了在 Google 内部实现低延迟数据处理的编程模型和工程实现，后面 Google 在此基础上抽象出了 DataFlow 流处理模型（具体参考论文《The Dataflow Model: A Practical Approach to Balancing Correctness, Latency, and Cost in Massive-Scale,Unbounded, Out-of-Order Data Processing》），后者对流计算流域的影响堪比20世纪初 GFS，BigTable 以及MapReduce 三篇论文对大数据的影响，后面 Google 又在 MillWheel 之上继续发展，开源了 Apache Bean 这个系统级的流批一体数据解决方案，因为 MillWheel 是更纯粹的「流计算」，所以我们重点来分析 MillWheel。</p>
+<p>MillWheel 使用了一种名为「Strong production」的机制将每个算子的输出在发送至下游之前都进行了持久化存储，一旦发生了故障，当需要恢复时，引擎可以直接将存储后的结果发出去。回头再看端到端一致性数据处理语义的充分必要条件，显然 MillWheel  是符合「实时存储每一条中间和最终计算结果」这个条件的。对于存在不确定性计算的流计算场景，当 FailOver 时，引擎会从源头重新发送消息进行重算，多次计算可能会产生的不一致的结果，但由于「Strong Production」会对计算进行去重，因此即便进行了多次重算，但有且仅有一次重算的结果被输出给下游（下游算子或结果接受端），从整体上来看数据是满足一致性的，这也被称之为「Effective Determinism」。</p>
+<p><img src="https://ucc.alicdn.com/pic/developer-ecology/a66fcad991d64d0fb6a86d9c496c103c.png" rel="external noreferrer nofollow noopener" referrerpolicy="no-referrer" alt="图片"></p>
+<p>MillWheel 会对每一条记录赋予一个唯一 ID，同时基于此 ID 维护一份是否处理过当前记录的目录。对于每一条流入当前算子的记录，引擎查找此 ID 目录以确定此记录是否是已经处理过。这里会有很多技术上的挑战，这里稍微举几个例子。</p>
+<p>譬如，需要有稳定且高吞吐的存储后端用于结果存储，Google 内部的 BigTable 发挥了其作用。流任务执行前后，引擎会对执行流做若干优化，如合并多个逻辑算子至单个算子（类似 Flink 中的 chain 化）、节点内先执行部分合并（count / sum）后再 shuffle等等，种种手段均是为了降低算子间 IO 的数据规模。</p>
+<p>此外，在判断「当前记录」是否已被处理时，MillWheel 使用了布隆过滤器用于前置过滤，因为在一个正常运行的流计算任务中，记录绝大多数的时间都是不重复的，这刚好契合布隆过滤器的使用场景（如过滤器返回不存在则记录一定不存在），引擎中的每个节点都维护了以记录 ID 为主键的布隆过滤器，计算前都会通过此过滤器进行判断，若提示不存在则进行数据处理，如果存在，则需要二次校验。当然，MillWheel 在实际使用布隆过滤器，是做了若干改造的，这里就不具体展开了。</p>
+<h2 id="2-Apache-Flink"><a href="#2-Apache-Flink" class="headerlink" title="2 Apache Flink"></a>2 Apache Flink</h2><p>MillWheel 作为一个内部系统可以存储每一个中间结果，但是对于开源系统的 Apache Flink 来说，毕竟不是每一个公司都有这么完备的技术基建。Flink 会定期把结果以事务的方式进行批量存储，这里的「结果」如上面分析，由源状态 SourceState(t)、算子状态 OperatorState(t) 、输出的结果 Sink(t) 组成，其中 Flink 把源状态和算子状态进行了打包，统称为「分布式一致性快照」（基于 Chandy-Lamport 分布式快照算法来实现），数据会持久化在 RocksDB 中。</p>
+<p><img src="https://ucc.alicdn.com/pic/developer-ecology/acce9e512993431aab0a5b724a5f9515.png" rel="external noreferrer nofollow noopener" referrerpolicy="no-referrer" alt="图片"></p>
+<p>如上图所示，Flink 引擎会定时（每个周期称之为一个 epoch）以 2PC 的方式提交结果。事实上，即便不考虑结果输出，Flink 「分布式一致性快照」的快照的实现也是一个 2PC 的过程：算子的状态快照存储类似于 2PC 的 Prepare 阶段，但 Commit 的确认仅需 Coordinator（ Flink JobManager） 根据「是否收到了完整算子的 ACK 」来推出是否 Commit 或 Abort。将结果输出纳入快照生成的 2PC 后，端到端一致性数据处理语义的充分必要条件在这里也得到了满足：在流计算过程中，定期（epoch）以事务（2PC）的方式进行批量存储结果（分布式一致性快照 + 写外部存储）。需要注意的是，由于 Flink 会以 epoch 为周期输出结果，因此基于此构建的流处理系统会存在一定的端到端延迟。</p>
+<h2 id="3-Apache-Kafka-Streams"><a href="#3-Apache-Kafka-Streams" class="headerlink" title="3 Apache Kafka Streams"></a>3 Apache Kafka Streams</h2><p>Kafka Streams 是 Apache Kafka 0.10.0版本中包含的一个Java库，严格来讲并不算一个完整的流处理引擎，利用这个库，用户可以基于 Kafka 构建有状态的实时数据处理应用，更进一步地，Kafka Streams 需要数据输入源和输出均为 Kafka 消息队列。</p>
+<p>Kafka Streams 中的「结果」也以事务的方式批量持久化，但和 Flink 不同的是，这些结果是被写入不同的消息队列中：</p>
+<ol>
+<li>源状态 SourceState(t)：即 Kafka 源中的 Offset 信息，会被写入一个单独的 Kafaka 队列中，该队列对用户透明；</li>
+<li>算子状态 OperatorState(t) ：计算中算子的 Changelog，也会写入单独的 Kafaka 队列中，该队列对用户透明；</li>
+<li>输出结果 Sink(t) ：即用户配置的实际的输出队列，用于存放计算结果。</li>
+</ol>
+<p>Kafka Streams 将上述结果定期以事务的方式进行批量存储，上述事务在 Kafka 这被称之为 Transactions API，使用这个 API 构建的流处理应用，可以在一个事务中将多个主题消息进行同时提交，如果事务终止或回滚，则下游消费不会读取到相应的结果（当然下游消费者也需要配置相应的一致性级别），其过程如下图所示：</p>
+<p><img src="https://ucc.alicdn.com/pic/developer-ecology/da8b6a66b7fd444080f52a6e5e9a4a4b.png" rel="external noreferrer nofollow noopener" referrerpolicy="no-referrer" alt="图片"></p>
+<p>如果稍微回顾一下 Flink 一致性的实现逻辑，会发现这两者有很多相似点，因此 Kafka Streams 的输出结果也会存在一定的端到端延迟。因为在提交结果时创建了新的事务，所以平均事务大小由提交间隔确定，当流量相同时，较短的提交间隔将导致较小的事务，但太小的间隔将导致吞吐下降，因此吞吐量与端到端处理延迟之间需要有一个折衷。</p>
+<p>同时，我们需要注意到的是，Flink 和 Kafaka 中的「事务」提交，和我们常规的操作关系型数据库中的事务还是有所不同的，后者的事务提交对象一般就一个（e.g. MySQL Server），但在流计算中，由于结果有下游输出、消费进度、算子状态等，因此流计算引擎需要设计一个全局的事务协议用于和下游待提交的各个存储后端进行交互。举例：Kafka Streams 的输出后端需要是 Kafka，以配合在事务提交过程中，屏蔽部分已输出至下游（被 Kafka Broker 持久化），但还不满足事务隔离性的消息（read_committed 级别），从流计算输出的角度来看，这些消息已被成功处理同时输出至下游，但从端到端的一致性来看，它们依然属于不一致的数据。又如，使用 Flink 处理 CDC（Change Data Capture） 的场景，如果下游是 MySQL，在 Flink 2PC 完成之前，来自不同 Flink 节点的数据输出后其实已经被 commit，类似 Kafka Broker 中的消息无法撤回，MySQL 提交的事务也无法回滚，因此输出数据中也需要有类似的字段实现隔离（isolation）语义，以屏蔽这种不一致的数据。</p>
+<h2 id="4-Apache-Spark-Streaming"><a href="#4-Apache-Spark-Streaming" class="headerlink" title="4 Apache Spark Streaming"></a>4 Apache Spark Streaming</h2><p>这里提到的 Spark Streaming 指的是原始的基于「Micro-batch，微批」的 Spark 流处理引擎，后面 Spark 又提出了Structured Streaming，使用 Continuous Processing mode 来替代「微批」解决延迟的问题，容错机制上和 Flink 一样也使用了Chandy-Lamport 算法，Structured Stream 目前还不成熟，暂时还不能完全支持 Exactly-Once-Processing，因此这里着重对比 Spark Streaming。</p>
+<p>Spark Streaming 只能保证引擎内部的处理逻辑是一致的，但是对于结果输出，则并没有做特别的抽象，因此如果我们希望实现端到端的一致性语义，则需要对自行维护和判断一些信息。同传统的批处理系统类似，流处理中也是以 RDD 构建出整个的数据血缘，当发生 FailOver 时，则重新计算整个 RDD 就可以了。如果 Spark Streaming 存在非确定性的计算，则不能实现端到端一致，原因是：1、不满足条件一「实时存储每一条结果」。如果能记录下每个 RDD 分区下的执行情况，避免重复执行（幂等），也一定程度上能实现端到端一致，但这需要进行大量的改造工作，最终形态会和 MillWheel 比较类似；2、不满足条件二「事务方式存储」，需要保证每个 RDD 产出环节的事务性（如最终结果写 HDFS 就不是原子的）。</p>
+<p>考虑一种比较简单的场景：不存在非确定计算的流计算应用。如果不存在非确定计算，根据端到端的一致性语义的充分必要条件，只需要接受端实现幂等，则 Spark Streaming 就可以实现端到端的一致性。背后的原因是，当将形式化的结果定义与 Spark Streaming 进行映射，会发现当以「微批」的形式存储结果时，源状态和算子状态以 RDD 血缘的方式天然地和输出结果进行了绑定，即当输出最终结果时，我们其实也一并输出了源和算子状态，操作符合一致性条件。</p>
+<p><img src="https://ucc.alicdn.com/pic/developer-ecology/c4791c8a15a44339a07536d8b6bcda1b.png" rel="external noreferrer nofollow noopener" referrerpolicy="no-referrer" alt="图片"></p>
+<p>更进一步，当把仅有确定性计算（幂等输出）的 Spark Streaming 和 仅有确定性计算（幂等输出）的的 Flink 进行对比时，会发现二者非常相似。RDD 血缘类比分布式一致性快照，批量输出类比一致性快照后的结果输出，微批类比 epoch。不同之处在于：1、Spark Streaming 在计算过程中的每一个 RDD 生成阶段都会有延迟，而 Flink 在计算过程中可以进行实时处理；2、Spark Streaming 只有一个「epoch」，而 Flink 可以有多个 「epoch」并行存在。基于上述两点原因，Flink 的数据处理的端到端延迟要小得多，但这两种引擎幂等输出能实现一致性的本质是相似的。</p>
+<h2 id="5-各引擎一致性实现总结"><a href="#5-各引擎一致性实现总结" class="headerlink" title="5 各引擎一致性实现总结"></a>5 各引擎一致性实现总结</h2><p>上面我们简述了目前主流的几种流计算引擎的一致性实现机制。从整体来看，如果实现端到端的一致性，则均需要满足我们上面从形式化定义推导出来的充分必要条件：实时存储每一条中间和最终计算结果，如果考虑吞吐率不能存储每一条，则需定期以事务的方式进行批量存储，这里的结果包含流计算引擎中的状态。上面的充分必要条件还可以进一步简化，即实时存储结果或定期事务，均可以视为当前处理逻辑单元（算子或最终存储）对上游的输入（引擎状态+输出结果）进行的幂等化处理：引擎 FailOver  -&gt; 输入源的事件会进行重发 -&gt; 前期存储的结果会用于去重/事务回滚让结果（引擎状态+输出结果）回到上一次的一致性状态 -&gt; 下一批结果输出 -&gt; 结果接受端只影响一次 -&gt; 实现了端到端的一致。</p>
+<p>下面的图列举出各引擎实现端到端一致性的路线图：</p>
+<p><img src="https://ucc.alicdn.com/pic/developer-ecology/c44a31d285aa4109bfed65ea23fa7268.png" rel="external noreferrer nofollow noopener" referrerpolicy="no-referrer" alt="图片"></p>
+<p>前面分析端到端一致性的实现中，重点在分析引擎处理（算子）和输出端行为，没有提及对数据源的要求，数据源需具备重播（repaly）和消息去重的功能即可，属于基础要求，这里不再展开。</p>
+<h1 id="五、总结与展望"><a href="#五、总结与展望" class="headerlink" title="五、总结与展望"></a>五、总结与展望</h1><p>本文从流计算的本质出发，推导出了在流处理中实现端到端一致性的通用解法，同时结合通用解法，分析了目前几种主流流计算引擎在一致性上的实现思路。有「财大气粗」型的 Google MillWheel，背靠强大的基础架构用于状态管理；有「心灵手巧」型的 Apache Flink，巧妙地结合了分布式一致性快照和两阶段事务实现一致性；也有「重剑无锋」型的 Apache Kafka Streams，直接将流处理过程事务化，屏蔽复杂的底层逻辑，编程模型和理解成本都更简单（当然也一定程度上限制其使用的场景）；也有 「蓬勃发展」中的 Apache Spark （Structured）Streaming，底层的一些实现构想和 Apache Flink 愈加趋同，可以期待它将来能达到类似 Apache Spark 在批处理流域中的地位。</p>
+<p>当然，引擎虽然这么多，但其背后是有若干条主线贯穿的，希望我们能拨开迷雾，不被营销的噱头所影响，能洞察到一些更为本质的东西。本文论述的端到端一致的流数据处理实现，重点聚焦在「计算和状态」管理，但实际上，还有很多因素需要我们去考虑，如时间窗口的推导、延迟数据的处理策略、底层计算节点的通信容错等，这些问题多多少少也会影响数据的一致性，考虑到文中篇幅，这里就不一一展开了，感兴趣的同学可以选择一个主题做深入研究。</p>
+<p>下面这些论文对进一步了解流计算很有帮助，感兴趣的同学可以参考：</p>
+<ol>
+<li>《Streaming System》，T Akidau, S Chernyak, R Lax</li>
+<li>《Transactions in Apache Kafka》，Apurva Mehta，Jason Gustafson</li>
+<li>《A Survey of State Management in Big Data Processing Systems》，QC To, J Soto, V Markl</li>
+<li>《MillWheel: fault-tolerant stream processing at Internet scale》，T Akidau, A Balikov, K Bekiroğlu, S Chernyak</li>
+<li>《Discretized Streams: Fault-Tolerant Streaming Computation at Scale》，M Zaharia, T Das, H Li, T Hunter</li>
+</ol>
+
+    </div>
+
+    <div>全文完。</div>
+  </article>
+  <div class="fix-container">
+    <div id="toc" class="fix-right">
+      
+<div class="toc-wrapper">
+  <strong class="toc-title">目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%B5%81%E8%AE%A1%E7%AE%97%E4%B8%AD%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-text">一、流计算中的一致性</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E4%B8%80%E8%87%B4%E6%80%A7%E5%AE%9A%E4%B9%89%E5%8F%8A%E6%8C%91%E6%88%98"><span class="toc-text">1 一致性定义及挑战</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%B8%80%E8%87%B4%E6%80%A7%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5%E7%A5%9B%E9%AD%85"><span class="toc-text">2 一致性相关概念祛魅</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%B5%81%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%9C%AC%E8%B4%A8"><span class="toc-text">二、流计算系统的本质</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%86%8D%E6%AC%A1%E8%AE%A4%E8%AF%86%E6%B5%81%E8%AE%A1%E7%AE%97"><span class="toc-text">1 再次认识流计算</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E7%A1%AE%E5%AE%9A%E6%80%A7-%E9%9D%9E%E7%A1%AE%E5%AE%9A%E6%80%A7%E8%AE%A1%E7%AE%97"><span class="toc-text">2 确定性&#x2F;非确定性计算</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E4%B8%80%E8%87%B4%E6%80%A7%E9%97%AE%E9%A2%98%E7%9A%84%E5%BD%A2%E5%BC%8F%E5%8C%96%E5%AE%9A%E4%B9%89"><span class="toc-text">3 一致性问题的形式化定义</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E4%B8%80%E8%87%B4%E6%80%A7%E7%9A%84%E9%80%9A%E7%94%A8%E8%A7%A3%E6%B3%95"><span class="toc-text">三、一致性的通用解法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E9%80%9A%E7%94%A8%E8%A7%A3%E6%B3%95%E7%9A%84%E6%8E%A8%E5%AF%BC"><span class="toc-text">1 通用解法的推导</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E9%80%9A%E7%94%A8%E8%A7%A3%E6%B3%95%E7%9A%84%E5%B7%A5%E7%A8%8B%E5%AE%9E%E7%8E%B0"><span class="toc-text">2 通用解法的工程实现</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%9B%9B-%E4%B8%80%E8%87%B4%E6%80%A7%E7%9A%84%E5%BC%95%E6%93%8E%E5%AE%9E%E7%8E%B0"><span class="toc-text">四 一致性的引擎实现</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-Google-MillWheel"><span class="toc-text">1 Google MillWheel</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-Apache-Flink"><span class="toc-text">2 Apache Flink</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-Apache-Kafka-Streams"><span class="toc-text">3 Apache Kafka Streams</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-Apache-Spark-Streaming"><span class="toc-text">4 Apache Spark Streaming</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%90%84%E5%BC%95%E6%93%8E%E4%B8%80%E8%87%B4%E6%80%A7%E5%AE%9E%E7%8E%B0%E6%80%BB%E7%BB%93"><span class="toc-text">5 各引擎一致性实现总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%80%BB%E7%BB%93%E4%B8%8E%E5%B1%95%E6%9C%9B"><span class="toc-text">五、总结与展望</span></a></li></ol>
+</div>
+
+      
+<div class="ads-banner">
+    <div class="swiper-wrapper">
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/gze2lfYy" title="买云服务器，参与礼品兑换、抽奖，最高送价值8000元IPad，还有Bose耳机、千元京东卡等您来！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E4%BC%81%E4%B8%9A%E7%9B%9B%E5%A4%8F%E6%9C%89%E7%A4%BC-345x200-d2146292109c1c9e1ae000a6c3ecde162d89e493.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/ecs_amd_test-0901?userCode=s4pthvp2" title="云服务器AMD二代火热公测">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/2480630_1634815908.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/LonPwhxX" title="DNSPod解析套餐全面升配降价，更高的套餐配置规格，更优的价格方案，全面提升可用性及响应率，专业版限时99元/年！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%E9%8D%93%EE%88%9B%E6%B9%B0-82de69db27c1e7984b871bdba4ea3dd5d5acda1f.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/7ec01pIF" title="云产品限时秒杀，爆款1核2G云服务器，首年74元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-788d0ee3eed06e913b85ddb6b178f8b9960c4684.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/minisite/goods?userCode=s4pthvp2" title="云小站特惠">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/6421642_1634812338.jpg" />
+            
+            <span>云小站特惠</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/95DUQ4ON" title="境外1核2G服务器低至2折，半价续费券限量免费领取！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A8%E7%90%83%E8%B4%AD_345%20200-dd004d4a4191fcbabcabea4fcd96f67d1e069f58.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SAIuJMWI" title="星星海SA2云服务器，1核2G首年99元起，高性价比首选">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%20%281%29-87905a297b9ba92f411e1e8fefc629b63cca5781.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/3YMiCK6w" title="推广者专属福利，新客户无门槛领取总价值高达2860元代金券，每种代金券限量500张，先到先得。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200--2953d058277cb63c6b1cd127285163335cd6751e.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/activity_selection?userCode=s4pthvp2" title="云服务器 精选特惠 新用户低至0.5折起 爆款免费试用3个月">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9125844_1634816292.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/qbSzF0sM" title="中小企业福利专场，多款刚需产品，满足企业通用场景需求，云服务器2.5折起">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-b28f7dee9552f4241ea6a543f15a9798049701d4.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/H6YmBFC4" title="云开发CloudBase，一站式高效开发平台，新用户选购低至0元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-a1b026a76d4ef2fc73b9fd976759da3a16715b44.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/daily/bestoffer?userCode=s4pthvp2" title="阿里云 爆款特惠 精选爆款产品低至0.5折">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9604134_1634812518.jpg" />
+            
+            <span>阿里云 爆款特惠 精选爆款产品低至0.5折</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/new?userCode=s4pthvp2" title="新人特惠专享 汇聚阿里云爆款云产品，云服务器1核2G n4 72.6元/年">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/3500689_1634812626.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/hDCEkRsS" title="ElasticSearch新用户特惠，快速实现日志分析、应用搜索，首购低至4折">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E8%85%BE%E8%AE%AF%E4%BA%913_345%20200_1-7aeb8eb451fd6de33676444898914b1ff3298996.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/YjfBwRLm" title="腾讯云数据库性能卓越稳定可靠，为您解决数据库运维难题">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A5%E9%97%A8%E4%BA%91%E6%95%B0%E6%8D%AE%E5%BA%93MYSQL-345x200-a68c566987f9bf687433e2cf4fbdc85ece6e2d93.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SDMIWAoV" title="腾讯云图，像PPT一样简单的数据可视化工具。5元搞定数据可视化，模板丰富，拖拖拽拽就能做出好看的可视化大屏。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-89eeba55a2f49008e686e1a51e14bfe79f63af13.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/8DvMAlwF" title="视频通信爆款 9.9 元起， 提供电商、教育、社交娱乐等多行业多场景的一站式解决方案，最快 1 天布局火爆赛道">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200-51cc0ac5a1b375c4269c679987e3bc7c62a2c592.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/care?userCode=s4pthvp2" title="云服务器老用户专享礼遇 实例升级低至 6.3折、续费低至 3.5折 限时折扣！">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/7740487_1634816569.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/VbUAuJ2j" title="即时通信 IM 首购 1 折特惠，仅需99.9元/月，支持直播电商、在线教育等多种热门应用场景">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD-15e14b2502f1e6df9e647ba452416d4a4f3dda04.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/6HS1Q41a" title="9.9元体验2万分钟实时音视频通话,支持1对1或多人音视频通话,单房可支持300人同时在线，10万人同时观看；全平台互通高品质通话">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%202-15a05a841743ffd2dc01731972dd7b3c2b46e357.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/Z3HKwaYY" title="云数据库MySQL基础版1元体验，为中小企业量身打造，单节点架构，保证数据可靠性">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E6%95%B0%E6%8D%AE%E5%BA%93%20SQL%20345x200-0f7c36787bd045c5a201bc29b01deab00bb4a3cd.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/pcReLJBk" title="专业版APP加固特惠5折起，可享免费兼容性测试">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-5d6e2cf6805432934eeb9f7800bd1a5d282906ae.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/xwWYC6oW" title="新客户首购 TPNS 特惠9.8元/万 DAU，新老客户低至6.5折，给您提供快速、稳定、安全、高效的用户促活利器">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%203-9f78293b201220263799ac53f85ae6cd13e0e8a7.png" />
+            
+        </a>
+        
+    </div>
+    <div aria-label="Previous" class="swiper-button-prev"></div>
+    <div aria-label="Next" class="swiper-button-next"></div>
+    <div class="swiper-pagination"></div>
+</div>
+<script>
+    window.addEventListener('load', function () {
+            let options = {"pagination":{"el":".swiper-pagination","type":"progressbar"},"navigation":{"nextEl":".swiper-button-next","prevEl":".swiper-button-prev"},"slidesPerView":1,"spaceBetween":10,"loop":true,"autoplay":{"delay":2000,"disableOnInteraction":false}} ;
+            var swiper = new Swiper(".ads-banner", options);
+        },
+        false);
+</script>
+
+    </div>
+  </div>
+</div>
+<div class="copyright">
+    <span>原文链接：</span>
+    <a target="_blank" rel="noopener" href="https://developer.aliyun.com/article/793756">https://developer.aliyun.com/article/793756</a>
+</div>
+<div class="share" style="width: 100%;">
+  <img src="https://www.hufeifei.cn/wechat-public-account.jpg" alt="Holmofy" style="margin: auto; display: block; width: 40%;min-width: 160px;max-width: 400px;"/>
+  <div style="margin: auto; text-align: center; font-size: 0.8em; color: grey;">老铁们关注走一走，不迷路</div>
+</div>
+
+  
+    <div class="post-nav">
+      <div class="post-nav-item post-nav-next">
+        
+          <span>〈 </span>
+          <a href="/backend/k8s-basic/" rel="next" title="Kubernetes解决了哪些问题">
+          Kubernetes解决了哪些问题
+          </a>
+        
+      </div>
+  
+      <div class="post-nav-item post-nav-prev">
+          
+          <a href="/db/introduction-PolarDB-X/" rel="prev" title="深度干货｜云原生分布式数据库 PolarDB-X 的技术演进">
+            深度干货｜云原生分布式数据库 PolarDB-X 的技术演进
+          </a>
+          <span>〉</span>
+        
+      </div>
+    </div>
+  
+
+<div id="vcomments" style="padding: 10px 50px;"></div>
+<script>
+    window.addEventListener('load', function () {
+        new Valine({"el":"#vcomments","enable":true,"appId":"8Yo6tv65sOStsPwvGSOAmOtM-gzGzoHsz","appKey":"IJPXPCV29V5ja34nj1JL3tQe","notify":false,"verify":false,"pageSize":10,"avatar":"mm","lang":"zh-cn","placeholder":"Just go go","visitor":true,"recordIP":true,"requiredFields":["nick"]});
+    });
+</script>
+
+    </div>
+
+    
+
+  </div>
+  <footer class="footer text-center">
+    <div id="bottom-inner">
+        <a class="bottom-item" href="https://www.hufeifei.cn">首页</a> |
+        <a class="bottom-item" href="https://blog.hufeifei.cn" target="_blank">个人博客</a> |
+        <a class="bottom-item" href="https://github.com/holmofy" target="_blank">GitHub</a>
+    </div>
+    
+    <div>
+        <span class="bottom-item">友情链接: </span>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://draveness.me/">draveness</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://coolshell.cn/">CoolShell</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://martin.kleppmann.com/">martin kleppmann</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://www.skywind.me/blog/">skywind</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://duanple.com/">duanple</a>
+        
+    </div>
+    
+</footer>
+
+  
+  <!-- scripts list from theme config.yml -->
+  
+    <script src="//unpkg.com/swiper/swiper-bundle.min.js"></script>
+  
+    <script src="//cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+  
+
+
+<script>
+  (function(window, document, undefined) {
+
+    var timer = null;
+
+    function returnTop() {
+      cancelAnimationFrame(timer);
+      timer = requestAnimationFrame(function fn() {
+        var oTop = document.body.scrollTop || document.documentElement.scrollTop;
+        if (oTop > 0) {
+          document.body.scrollTop = document.documentElement.scrollTop = oTop - 50;
+          timer = requestAnimationFrame(fn);
+        } else {
+          cancelAnimationFrame(timer);
+        }
+      });
+    }
+
+    var hearts = [];
+    window.requestAnimationFrame = (function() {
+      return window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        function(callback) {
+          setTimeout(callback, 1000 / 60);
+        }
+    })();
+    init();
+
+    function init() {
+      css(".heart{z-index:9999;width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+      attachEvent();
+      gameloop();
+      addMenuEvent();
+    }
+
+    function gameloop() {
+      for (var i = 0; i < hearts.length; i++) {
+        if (hearts[i].alpha <= 0) {
+          document.body.removeChild(hearts[i].el);
+          hearts.splice(i, 1);
+          continue;
+        }
+        hearts[i].y--;
+        hearts[i].scale += 0.004;
+        hearts[i].alpha -= 0.013;
+        hearts[i].el.style.cssText = "left:" + hearts[i].x + "px;top:" + hearts[i].y + "px;opacity:" + hearts[i].alpha + ";transform:scale(" + hearts[i].scale + "," + hearts[i].scale + ") rotate(45deg);background:" + hearts[i].color;
+      }
+      requestAnimationFrame(gameloop);
+    }
+
+    /**
+     * 给logo设置点击事件
+     * 
+     * - 回到顶部
+     * - 出现爱心
+     */
+    function attachEvent() {
+      var old = typeof window.onclick === "function" && window.onclick;
+      var logo = document.getElementById("logo");
+      if (logo) {
+        logo.onclick = function(event) {
+          returnTop();
+          old && old();
+          createHeart(event);
+        }
+      }
+      
+    }
+
+    function createHeart(event) {
+      var d = document.createElement("div");
+      d.className = "heart";
+      hearts.push({
+        el: d,
+        x: event.clientX - 5,
+        y: event.clientY - 5,
+        scale: 1,
+        alpha: 1,
+        color: randomColor()
+      });
+      document.body.appendChild(d);
+    }
+
+    function css(css) {
+      var style = document.createElement("style");
+      style.type = "text/css";
+      try {
+        style.appendChild(document.createTextNode(css));
+      } catch (ex) {
+        style.styleSheet.cssText = css;
+      }
+      document.getElementsByTagName('head')[0].appendChild(style);
+    }
+
+    function randomColor() {
+      // return "rgb(" + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + ")";
+      return "#F44336";
+    }
+
+    function addMenuEvent() {
+      var menu = document.getElementById('menu-main-post');
+      if (menu) {
+        var toc = document.getElementById('toc');
+        if (toc) {
+          menu.onclick = function() {
+            if (toc) {
+              if (toc.style.display == 'block') {
+                toc.style.display = 'none';
+              } else {
+                toc.style.display = 'block';
+              }
+            }
+          };
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+    }
+
+  })(window, document);
+</script>
+
+  
+
+
+
+<script>(function (w, d, s, id) {
+            if (typeof (w.webpushr) !== 'undefined') return; w.webpushr = w.webpushr || function () { (w.webpushr.q = w.webpushr.q || []).push(arguments) }; var js, fjs = d.getElementsByTagName(s)[0]; js = d.createElement(s); js.id = id; js.async = 1; js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window, document, 'script', 'webpushr-jssdk'));webpushr('setup', { 'key': 'BPOxQK5zO7VR8Ja1xRzI_E6lKWqJqwAMSNJozmybmGC6-aujLX8k-lHdIAdb_BcX9po-j5bpVTyEEA6f9Kz0bqU' });</script></body>
+</html>

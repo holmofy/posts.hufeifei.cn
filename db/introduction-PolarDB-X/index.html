@@ -1,0 +1,489 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#202020"/>
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta name="keywords" content="MySQL,PolarDB,Sharding,NewSQL,Cloud Native,Distributed," />
+  
+
+  
+    <meta name="description" content="各大平台上精选优质文章进行汇总" />
+  
+  
+  <link rel="icon" type="image/x-icon" href="/logo.png">
+  <title>深度干货｜云原生分布式数据库 PolarDB-X 的技术演进 [ 站在巨人的肩膀上 ]</title>
+  
+    <!-- stylesheets list from config.yml -->
+    
+      <link rel="stylesheet" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css">
+    
+      <link rel="stylesheet" href="//unpkg.com/swiper/swiper-bundle.min.css">
+    
+      <link rel="stylesheet" href="/css/xoxo.css">
+    
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-H58NSPXYPF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'G-H58NSPXYPF');
+  </script>
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="站在巨人的肩膀上" type="application/atom+xml">
+</head>
+
+
+<body>
+  <div class="nav-container">
+    <nav class="home-menu pure-menu pure-menu-horizontal">
+  <a class="pure-menu-heading" href="/">
+    <img class="avatar" src="https://www.hufeifei.cn/favicon.jpg">
+    <span class="title">站在巨人的肩膀上</span>
+  </a>
+
+  <ul class="pure-menu-list clearfix">
+      
+          
+            <li class="pure-menu-item"><a href="/" class="pure-menu-link">首页</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/tags" class="pure-menu-link">标签</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/atom.xml" class="pure-menu-link">RSS</a></li>
+          
+      
+  </ul>
+   
+</nav>
+  </div>
+
+  <div class="container" id="content-outer">
+    <div class="inner" id="content-inner">
+      <div class="post-container">
+  <article class="post" id="post">
+    <header class="post-header text-center">
+      <h1 class="title">
+        深度干货｜云原生分布式数据库 PolarDB-X 的技术演进
+      </h1>
+      <span>
+        
+        <time class="time" datetime="2021-10-12T00:00:00.000Z">
+          2021-10-12
+        </time>
+        
+      </span>
+      <span class="slash">/</span>
+      <span class="post-meta">
+        <span class="post-tags">
+          <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Cloud-Native/" rel="tag">Cloud Native</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Distributed/" rel="tag">Distributed</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NewSQL/" rel="tag">NewSQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PolarDB/" rel="tag">PolarDB</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Sharding/" rel="tag">Sharding</a></li></ul>
+        </span>
+      </span>
+      <span class="slash">/</span>
+      <span id="/db/introduction-PolarDB-X/" class="read leancloud_visitors" data-flag-title="深度干货｜云原生分布式数据库 PolarDB-X 的技术演进">
+        <span class="leancloud-visitors-count"></span> 点击
+      </span>
+      <span class="slash">/</span>
+      <span class="read">阅读耗时 17 分钟</span>
+    </header>
+
+    <div class="post-content">
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><h1 id="一、PolarDB-X是什么"><a href="#一、PolarDB-X是什么" class="headerlink" title="一、PolarDB-X是什么"></a>一、PolarDB-X是什么</h1><p>PolarDB-X最早起源于阿里集团2009年提出用分布式架构替代传统商业数据库，阿里研发了TDDL分库分表中间件。2014年阿里集团开始全面上云，将TDDL升级成DRDS分布式数据库服务，实现了在线扩缩容以及数据拆分等能力。2018年后，国内分布式数据库技术进入一个百家争鸣的局面，阿里在这方面也做了很多探索，经过对X-DB、PolarDB等技术整合，诞生了PolarDB-X。</p>
+<p><img src="https://pic4.zhimg.com/80/v2-9dd6ffbc163fb08f2ccb4b9666fa8b07_720w.jpg" alt="img"></p>
+<p>PolarDB-X结合了Sharding On MySQL、NewSQL、Cloud Native DB几种数据库理念的精华，具有云原生分布式的特性，底层使用了PolarDB云原生数据库的技术，上层用到了很多分布式技术。</p>
+<h1 id="二、PolarDB-X-技术架构"><a href="#二、PolarDB-X-技术架构" class="headerlink" title="二、PolarDB-X 技术架构"></a>二、PolarDB-X 技术架构</h1><p>PolarDB-X采用经典的两层架构，分计算层和存储层。计算层用的PolarDB-X，可以独立水平扩展、扩缩容，各种能力完备。在整个系统里，一条SQL经过自研的解析器、优化器，得到分布式的执行计划；然后发送到存储节点执行；在中间的网络传输层，使用了定制的RPC协议，效率远高于传统的JDBC协议；之后执行计划会发送到PolarDB-X的执行引擎里去做具体的计算。</p>
+<p><img src="https://pic4.zhimg.com/80/v2-b861edfe489782894b26d6b2408644b7_720w.jpg" alt="img"></p>
+<p>PolarDB-X目前具有高可用、高可扩展、极致弹性等几个特性，高兼容、HTAP、开放生态，在MySQL生态里是一款具有竞争力的产品。</p>
+<h1 id="三、PolarDB-X的几个关键技术"><a href="#三、PolarDB-X的几个关键技术" class="headerlink" title="三、PolarDB-X的几个关键技术"></a>三、PolarDB-X的几个关键技术</h1><p><strong>（一）分布式事务，如何实现ACID？</strong></p>
+<p><img src="https://pic3.zhimg.com/80/v2-c1ce78dd9ba44f6e0139e7d77db6bc4a_720w.jpg" alt="img"></p>
+<p>如果分布式数据库要支持金融转账场景，就必须支持分布式事务，才能保证一致性，不会发生数据丢失等异常。纵观业界技术，可以归成以下几类，第一类是基于MySQL的XA技术，实现两阶段提交；缺点是不能保证全局一致，不能保证全局快照。第二类是TSO技术做全局分配，实现给全局的事务定序，从而实现分布式快照。第三是HLC技术，也存在一定的局限性。第四类是在PG里比较多使用的GTM技术。这几项技术目前没有一个能完美解决所有场景，都需要在性能、可用性、扩展性方面去做权衡。PolarDB-X认为TSO是比较契合公有云以及混合云的技术。</p>
+<p>PolarDB-X基于TSO技术实现全局分布式事务。第一个问题是如何去做全局时钟，也就是TSO。TSO会给分布式事务做定序，按照时间戳的顺序去做排序。第二个问题是如何基于MySQL的InnoDB做分布式事务。PolarDB-X对InnoDB的事务系统做了深度改造，从原本的ReadView的事务机制改造成基于时间戳的事务系统。有了基于时间戳的事务系统之后，结合TSO技术，就可以实现全局一致的分布式事务。除此之外，事务里还有很多的技术难点，如何处理长写事务以及做全局的垃圾回收。</p>
+<p>用TSO技术有一个必须要解决的问题——通常会增加几十微秒到几百微秒的RT。因此，PolarDB-X实现了一阶段提交、2PC的异步提交等优化，能够尽量克服TSO带来的性能损失。</p>
+<p>实现上述性能优化之后，经过与业界产品在sysbench和TPCC等测试集做了性能对比，PolarDB-X的性能相对来说非常有竞争力。</p>
+<p><strong>（二）透明分布式，如何优化易用性？</strong></p>
+<p>透明分布式主要解决的问题是分布式数据库的使用门槛。很多分布式数据库技术听起来很好，但用户却认为很难用。比如用户常常困扰，为什么某些场景的性能会不如一个单机系统，或者某些功能不具备，或者问题难以排查？从我们对服务用户的经验来看，用户在使用分布式数据库过程中通常会遇到以下几个门槛，即如何选择拆分键、如何优化分布式事务、如何优化慢查询。因此，我们研发了透明分布式的项目，试图降低用户使用分布式数据库的门槛。</p>
+<p>第一，如何做Sharding。每个产品都有不同的解决方案，PolarDB-X结合了MySQL分区表语法，从语法上完全兼容MySQL列表，使用二级分区覆盖到用户的各种Workload。这背后是基于一致性哈希算法，实现分区级的动态分裂，大大降低扩缩容的代价。以Range分区为例，一开始可能是4千到5千这个数据范围，当这个Range的数据变多之后，它可以分裂成多个Range，迁移到多个机器上，避免数据过于集中。将这些技术融入PolarDB-X中，能够有效解决热点数据等问题。</p>
+<p>第二，PolarDB-X做的跟其他产品有差异化的技术，是TableGroup。它解决的问题是Join下推，这是阿里的业务场景中非常常见。如果不能做Join的下推，做分布式Join的性能会比较差。在PolarDB-X中，多个表按一个分区方式做Partition，它们就会放置于同一个TableGroup，因此就可以实现Join下推。当然对应的，一个TableGroup中的分区分裂、迁移，都需要以PartitionGroup为单位了。</p>
+<p><img src="https://pic2.zhimg.com/80/v2-b01acb14972a42d59d6921233dbdeb2d_720w.jpg" alt="img"></p>
+<p>第三，扩缩容离不开的一个问题，就是Online DDL。例如PolarDB-X支持单表、拆分表、分区表，当用户对表类型进行修改，把分区键从买家ID改成卖家ID的时候，背后就是用Online DDL的技术。PolarDB-X支持多种的Online DDL，包括拆分键修改、创建索引、加减列等等，这些操作都可以在线上直接执行，对用户业务影响非常小。</p>
+<p>PolarDB-X的透明分布式提供了分区表、全局索引、Online DDL等技术，使得用户的业务能够以很低的成本接入到分布式数据库中，并且后续随着业务的发展，数据库还可以做通过Scale-Up或者Scale-Out的方式提高性能。</p>
+<p><strong>（三）HTAP技术，如何提高分析能力</strong></p>
+<p>所谓HTAP，在PolarDB-X的理解中，即能否在线上数据库中执行复杂查询。它的价值有两方面，一方面是能够降低用户的使用成本、运维成本，另一方面，就是实时的分析，能够从实时数据获得实时洞察。做HTAP面对的技术挑战有几方面，分别是负载隔离、计算能力、存储能力。</p>
+<p>对应到PolarDB-X的架构，会通过只读节点做负载隔离，简单查询发到读写节点，复杂查询发到只读节点执行，因此这两种负载能够得到较好的隔离，不会相互影响。这中间的智能路由是通过优化器的代价估算去实现，代价高的判定为AP查询，代价低的判定TP查询。除此之外，这种架构还需要解决的一个问题是一致性快照，PolarDB-X通过TSO技术，实现了只读节点的分布式事务。</p>
+<p>接下来的问题是如何提升计算能力和存储能力。</p>
+<p>提高计算能力主要通过MPP并行计算、向量化计算等方式。此前PolarDB-X主要面向TP场景，做算子下推，以及通过分区裁剪尽量查询更少的分片，优化TP场景的性能。而面对AP场景，需要的技术则很不一样。具体来说，PolarDB-X提供了原生的MPP支持，能够充分发挥多个节点的资源进行计算。为此，优化器里中增加了MPP优化阶段，在单机执行计划之后，中间加入Exchange，变成分布式的执行计划，实现多机并行。具体到执行器，也会有两种执行模式，一种是本地单机执行，另一种是MPP分布式执行。</p>
+<p><img src="https://pic2.zhimg.com/80/v2-48dd52b6138c5230f86d57d2ac80d055_720w.jpg" alt="img"></p>
+<p>具体来看，在MPP并行计算中，PolarDB-X做了两层的并行，第一层是节点之间的并行，第二层是计算节点内部的运行。分为两层的好处在于能够减少调度开销，减少数据传输的开销。除此之外，PolarDB-X还做了内存池化、流水线化、向量化等精细化的技术，通过向量化提高执行器的执行效率，通过流水线化增加并行度减少数据物化。这些技术使得PolarDB-X在执行复杂SQL查询时具有较高的效率。</p>
+<p><img src="https://pic2.zhimg.com/80/v2-2cadc7962f21628776640e950892b46d_720w.jpg" alt="img"></p>
+<p>除此之外，就是提高存储方面的性能。从技术角度看，单独做一个行存、列存都不难，难的是做一个能够实时更新的列存。PolarDB-X采用的方案是在写入节点用行存，在只读节点用列存，中间通过redo做异步复制，实现列存的实时更新。基于这样的架构，就可以实现行列混存，行存承担高并发写入，列存承担复杂查询。结合MPP、行列混存、向量化等技术，PolarDB-X实现了TPC-H场景的5-10倍的性能提升。这一成果也即将在公有云上线，敬请期待。</p>
+<h1 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h1><p>PolarDB-X能够高度兼容单机MySQL，从SQL兼容到事务兼容到生态兼容。在此基础上，通过透明分布式的技术降低用户使用门槛，使得用户可以快速上手，适配各种用户业务，并通过弹性扩缩容的能力，适应用户的业务变化。而HTAP技术，将形成差异化的竞争力，使得用户能够从在线数据中获得实时洞察。</p>
+
+    </div>
+
+    <div>全文完。</div>
+  </article>
+  <div class="fix-container">
+    <div id="toc" class="fix-right">
+      
+<div class="toc-wrapper">
+  <strong class="toc-title">目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%80%E3%80%81PolarDB-X%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-text">一、PolarDB-X是什么</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%8C%E3%80%81PolarDB-X-%E6%8A%80%E6%9C%AF%E6%9E%B6%E6%9E%84"><span class="toc-text">二、PolarDB-X 技术架构</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%89%E3%80%81PolarDB-X%E7%9A%84%E5%87%A0%E4%B8%AA%E5%85%B3%E9%94%AE%E6%8A%80%E6%9C%AF"><span class="toc-text">三、PolarDB-X的几个关键技术</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-text">四、总结</span></a></li></ol>
+</div>
+
+      
+<div class="ads-banner">
+    <div class="swiper-wrapper">
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/gze2lfYy" title="买云服务器，参与礼品兑换、抽奖，最高送价值8000元IPad，还有Bose耳机、千元京东卡等您来！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E4%BC%81%E4%B8%9A%E7%9B%9B%E5%A4%8F%E6%9C%89%E7%A4%BC-345x200-d2146292109c1c9e1ae000a6c3ecde162d89e493.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/ecs_amd_test-0901?userCode=s4pthvp2" title="云服务器AMD二代火热公测">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/2480630_1634815908.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/LonPwhxX" title="DNSPod解析套餐全面升配降价，更高的套餐配置规格，更优的价格方案，全面提升可用性及响应率，专业版限时99元/年！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%E9%8D%93%EE%88%9B%E6%B9%B0-82de69db27c1e7984b871bdba4ea3dd5d5acda1f.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/7ec01pIF" title="云产品限时秒杀，爆款1核2G云服务器，首年74元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-788d0ee3eed06e913b85ddb6b178f8b9960c4684.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/minisite/goods?userCode=s4pthvp2" title="云小站特惠">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/6421642_1634812338.jpg" />
+            
+            <span>云小站特惠</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/95DUQ4ON" title="境外1核2G服务器低至2折，半价续费券限量免费领取！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A8%E7%90%83%E8%B4%AD_345%20200-dd004d4a4191fcbabcabea4fcd96f67d1e069f58.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SAIuJMWI" title="星星海SA2云服务器，1核2G首年99元起，高性价比首选">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%20%281%29-87905a297b9ba92f411e1e8fefc629b63cca5781.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/3YMiCK6w" title="推广者专属福利，新客户无门槛领取总价值高达2860元代金券，每种代金券限量500张，先到先得。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200--2953d058277cb63c6b1cd127285163335cd6751e.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/activity_selection?userCode=s4pthvp2" title="云服务器 精选特惠 新用户低至0.5折起 爆款免费试用3个月">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9125844_1634816292.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/qbSzF0sM" title="中小企业福利专场，多款刚需产品，满足企业通用场景需求，云服务器2.5折起">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-b28f7dee9552f4241ea6a543f15a9798049701d4.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/H6YmBFC4" title="云开发CloudBase，一站式高效开发平台，新用户选购低至0元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-a1b026a76d4ef2fc73b9fd976759da3a16715b44.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/daily/bestoffer?userCode=s4pthvp2" title="阿里云 爆款特惠 精选爆款产品低至0.5折">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9604134_1634812518.jpg" />
+            
+            <span>阿里云 爆款特惠 精选爆款产品低至0.5折</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/new?userCode=s4pthvp2" title="新人特惠专享 汇聚阿里云爆款云产品，云服务器1核2G n4 72.6元/年">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/3500689_1634812626.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/hDCEkRsS" title="ElasticSearch新用户特惠，快速实现日志分析、应用搜索，首购低至4折">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E8%85%BE%E8%AE%AF%E4%BA%913_345%20200_1-7aeb8eb451fd6de33676444898914b1ff3298996.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/YjfBwRLm" title="腾讯云数据库性能卓越稳定可靠，为您解决数据库运维难题">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A5%E9%97%A8%E4%BA%91%E6%95%B0%E6%8D%AE%E5%BA%93MYSQL-345x200-a68c566987f9bf687433e2cf4fbdc85ece6e2d93.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SDMIWAoV" title="腾讯云图，像PPT一样简单的数据可视化工具。5元搞定数据可视化，模板丰富，拖拖拽拽就能做出好看的可视化大屏。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-89eeba55a2f49008e686e1a51e14bfe79f63af13.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/8DvMAlwF" title="视频通信爆款 9.9 元起， 提供电商、教育、社交娱乐等多行业多场景的一站式解决方案，最快 1 天布局火爆赛道">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200-51cc0ac5a1b375c4269c679987e3bc7c62a2c592.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/care?userCode=s4pthvp2" title="云服务器老用户专享礼遇 实例升级低至 6.3折、续费低至 3.5折 限时折扣！">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/7740487_1634816569.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/VbUAuJ2j" title="即时通信 IM 首购 1 折特惠，仅需99.9元/月，支持直播电商、在线教育等多种热门应用场景">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD-15e14b2502f1e6df9e647ba452416d4a4f3dda04.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/6HS1Q41a" title="9.9元体验2万分钟实时音视频通话,支持1对1或多人音视频通话,单房可支持300人同时在线，10万人同时观看；全平台互通高品质通话">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%202-15a05a841743ffd2dc01731972dd7b3c2b46e357.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/Z3HKwaYY" title="云数据库MySQL基础版1元体验，为中小企业量身打造，单节点架构，保证数据可靠性">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E6%95%B0%E6%8D%AE%E5%BA%93%20SQL%20345x200-0f7c36787bd045c5a201bc29b01deab00bb4a3cd.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/pcReLJBk" title="专业版APP加固特惠5折起，可享免费兼容性测试">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-5d6e2cf6805432934eeb9f7800bd1a5d282906ae.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/xwWYC6oW" title="新客户首购 TPNS 特惠9.8元/万 DAU，新老客户低至6.5折，给您提供快速、稳定、安全、高效的用户促活利器">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%203-9f78293b201220263799ac53f85ae6cd13e0e8a7.png" />
+            
+        </a>
+        
+    </div>
+    <div aria-label="Previous" class="swiper-button-prev"></div>
+    <div aria-label="Next" class="swiper-button-next"></div>
+    <div class="swiper-pagination"></div>
+</div>
+<script>
+    window.addEventListener('load', function () {
+            let options = {"pagination":{"el":".swiper-pagination","type":"progressbar"},"navigation":{"nextEl":".swiper-button-next","prevEl":".swiper-button-prev"},"slidesPerView":1,"spaceBetween":10,"loop":true,"autoplay":{"delay":2000,"disableOnInteraction":false}} ;
+            var swiper = new Swiper(".ads-banner", options);
+        },
+        false);
+</script>
+
+    </div>
+  </div>
+</div>
+<div class="copyright">
+    <span>原文链接：</span>
+    <a target="_blank" rel="noopener" href="https://developer.aliyun.com/article/793519">https://developer.aliyun.com/article/793519</a>
+</div>
+<div class="share" style="width: 100%;">
+  <img src="https://www.hufeifei.cn/wechat-public-account.jpg" alt="Holmofy" style="margin: auto; display: block; width: 40%;min-width: 160px;max-width: 400px;"/>
+  <div style="margin: auto; text-align: center; font-size: 0.8em; color: grey;">老铁们关注走一走，不迷路</div>
+</div>
+
+  
+    <div class="post-nav">
+      <div class="post-nav-item post-nav-next">
+        
+          <span>〈 </span>
+          <a href="/db/stream-consistency/" rel="next" title="流计算引擎数据一致性的本质">
+          流计算引擎数据一致性的本质
+          </a>
+        
+      </div>
+  
+      <div class="post-nav-item post-nav-prev">
+          
+          <a href="/backend/dockerfile-best-practice/" rel="prev" title="Dockerfile最佳实践">
+            Dockerfile最佳实践
+          </a>
+          <span>〉</span>
+        
+      </div>
+    </div>
+  
+
+<div id="vcomments" style="padding: 10px 50px;"></div>
+<script>
+    window.addEventListener('load', function () {
+        new Valine({"el":"#vcomments","enable":true,"appId":"8Yo6tv65sOStsPwvGSOAmOtM-gzGzoHsz","appKey":"IJPXPCV29V5ja34nj1JL3tQe","notify":false,"verify":false,"pageSize":10,"avatar":"mm","lang":"zh-cn","placeholder":"Just go go","visitor":true,"recordIP":true,"requiredFields":["nick"]});
+    });
+</script>
+
+    </div>
+
+    
+
+  </div>
+  <footer class="footer text-center">
+    <div id="bottom-inner">
+        <a class="bottom-item" href="https://www.hufeifei.cn">首页</a> |
+        <a class="bottom-item" href="https://blog.hufeifei.cn" target="_blank">个人博客</a> |
+        <a class="bottom-item" href="https://github.com/holmofy" target="_blank">GitHub</a>
+    </div>
+    
+    <div>
+        <span class="bottom-item">友情链接: </span>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://draveness.me/">draveness</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://coolshell.cn/">CoolShell</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://martin.kleppmann.com/">martin kleppmann</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://www.skywind.me/blog/">skywind</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://duanple.com/">duanple</a>
+        
+    </div>
+    
+</footer>
+
+  
+  <!-- scripts list from theme config.yml -->
+  
+    <script src="//unpkg.com/swiper/swiper-bundle.min.js"></script>
+  
+    <script src="//cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+  
+
+
+<script>
+  (function(window, document, undefined) {
+
+    var timer = null;
+
+    function returnTop() {
+      cancelAnimationFrame(timer);
+      timer = requestAnimationFrame(function fn() {
+        var oTop = document.body.scrollTop || document.documentElement.scrollTop;
+        if (oTop > 0) {
+          document.body.scrollTop = document.documentElement.scrollTop = oTop - 50;
+          timer = requestAnimationFrame(fn);
+        } else {
+          cancelAnimationFrame(timer);
+        }
+      });
+    }
+
+    var hearts = [];
+    window.requestAnimationFrame = (function() {
+      return window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        function(callback) {
+          setTimeout(callback, 1000 / 60);
+        }
+    })();
+    init();
+
+    function init() {
+      css(".heart{z-index:9999;width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+      attachEvent();
+      gameloop();
+      addMenuEvent();
+    }
+
+    function gameloop() {
+      for (var i = 0; i < hearts.length; i++) {
+        if (hearts[i].alpha <= 0) {
+          document.body.removeChild(hearts[i].el);
+          hearts.splice(i, 1);
+          continue;
+        }
+        hearts[i].y--;
+        hearts[i].scale += 0.004;
+        hearts[i].alpha -= 0.013;
+        hearts[i].el.style.cssText = "left:" + hearts[i].x + "px;top:" + hearts[i].y + "px;opacity:" + hearts[i].alpha + ";transform:scale(" + hearts[i].scale + "," + hearts[i].scale + ") rotate(45deg);background:" + hearts[i].color;
+      }
+      requestAnimationFrame(gameloop);
+    }
+
+    /**
+     * 给logo设置点击事件
+     * 
+     * - 回到顶部
+     * - 出现爱心
+     */
+    function attachEvent() {
+      var old = typeof window.onclick === "function" && window.onclick;
+      var logo = document.getElementById("logo");
+      if (logo) {
+        logo.onclick = function(event) {
+          returnTop();
+          old && old();
+          createHeart(event);
+        }
+      }
+      
+    }
+
+    function createHeart(event) {
+      var d = document.createElement("div");
+      d.className = "heart";
+      hearts.push({
+        el: d,
+        x: event.clientX - 5,
+        y: event.clientY - 5,
+        scale: 1,
+        alpha: 1,
+        color: randomColor()
+      });
+      document.body.appendChild(d);
+    }
+
+    function css(css) {
+      var style = document.createElement("style");
+      style.type = "text/css";
+      try {
+        style.appendChild(document.createTextNode(css));
+      } catch (ex) {
+        style.styleSheet.cssText = css;
+      }
+      document.getElementsByTagName('head')[0].appendChild(style);
+    }
+
+    function randomColor() {
+      // return "rgb(" + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + ")";
+      return "#F44336";
+    }
+
+    function addMenuEvent() {
+      var menu = document.getElementById('menu-main-post');
+      if (menu) {
+        var toc = document.getElementById('toc');
+        if (toc) {
+          menu.onclick = function() {
+            if (toc) {
+              if (toc.style.display == 'block') {
+                toc.style.display = 'none';
+              } else {
+                toc.style.display = 'block';
+              }
+            }
+          };
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+    }
+
+  })(window, document);
+</script>
+
+  
+
+
+
+<script>(function (w, d, s, id) {
+            if (typeof (w.webpushr) !== 'undefined') return; w.webpushr = w.webpushr || function () { (w.webpushr.q = w.webpushr.q || []).push(arguments) }; var js, fjs = d.getElementsByTagName(s)[0]; js = d.createElement(s); js.id = id; js.async = 1; js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window, document, 'script', 'webpushr-jssdk'));webpushr('setup', { 'key': 'BPOxQK5zO7VR8Ja1xRzI_E6lKWqJqwAMSNJozmybmGC6-aujLX8k-lHdIAdb_BcX9po-j5bpVTyEEA6f9Kz0bqU' });</script></body>
+</html>
