@@ -1,0 +1,694 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/lsm-tree/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/frontend/how-npm-handles-dependency-version-conflict/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/backend/es-clickhouse-loki/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/backend/google-paper-opensource/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/backend/java-agent-profiler/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/backend/k8s-basic/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/backend/kuberentes-limitations/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/backend/kubernetes-operator/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/backend/kubernetes-persistent/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/backend/multi-stage-build-for-docker/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/backend/nginx/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/backend/springboot-docker-image/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/backend/observability/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/basic/deep-regex/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/basic/regex-basic/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/db/bigdata-landspace/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/db/elasticsearch/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/db/introduction-PolarDB-X/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/db/db-index/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/db/olap/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/db/stream-consistency/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/db/vector-search/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/algorithm/change-money/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/algorithm/image-hash/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/backend/alimonitor-sunfire-architecture/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/backend/alimonitor-sunfire/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/backend/docker-core-technologies/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/backend/dockerfile-best-practice/</loc>
+    
+    <lastmod>2024-08-14</lastmod>
+    
+  </url>
+  
+
+  <url>
+    <loc>http://posts.hufeifei.cn/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/LSM-Tree/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/algorithm/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/%E9%80%92%E5%BD%92/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Alibaba/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/monitor/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Sunfire/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Docker/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Namespace/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/cGroups/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/unionfs/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/aufs/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/DB/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/ElasticSearch/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/ClickHouse/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Loki/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Google/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/OpenSource/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Cloud/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Java/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/FlameGraph/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Kubernetes/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/%E4%BA%91%E5%8E%9F%E7%94%9F/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/%E9%9B%86%E7%BE%A4%E7%AE%A1%E7%90%86/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/%E5%AE%B9%E5%99%A8%E7%BC%96%E6%8E%92/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/%E6%95%B0%E6%8D%AE%E4%B8%AD%E5%BF%83/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Operator/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/PersistentVolume/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Nginx/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Multiplex/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/SpringBoot/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/OpenTelemetry/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Grafana/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/eBPF/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Regex/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Hadoop/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Hive/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Spark/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Storm/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Kafka/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/DataX/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/RDBMS/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Solr/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/OpenTSDB/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/HBase/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Lucene/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/MySQL/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/PolarDB/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Sharding/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/NewSQL/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Cloud-Native/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Distributed/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/LevelDB/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/RocksDB/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/OLAP/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/ROLAP/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/MOLAP/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/Flink/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/VectorSearch/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/SPTAG/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/KGraph/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/node-js/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/tags/npm/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/categories/%E7%AE%97%E6%B3%95/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/categories/%E5%90%8E%E7%AB%AF/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://posts.hufeifei.cn/categories/%E5%89%8D%E7%AB%AF/</loc>
+    <lastmod>2024-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+</urlset>

@@ -1,0 +1,633 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#202020"/>
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta name="keywords" content="OpenTelemetry,Grafana,eBPF," />
+  
+
+  
+    <meta name="description" content="各大平台上精选优质文章进行汇总" />
+  
+  
+  <link rel="icon" type="image/x-icon" href="/logo.png">
+  <title>2023，可观测性需求将迎来“爆发之年”？ | 解读可观测技术的 2022 [ 站在巨人的肩膀上 ]</title>
+  
+    <!-- stylesheets list from config.yml -->
+    
+      <link rel="stylesheet" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css">
+    
+      <link rel="stylesheet" href="//unpkg.com/swiper/swiper-bundle.min.css">
+    
+      <link rel="stylesheet" href="/css/xoxo.css">
+    
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-H58NSPXYPF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'G-H58NSPXYPF');
+  </script>
+<meta name="generator" content="Hexo 5.4.0"><style>mjx-container[jax="SVG"] {
+  direction: ltr;
+}
+
+mjx-container[jax="SVG"] > svg {
+  overflow: visible;
+}
+
+mjx-container[jax="SVG"][display="true"] {
+  display: block;
+  text-align: center;
+  margin: 1em 0;
+}
+
+mjx-container[jax="SVG"][justify="left"] {
+  text-align: left;
+}
+
+mjx-container[jax="SVG"][justify="right"] {
+  text-align: right;
+}
+
+g[data-mml-node="merror"] > g {
+  fill: red;
+  stroke: red;
+}
+
+g[data-mml-node="merror"] > rect[data-background] {
+  fill: yellow;
+  stroke: none;
+}
+
+g[data-mml-node="mtable"] > line[data-line] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > rect[data-frame] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > .mjx-dashed {
+  stroke-dasharray: 140;
+}
+
+g[data-mml-node="mtable"] > .mjx-dotted {
+  stroke-linecap: round;
+  stroke-dasharray: 0,140;
+}
+
+g[data-mml-node="mtable"] > svg {
+  overflow: visible;
+}
+
+[jax="SVG"] mjx-tool {
+  display: inline-block;
+  position: relative;
+  width: 0;
+  height: 0;
+}
+
+[jax="SVG"] mjx-tool > mjx-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+mjx-tool > mjx-tip {
+  display: inline-block;
+  padding: .2em;
+  border: 1px solid #888;
+  font-size: 70%;
+  background-color: #F8F8F8;
+  color: black;
+  box-shadow: 2px 2px 5px #AAAAAA;
+}
+
+g[data-mml-node="maction"][data-toggle] {
+  cursor: pointer;
+}
+
+mjx-status {
+  display: block;
+  position: fixed;
+  left: 1em;
+  bottom: 1em;
+  min-width: 25%;
+  padding: .2em .4em;
+  border: 1px solid #888;
+  font-size: 90%;
+  background-color: #F8F8F8;
+  color: black;
+}
+
+foreignObject[data-mjx-xml] {
+  font-family: initial;
+  line-height: normal;
+  overflow: visible;
+}
+
+.MathJax path {
+  stroke-width: 3;
+}
+
+mjx-container[display="true"] {
+  overflow: auto hidden;
+}
+
+mjx-container[display="true"] + br {
+  display: none;
+}
+</style><link rel="alternate" href="/atom.xml" title="站在巨人的肩膀上" type="application/atom+xml">
+</head>
+
+
+<body>
+  <div class="nav-container">
+    <nav class="home-menu pure-menu pure-menu-horizontal">
+  <a class="pure-menu-heading" href="/">
+    <img class="avatar" src="https://www.hufeifei.cn/favicon.jpg">
+    <span class="title">站在巨人的肩膀上</span>
+  </a>
+
+  <ul class="pure-menu-list clearfix">
+      
+          
+            <li class="pure-menu-item"><a href="/" class="pure-menu-link">首页</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/tags" class="pure-menu-link">标签</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/atom.xml" class="pure-menu-link">RSS</a></li>
+          
+      
+  </ul>
+   
+</nav>
+  </div>
+
+  <div class="container" id="content-outer">
+    <div class="inner" id="content-inner">
+      <div class="post-container">
+  <article class="post" id="post">
+    <header class="post-header text-center">
+      <h1 class="title">
+        2023，可观测性需求将迎来“爆发之年”？ | 解读可观测技术的 2022
+      </h1>
+      <span>
+        
+        <time class="time" datetime="2022-12-28T00:00:00.000Z">
+          2022-12-28
+        </time>
+        
+      </span>
+      <span class="slash">/</span>
+      <span class="post-meta">
+        <span class="post-tags">
+          <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Grafana/" rel="tag">Grafana</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/OpenTelemetry/" rel="tag">OpenTelemetry</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/eBPF/" rel="tag">eBPF</a></li></ul>
+        </span>
+      </span>
+      <span class="slash">/</span>
+      <span id="/backend/observability/" class="read leancloud_visitors" data-flag-title="2023，可观测性需求将迎来“爆发之年”？ | 解读可观测技术的 2022">
+        <span class="leancloud-visitors-count"></span> 点击
+      </span>
+      <span class="slash">/</span>
+      <span class="read">阅读耗时 46 分钟</span>
+    </header>
+
+    <div class="post-content">
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><blockquote>
+<p>本文是 “<a target="_blank" rel="noopener" href="https://www.infoq.cn/theme/168" title="xxx">2022 InfoQ 年度技术盘点与展望</a>” 系列文章之一，由 InfoQ 编辑部制作呈现，重点聚焦可观测技术领域在 2022 年的重要进展、动态，希望能帮助你准确把握 2022 年可观测技术领域的核心发展脉络，在行业内始终保持足够的技术敏锐度。</p>
+<p>“InfoQ 年度技术盘点与展望”是 InfoQ 全年最重要的内容选题之一，将涵盖操作系统、数据库、AI、大数据、云原生、架构、大前端、编程语言、开源安全、数字化十大方向，后续将聚合延展成专题、迷你书、直播周、合集页面，在 InfoQ 媒体矩阵陆续放出，欢迎大家持续关注。</p>
+</blockquote>
+<p>随着 5G、云计算、微服务等技术的广泛应用，企业所面临的 IT 运维环境越来越复杂，需要运维的系统不仅数量多，而且网络架构复杂、基础设施多样。在信息化建设日益普及的当下，快速提升企业 IT 资产管理能力开始成为企业迫切解决的问题。</p>
+<p>过去一年，可观测技术得到了极大关注，并被 Gartner 列为 2023 年十大战略技术趋势之一。然而，企业在实际落地可观测的过程中依旧面临很多问题，比如如何选择合适的方案、平衡新旧系统之间的关系等等。</p>
+<p>其实，一个企业 IT 系统的可观测性建的好不好，在新员工入职时就能看出来。如果新员工去看文档时，看的是公司某个架构师画的系统架构图，显然这个公司技术系统是缺乏可观测性的。因为企业系统一直在迭代，而系统的架构图却很难及时更新。如果新员工看到的是完整的可观测性平台数据看板，那这个公司的“可观测性”构建的应该算是比较完善的。当企业的可观测性构建趋于成熟后，开发者可以快速定位系统问题，精准的“观测性数据”可以帮助开发者完成包括自动化巡检在内的各种各样的 Control 或者是金丝雀发布的控制等等。</p>
+<p>所以，可观测技术目前发展到哪个阶段了？开发者们对可观测性平台的需求到底是怎样的？带着这些问题我们对观测云 CEO 蒋烁淼进行了专访，我们一起对可观测技术过去一年的发展做了一个盘点。</p>
+<h2 id="一、国内外“可观测性”的认知尚存在较大差异"><a href="#一、国内外“可观测性”的认知尚存在较大差异" class="headerlink" title="一、国内外“可观测性”的认知尚存在较大差异"></a>一、国内外“可观测性”的认知尚存在较大差异</h2><p>当我们想要盘点一项技术过去一年的发展状况时，首先要看它过去一年的应用率是否有所提升。去年，领域里有相关数据表明，大部分公司都在进行可观测实践，但国外也仅有 27% 的公司实现了全栈的可观测，国内可能更少，可能 10% 的比例都不到。而今年，这个比例似乎并没有提高。</p>
+<p>正如蒋总所说的那样，“在中国，真正地构建了完全可观测性的企业非常的少，做的好的企业少之又少。”</p>
+<p>放眼过去，目前国内确实很缺乏好的可观测性的服务商和技术提供商，这让中国的可观测性技术发展与国外产生了不小的距离。包括字节、阿里云等大厂在内的国内大部分厂商在可观测性方面都还是处于“零散拼装”的状态，他们大多把开源的 Prometheus、Loki、OpenTelemetry Collector 组装在一起形成“可观测性套件”，然后提供一个开源的托管版本给开发者使用。很少有人敢称自己为“可观测性平台”，因为没有一个完整的可观测性的概念。</p>
+<p>然而，过去一年里，无论是在国外还是国内，企业 CTO 们对于可观测性的关注度有了明显大幅提升。从全球视角来看，不管是 Grafana 的 ObservabilityCON，还是今年谷歌云举办的 Google Cloud Next’22 Recap、北美的 KubeCon 2022 大会，亦或者是前不久亚马逊云科技举办的 re:Invent 全球大会、NGINX 举办的 NGINX Sprint China2022，可观测性话题的探讨比例都有了明显提升，像 Google Cloud Next’22 Recap 大会谈可观测性几乎占到了大会整体内容的三分之一。</p>
+<p>切回国内视角，当我们和国内的企业 CTO 们去聊天的时候会发现，他们今年明显会更关注可观测性这件事，无论是因为业务层面譬如 B 站 713 事件带来的启发，还是受行业大会演讲内容的影响，国内在可观测性方面没有明显的技术发展，大多是因为疫情下的市场经济不景气、企业预算不足下的“按兵不动”之举。</p>
+<p>聚焦到具体的业务需求上，目前企业技术决策者正处于一个认知迭代的过程中——“将监控升级为可观测性”。原来的“监控”大多都是分裂的，可能是每一个项目都有一套监控工具，可能是是一个项目中的日志平台、APM 平台单独运行。所以现在不少开发者会认为可观测性就是新瓶装旧酒，他们认为把传统的监控工具整合在一起，就是可观测性了，甚至不少创业公司的 CTO 会将一些 K8S 监控工具或者 APM 混同于可观测性。</p>
+<p>事实上，可观测性相关的工具如果被称为“下一代监控”的话，它的投资占 IT 的比重并不小，可观测性的应用场景远远要超过目前大部分开发者的认知。“可观测性”这件事在大部分 CTO 的意识中，无论是横向扩展还是垂直扩展，大家的认知都还需要有一个“求同”的过程。</p>
+<p>就像现在许多人会把“可观测性”定义为是一个降本增效的好工具，很多相关产品厂商会将“降本增效”作为产品的推广利益点，这让许多开发者认为安装了可观测性平台，就可以降低成本、为业务创造价值。事实上，可观测性工具从来不是一个“便宜”的东西，可观测性平台除了基本的工具投入，还需要有一套完整的数据存储方案，企业自研一套优秀的可观测性解决方案投入成本并不低。以美国企业的可观测性相关投入为例，其会占企业整体 IT 支出的 5%-10%。而且，它的“降本增效”不是短时间内就可以显现出来的，而是通过长时间的应用，为业务提供大量的数据支撑进行技术性优化，从而产生价值。</p>
+<p>总体来说，真正的可观测性平台应该是，能够将各种各样对于系统的形态、实时的状态进行有结构性的收集并提供一系列的观察、测量手段的平台。简单来说，就是用各种各样的技术，像传感器一样，能够让开发者们的开发、测试、运维过程变的更容易，能够即时了解系统的运行状态，而并不是简简单单的“监控”。</p>
+<p>可观测性平台一定是数据组织统一化的，否则分开的日志系统、链路系统、指标系统很难实现数据与数据的关联。比如日志里的字段，主机系统中叫 host，在指标系统里叫 host name，然后有的系统用 IP 地址，有的系统用主机名，那在做关联分析和连接查询时会发现根本无从下手。有的公司也会将不同系统的数据分散开进行监控，利用“数据中台”的一个构建方案将所有数据汇聚到同一个平台中去做分析，但在实践过程中会发现，数据缺少实时性的结构化，无法做实时预警预测，只能做事后故障定位。</p>
+<h2 id="二、全球可观测性技术演进主要聚焦在-6-个方面"><a href="#二、全球可观测性技术演进主要聚焦在-6-个方面" class="headerlink" title="二、全球可观测性技术演进主要聚焦在 6 个方面"></a>二、全球可观测性技术演进主要聚焦在 6 个方面</h2><h4 id="1、OpenTelemetry-逐渐成为行业标准"><a href="#1、OpenTelemetry-逐渐成为行业标准" class="headerlink" title="1、OpenTelemetry 逐渐成为行业标准"></a>1、OpenTelemetry 逐渐成为行业标准</h4><p>OpenTelemetry 作为一套由 CNCF 主导的云原生可观测性的标准协议，目前已经是海外企业在该领域的实践标准。从数据收集的角度来说，基于 OpenTelemetry 或者兼容 OpenTelemetry 的方案，从今年到明年都应该会逐步成为主流。OpenTelemetry 已迭代到了 1.0 版本，作为一个客户端，日志和网络等部分也都正在得到逐步补强，严格意义上讲，OpenTelemetry 1.0 已经算是完成了整体的标准化，OpenTelemetry 标准协议已称得上是一个行业标准。</p>
+<p>反观国内，虽未形成类似的标准，却也涌现了诸如 CAT 和 SkyWalking 等一系列国产开源的 APM 系统，通过实时监控企业的应用系统，系统化地提供应用性能管理和故障定位的解决方案，在运维中被广泛使用。得益于对业务代码无侵入，性能表现优秀，社区活跃，中文文档齐全等众多优秀特性，SkyWalking 在国内异常火爆。</p>
+<h4 id="2、Grafana-8-0-修改了-AGPL-协议"><a href="#2、Grafana-8-0-修改了-AGPL-协议" class="headerlink" title="2、Grafana 8.0 修改了 AGPL 协议"></a>2、Grafana 8.0 修改了 AGPL 协议</h4><p>开源项目背后的商业公司只有在商业上取得成功，才能更好地为开源项目提供新特性的开发、支持与维护，形成良性循环，这样开源项目的维护才会更加长久。Grafana 在云原生技术领域的监控工具中几乎是标准一般的存在，而在可观测性的投资方面，Grafana 也写下了浓墨重彩的一笔，推出了 Loki 日志存储、时序引擎 Mimir 和调用堆栈的存储引擎等一系列产品，力图通过提供一个复刻 DataDog 所有功能的开源方案，打包售卖 Grafana Cloud 服务。</p>
+<p>因此在 Grafana 8.0 后修改了 AGPL，允许甲方有技术实力的公司基于它的开源方案做二次开发，而不允许乙方在没有商业授权的时候拿着 Grafana 的产品包装出售，此举对国内不少的信创公司都造成了巨大的冲击。</p>
+<h4 id="3、eBPF-技术日趋成熟"><a href="#3、eBPF-技术日趋成熟" class="headerlink" title="3、eBPF 技术日趋成熟"></a>3、eBPF 技术日趋成熟</h4><p>内核通过文件系统或系统调用暴露出的信息有限，单纯从用户态切入无法抓取这些信息，只有从内核本身调用的过程中获取调用信息才可以补足相关能力。eBPF 是一项革命性的技术，它可以在 Linux 内核中运行沙盒程序，而无需更改内核源代码或加载内核模块。通过使 Linux 内核可编程，基础架构软件可以利用现有的层，使它们更加智能和功能丰富，无需继续为系统增加额外的复杂性层。</p>
+<p>eBPF 促进了网络，安全性，应用程序配置 / 跟踪和性能故障排除等领域的新一代工具的开发，这些工具不再依赖现有的内核功能，而是在不影响执行效率或安全性的情况下主动重新运行。在对内核无侵入的前提下，它通过动态地向内核中插入一段自己的代码，实现定义监控及跟踪能力。</p>
+<p>随着内核的发展，eBPF 逐步从最初的数据包过滤拓展到了网络、内核、安全、跟踪等领域，并且它的功能特性还在快速发展中，通过内核虚拟机，所有的 IO 包括程序运行、进程的网络通信等各种细部数据尽收眼底，大大加强了系统的可观测能力。</p>
+<p>然而，目前大多数的只通过 eBPF 获取数据并把自己标榜为可观测平台的公司，也仅仅是做了一个 eBPF 的支持而已。从第三方视角看，eBPF 是对传统观测能力一个非常好的补充，可以通过它拿到更多的数据，用户获取内核丰富观测指标的门槛被极大降低。</p>
+<h4 id="4、可观测性开始更“注意安全”"><a href="#4、可观测性开始更“注意安全”" class="headerlink" title="4、可观测性开始更“注意安全”"></a>4、可观测性开始更“注意安全”</h4><p>云原生数据库等新兴概念的出现，大大消除了大家对于存储成本方面的顾虑，使得企业可以更聚焦于提升观测能力本身，而不必在成本和性能方面分神，这方面的发展也有迹可循。比如今年 DataDog 推出了一个名为哈士奇的存储架构，它是一个完全云原生面向可观测性的数据库，得益于云原生的存储能力，可以在同等价格下多存储 5-10 倍数据，以往即使收集到了海量的数据，但面对高昂的存储成本，这些数据也只能被丢弃或者针对这些数据进行采样，本质上看，这对客户需要的结果也是有浪费的。但这也并不意味着使用这种新技术之后并不需要进行采样，只是新的更低成本更高性能的数据库技术，可以大大提升可观测性能够覆盖的范围，降低存储成本，这也是一个很重要的发展。</p>
+<p>安全和可观测性的合并，已在全球范围内形成一种趋势。摩根士丹利在《安全分析和可观测性》文章中也提到，在国外，以 DataDog 为代表的公司在上市之后发布的新增功能中有 70% 都是安全相关的，这其中的道理非常简单，可观测性是通过检查其输出来衡量系统内部状态的能力，它收集了系统的方方面面，通过这些数据可以分析出系统的故障，自然也就能够分析出系统有没有被入侵。比如 DataDog 就提供了通过分析当前访问请求，区分哪些可能是黑客在嗅探，或者准备未来做 DDoS 攻击的接口的功能。</p>
+<p>也就是说，采集的数据在安全方面也能够发挥作用，而不像传统安全工具那样，需要针对安全场景再进行一次数据采集。所以，安全和可观测性的合并在全球范围内已经成为一种趋势，当然抗 DDoS 、挖防火墙这些并不会合并，针对攻击现场的追踪，比如国内的态势感知、国外的 SIEM 这些安全产品都选择了和可观测性进行融合。</p>
+<h4 id="5、建立“业务的可观测性”越来越重要"><a href="#5、建立“业务的可观测性”越来越重要" class="headerlink" title="5、建立“业务的可观测性”越来越重要"></a>5、建立“业务的可观测性”越来越重要</h4><p>可观测性的概念起源于工业领域，在该领域中，可观测性被定义为从系统外部输出推断系统内部健康状态的能力；在软件产品和服务领域，可观测性就是从应用系统中收集尽可能多的遥测数据，以便可以调查和解决新出现的复杂问题，确保企业能够主动观察系统，在影响客户体验之前解决故障及问题，安全地进行测试并实施优化，它可以更好地管理和控制业务风险，有助于我们了解“正在发生什么”以及“为什么会这样”。可观测性使团队能够更有效地监控现代系统，帮助他们找到并连接复杂链中的影响，并将其追溯到原因。此外，它还使系统管理员、IT 运营分析师和开发⼈员能够了解他们的整个架构。</p>
+<p>如今的 IT 系统，迭代发布更迅速，业务系统更庞大，网络链路更复杂，运行环境更动态。在“业务至上”的互联网时代，技术工程师们保障的核心其实并不是这套 IT 系统或软件，他们保障的核心其实是业务，一笔业务可能会涉及到多个微服务系统，技术工程师们不再追踪一个 API 的全链路调用关系，而是要追踪到整个 API 关联的订单、用户甚至具体到哪一笔交易，这也是可观测性和业务结合的一个重要发展趋势。Gartner 也提到，“未来一切业务皆需可观测性”，简单地讲就是把运营人员、运维人员、IT 人员看到的数据做统一，而不是互相甩锅。</p>
+<h4 id="6、多个“新玩家”入局"><a href="#6、多个“新玩家”入局" class="headerlink" title="6、多个“新玩家”入局"></a>6、多个“新玩家”入局</h4><p>随着微服务架构的流行，一些微服务架构下的问题也日渐突出，比如一个请求会涉及到多个服务，而服务本身可能也会依赖其他业务，整个请求路径就构成了一个网状的调用链，而在这个调用链中，一旦某个节点发生异常，整个调用链的稳定性就会受到影响。</p>
+<p>据此，我们需要一些可以帮助理解系统行为、用于分析性能问题的工具，以便发生故障的时候，能够快速定位和解决问题。近年来，各种调用链监控产品层出不穷，呈现百花齐放的态势，各家你方唱罢我登场，比如 New Relic 收购的那家叫 PIXIE 的公司可以称得上是一个新玩家，又如最近出现了一个面向 K8S 的叫做 Kubeshark 的公司，它专门研发用于网络分析的开源组件。</p>
+<p>此外，随着 eBPF 的出现，未来会涌现越来越多的解决方案，尤其是面向整个 K8s 生态环境，这也是全球可观测性技术的一个演进方向。</p>
+<h4 id="三、具有“4-个统一性”的可观测性平台是企业刚需"><a href="#三、具有“4-个统一性”的可观测性平台是企业刚需" class="headerlink" title="三、具有“4 个统一性”的可观测性平台是企业刚需"></a>三、具有“4 个统一性”的可观测性平台是企业刚需</h4><p>当我们盘点完可观测性的行业趋势，所以到底什么样的平台才是目前企业所需要的呢？国内首批获得中国信通院颁发的「可观测性平台技术能力」先进级认证，新一代云原生全链路数据可观测平台——观测云给出了答案。</p>
+<p>观测云能全环境高基数采集数据，支持多维度信息智能检索分析，及提供强大的自定义可编程能力，使系统运行状态尽在掌控，故障根因无所遁形，实现了统一采集、统一标签、统一存储和统一界面，带来全功能的一体化可观测体验。观测云平台从技术层面主要实现了 4 个统一 —— 统一采集、统一治理、统一分析和统一编程：</p>
+<p>第一个统一，是统一的数据收集。数据采集是数据关联的基础能力，现今，国内外都有大量的数据采集器，但大多数采集能力单一，比如 Telegraf 仅支持指标，Filebeat 只服务日志，OpenTelemetry 的 Collector 对非云原生的组件并不友好，需要大量安装 Exporter 插件。</p>
+<p>为了实现系统的可观测性，一台主机上可能需要安装无数个 Agent，这既引入了管理上的问题，又产生了成本的问题，一定程度上造成了资源的浪费。观测云的 DataKit 是目前唯一的真正一体化实现各种环境（如传统环境、云原生等）统一数据采集平台，它通过一个进程或 Daemonset Pod 就可以实现全方位的数据采集，配置体验良好，开源且拓展性强，涵盖了更为全面的数据采集类型，有海量的技术栈的指标收集能力，采集器的配置更简单，数据质量更好。</p>
+<p>第二个统一，是数据采样格式实现统一。可观测性数据的一个重要特性就是实时性，Logstash 等传统的开源方案均在中心或边缘中心完成数据治理工作，而受限于中心处理的延迟和 delay，在日志收集方面通常有很大的时延，实时性也就无从得到保障。而在观测云的解决方案中，客户只需多拿出 5% 的 CPU 用于数据的处理，一方面可以发挥可观测数据的实时性。另一方面，还可以利用数据本身的现状还原。比如当把所有数据收集到中心的时候，实际上很多环境信息或多或少的都会存在遗漏或缺失的情况，如数据来源于哪个容器、哪个 pod、哪个部署单元或者哪个项目等，在边缘侧可以随时获取这些数据作为补充。</p>
+<p>行内人都知道，观测云是一个 SaaS 方案，在边缘侧还可以实现采样功能。比如数据中存在的一些电话号码、金额、用户 ID 等信息，完全可以通过边缘脱敏或者删除掉一些不需要上传或者不易上传的数字。这样一来，数据在上传前就已经完成了脱敏、加密或者丢弃，在丢弃情况下，还能大幅降低传输的带宽；数据无需上传到中心再做治理，这也进一步提升了客户的信任。此外，由于减少了一个中间处理模块，系统的整体实时性也得到了很大的保障。</p>
+<p>目前观测云也在考虑把端上的统一治理能力做成一个插件，贡献给 OpenTelemetry，使得 OpenTelemetry 的 Agent 也具备边缘计算的能力。据悉，目前观测云平台完全兼容 OpenTelemetry，单一采集器即可实现容器指标采集、应用链路追踪和日志采集。同时能和各种常用采集器实现串联，包括 Promethues、Skywalking、Fluentd 等十几种常见工具，可以替换更可以共存，轻松实现数据高密采集。</p>
+<p>第三个统一，是统一的数据治理。用户的数据在被传输到中心后，将会被统一存储、统一压缩、统一部署，保存在观测云自己定义的逻辑数据存储架构中，相较于开源方案，观测云主要有两个优势：</p>
+<ul>
+<li>在存储的整合性角度，观测云的成本低于开源方案；</li>
+<li>不论是指标数据、日志数据、链路数据、用户行为甚至未来开展到安全数据，区别于其他厂商平台，观测云通过自研的 DQL (Debug Query Language) 语言在数据分析平台进行整体分析，甚至针对不用用户使用不同时代的存储技术。</li>
+</ul>
+<p>第四个统一，是统一的拓展开发平台。当 DQL 或者软件本身的能力无法满足用户的需要时，用户可以通过 DataFlux Function 平台进行无限的拓展。比如出于中大型公司的安全合规要求，直接通过第三方平台发送 SaaS 平台的告警邮件到内部邮箱，会被直接屏蔽掉，而如果用户把自己的发件服务器注册到 DataFlux Function，就可以实现向内部邮箱发送告警邮件，类似的能力还有短信、电话等等。</p>
+<p>除此之外，DataFlux Function 平台还可以实现对各种云平台甚至业务数据的载入，最近，观测云使用 DataFlux Function 帮客户实现了业务对账系统和 IT 代码调用间的关联。据悉，未来观测云会基于 DataFlux Function 平台推出一个抢占型实例量化交易的 Demo。</p>
+<p>除了这四个“统一”，观测云还提供 Site Reliability Engineering (SRE) 和 Observability Engineering 的最佳实践，支持智能推测算法，可自动识别基础设施和应用程序的潜在问题。坚持每两周迭代升级，使工程师们可随时体验最前沿的技术和最尖端的能力。是目前市面上少见的，真正意义上做到了“观测性”实现的平台，真正地满足了企业系统及开发者们在观测性方面的需求。</p>
+<p>百闻不如一试。当我们回溯平台选型的根本，发现当前市面上的可观测性平台质量良莠不齐，大多还处于“监控”状态，系统整体性较差，无论是对于企业来说还是对于开发者来说，试错成本高。而目前观测云 SaaS 版完全按量计费，没有初始成本，拒绝为闲置功能付费，可提供专属服务经理，让初创团队也能体验一流的全链路系统可观测能力，切实地解决了平台选型难的问题。</p>
+<p>正如蒋烁淼所说的，“一个好的系统首先要做到采集、治理、分析、变成这四个方面的统一；其次，需要尽量兼容开源，将整个技术栈和开源进行一个双向的连接。观测云在未来将进一步下探存储成本，最终让利用户。”</p>
+<h4 id="四、国产可观测性的未来需要更多厂商共同努力"><a href="#四、国产可观测性的未来需要更多厂商共同努力" class="headerlink" title="四、国产可观测性的未来需要更多厂商共同努力"></a>四、国产可观测性的未来需要更多厂商共同努力</h4><p>目前，可观测性还在发展初期，很多产品仍在探索阶段，也有很多问题亟待解决，未来人们对可观测性的需求只会越来越高。</p>
+<p>谈及“可观测性”的未来，蒋烁淼认为，可观测性未来主要有四大趋势。观测性平台的开发厂商未来需要在以下几个方面做出改进和优化：</p>
+<ul>
+<li>提供更大的技术环境支持能力，支持标准的可观测协议；</li>
+<li>引入更多的算法，以智能的方式做数据的巡检；</li>
+<li>连接安全产品；</li>
+<li>进一步降低存储成本。</li>
+</ul>
+<p>这与媒体第三方视角观察到的趋势保持相似。然而，纸上得来终觉浅，绝知此事要躬行。虽然国内像观测云等厂商紧跟行业需求及技术发展趋势，提供了自定义数据大盘、基础设施监控、日志分析、用户访问监测、应用性能检测、Profiling、云拨测、智能巡检等多种解决方案，力图打造可观测性最佳实践。但是，仅仅是一家或者几家的努力，是远远不够的。</p>
+<p>行业的发展需要更多的人参与进来。观测性平台开发厂商需要挖掘更多用户需求，而普通开发者也应该将更多的注意力放到“可观测性”上，让可观测性工具成为业务优化的得力助手。</p>
+
+    </div>
+
+    <div>全文完。</div>
+  </article>
+  <div class="fix-container">
+    <div id="toc" class="fix-right">
+      
+<div class="toc-wrapper">
+  <strong class="toc-title">目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%9B%BD%E5%86%85%E5%A4%96%E2%80%9C%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7%E2%80%9D%E7%9A%84%E8%AE%A4%E7%9F%A5%E5%B0%9A%E5%AD%98%E5%9C%A8%E8%BE%83%E5%A4%A7%E5%B7%AE%E5%BC%82"><span class="toc-text">一、国内外“可观测性”的认知尚存在较大差异</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%85%A8%E7%90%83%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7%E6%8A%80%E6%9C%AF%E6%BC%94%E8%BF%9B%E4%B8%BB%E8%A6%81%E8%81%9A%E7%84%A6%E5%9C%A8-6-%E4%B8%AA%E6%96%B9%E9%9D%A2"><span class="toc-text">二、全球可观测性技术演进主要聚焦在 6 个方面</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81OpenTelemetry-%E9%80%90%E6%B8%90%E6%88%90%E4%B8%BA%E8%A1%8C%E4%B8%9A%E6%A0%87%E5%87%86"><span class="toc-text">1、OpenTelemetry 逐渐成为行业标准</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81Grafana-8-0-%E4%BF%AE%E6%94%B9%E4%BA%86-AGPL-%E5%8D%8F%E8%AE%AE"><span class="toc-text">2、Grafana 8.0 修改了 AGPL 协议</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81eBPF-%E6%8A%80%E6%9C%AF%E6%97%A5%E8%B6%8B%E6%88%90%E7%86%9F"><span class="toc-text">3、eBPF 技术日趋成熟</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7%E5%BC%80%E5%A7%8B%E6%9B%B4%E2%80%9C%E6%B3%A8%E6%84%8F%E5%AE%89%E5%85%A8%E2%80%9D"><span class="toc-text">4、可观测性开始更“注意安全”</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5%E3%80%81%E5%BB%BA%E7%AB%8B%E2%80%9C%E4%B8%9A%E5%8A%A1%E7%9A%84%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7%E2%80%9D%E8%B6%8A%E6%9D%A5%E8%B6%8A%E9%87%8D%E8%A6%81"><span class="toc-text">5、建立“业务的可观测性”越来越重要</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6%E3%80%81%E5%A4%9A%E4%B8%AA%E2%80%9C%E6%96%B0%E7%8E%A9%E5%AE%B6%E2%80%9D%E5%85%A5%E5%B1%80"><span class="toc-text">6、多个“新玩家”入局</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%85%B7%E6%9C%89%E2%80%9C4-%E4%B8%AA%E7%BB%9F%E4%B8%80%E6%80%A7%E2%80%9D%E7%9A%84%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7%E5%B9%B3%E5%8F%B0%E6%98%AF%E4%BC%81%E4%B8%9A%E5%88%9A%E9%9C%80"><span class="toc-text">三、具有“4 个统一性”的可观测性平台是企业刚需</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%9B%BD%E4%BA%A7%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7%E7%9A%84%E6%9C%AA%E6%9D%A5%E9%9C%80%E8%A6%81%E6%9B%B4%E5%A4%9A%E5%8E%82%E5%95%86%E5%85%B1%E5%90%8C%E5%8A%AA%E5%8A%9B"><span class="toc-text">四、国产可观测性的未来需要更多厂商共同努力</span></a></li></ol></li></ol></li></ol>
+</div>
+
+      
+<div class="ads-banner">
+    <div class="swiper-wrapper">
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/gze2lfYy" title="买云服务器，参与礼品兑换、抽奖，最高送价值8000元IPad，还有Bose耳机、千元京东卡等您来！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E4%BC%81%E4%B8%9A%E7%9B%9B%E5%A4%8F%E6%9C%89%E7%A4%BC-345x200-d2146292109c1c9e1ae000a6c3ecde162d89e493.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/ecs_amd_test-0901?userCode=s4pthvp2" title="云服务器AMD二代火热公测">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/2480630_1634815908.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/LonPwhxX" title="DNSPod解析套餐全面升配降价，更高的套餐配置规格，更优的价格方案，全面提升可用性及响应率，专业版限时99元/年！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%E9%8D%93%EE%88%9B%E6%B9%B0-82de69db27c1e7984b871bdba4ea3dd5d5acda1f.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/7ec01pIF" title="云产品限时秒杀，爆款1核2G云服务器，首年74元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-788d0ee3eed06e913b85ddb6b178f8b9960c4684.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/minisite/goods?userCode=s4pthvp2" title="云小站特惠">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/6421642_1634812338.jpg" />
+            
+            <span>云小站特惠</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/95DUQ4ON" title="境外1核2G服务器低至2折，半价续费券限量免费领取！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A8%E7%90%83%E8%B4%AD_345%20200-dd004d4a4191fcbabcabea4fcd96f67d1e069f58.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SAIuJMWI" title="星星海SA2云服务器，1核2G首年99元起，高性价比首选">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%20%281%29-87905a297b9ba92f411e1e8fefc629b63cca5781.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/3YMiCK6w" title="推广者专属福利，新客户无门槛领取总价值高达2860元代金券，每种代金券限量500张，先到先得。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200--2953d058277cb63c6b1cd127285163335cd6751e.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/activity_selection?userCode=s4pthvp2" title="云服务器 精选特惠 新用户低至0.5折起 爆款免费试用3个月">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9125844_1634816292.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/qbSzF0sM" title="中小企业福利专场，多款刚需产品，满足企业通用场景需求，云服务器2.5折起">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-b28f7dee9552f4241ea6a543f15a9798049701d4.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/H6YmBFC4" title="云开发CloudBase，一站式高效开发平台，新用户选购低至0元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-a1b026a76d4ef2fc73b9fd976759da3a16715b44.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/daily/bestoffer?userCode=s4pthvp2" title="阿里云 爆款特惠 精选爆款产品低至0.5折">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9604134_1634812518.jpg" />
+            
+            <span>阿里云 爆款特惠 精选爆款产品低至0.5折</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/new?userCode=s4pthvp2" title="新人特惠专享 汇聚阿里云爆款云产品，云服务器1核2G n4 72.6元/年">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/3500689_1634812626.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/hDCEkRsS" title="ElasticSearch新用户特惠，快速实现日志分析、应用搜索，首购低至4折">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E8%85%BE%E8%AE%AF%E4%BA%913_345%20200_1-7aeb8eb451fd6de33676444898914b1ff3298996.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/YjfBwRLm" title="腾讯云数据库性能卓越稳定可靠，为您解决数据库运维难题">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A5%E9%97%A8%E4%BA%91%E6%95%B0%E6%8D%AE%E5%BA%93MYSQL-345x200-a68c566987f9bf687433e2cf4fbdc85ece6e2d93.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SDMIWAoV" title="腾讯云图，像PPT一样简单的数据可视化工具。5元搞定数据可视化，模板丰富，拖拖拽拽就能做出好看的可视化大屏。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-89eeba55a2f49008e686e1a51e14bfe79f63af13.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/8DvMAlwF" title="视频通信爆款 9.9 元起， 提供电商、教育、社交娱乐等多行业多场景的一站式解决方案，最快 1 天布局火爆赛道">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200-51cc0ac5a1b375c4269c679987e3bc7c62a2c592.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/care?userCode=s4pthvp2" title="云服务器老用户专享礼遇 实例升级低至 6.3折、续费低至 3.5折 限时折扣！">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/7740487_1634816569.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/VbUAuJ2j" title="即时通信 IM 首购 1 折特惠，仅需99.9元/月，支持直播电商、在线教育等多种热门应用场景">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD-15e14b2502f1e6df9e647ba452416d4a4f3dda04.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/6HS1Q41a" title="9.9元体验2万分钟实时音视频通话,支持1对1或多人音视频通话,单房可支持300人同时在线，10万人同时观看；全平台互通高品质通话">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%202-15a05a841743ffd2dc01731972dd7b3c2b46e357.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/Z3HKwaYY" title="云数据库MySQL基础版1元体验，为中小企业量身打造，单节点架构，保证数据可靠性">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E6%95%B0%E6%8D%AE%E5%BA%93%20SQL%20345x200-0f7c36787bd045c5a201bc29b01deab00bb4a3cd.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/pcReLJBk" title="专业版APP加固特惠5折起，可享免费兼容性测试">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-5d6e2cf6805432934eeb9f7800bd1a5d282906ae.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/xwWYC6oW" title="新客户首购 TPNS 特惠9.8元/万 DAU，新老客户低至6.5折，给您提供快速、稳定、安全、高效的用户促活利器">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%203-9f78293b201220263799ac53f85ae6cd13e0e8a7.png" />
+            
+        </a>
+        
+    </div>
+    <div aria-label="Previous" class="swiper-button-prev"></div>
+    <div aria-label="Next" class="swiper-button-next"></div>
+    <div class="swiper-pagination"></div>
+</div>
+<script>
+    window.addEventListener('load', function () {
+            let options = {"pagination":{"el":".swiper-pagination","type":"progressbar"},"navigation":{"nextEl":".swiper-button-next","prevEl":".swiper-button-prev"},"slidesPerView":1,"spaceBetween":10,"loop":true,"autoplay":{"delay":2000,"disableOnInteraction":false}} ;
+            var swiper = new Swiper(".ads-banner", options);
+        },
+        false);
+</script>
+
+    </div>
+  </div>
+</div>
+<div class="copyright">
+    <span>原文链接：</span>
+    <a target="_blank" rel="noopener" href="https://www.infoq.cn/article/V5R45xKtTVizcIeg6fFS">https://www.infoq.cn/article/V5R45xKtTVizcIeg6fFS</a>
+</div>
+<div class="share" style="width: 100%;">
+  <img src="https://www.hufeifei.cn/wechat-public-account.jpg" alt="Holmofy" style="margin: auto; display: block; width: 40%;min-width: 160px;max-width: 400px;"/>
+  <div style="margin: auto; text-align: center; font-size: 0.8em; color: grey;">老铁们关注走一走，不迷路</div>
+</div>
+
+  
+    <div class="post-nav">
+      <div class="post-nav-item post-nav-next">
+        
+          <span>〈 </span>
+          <a href="/db/vector-search/" rel="next" title="13 种高维向量检索算法全解析！">
+          13 种高维向量检索算法全解析！
+          </a>
+        
+      </div>
+  
+      <div class="post-nav-item post-nav-prev">
+          
+          <a href="/db/olap/" rel="prev" title="OLAP入门问答-进阶篇">
+            OLAP入门问答-进阶篇
+          </a>
+          <span>〉</span>
+        
+      </div>
+    </div>
+  
+
+<div id="vcomments" style="padding: 10px 50px;"></div>
+<script>
+    window.addEventListener('load', function () {
+        new Valine({"el":"#vcomments","enable":true,"appId":"8Yo6tv65sOStsPwvGSOAmOtM-gzGzoHsz","appKey":"IJPXPCV29V5ja34nj1JL3tQe","notify":false,"verify":false,"pageSize":10,"avatar":"mm","lang":"zh-cn","placeholder":"Just go go","visitor":true,"recordIP":true,"requiredFields":["nick"]});
+    });
+</script>
+
+    </div>
+
+    
+
+  </div>
+  <footer class="footer text-center">
+    <div id="bottom-inner">
+        <a class="bottom-item" href="https://www.hufeifei.cn">首页</a> |
+        <a class="bottom-item" href="https://blog.hufeifei.cn" target="_blank">个人博客</a> |
+        <a class="bottom-item" href="https://github.com/holmofy" target="_blank">GitHub</a>
+    </div>
+    
+    <div>
+        <span class="bottom-item">友情链接: </span>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://draveness.me/">draveness</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://coolshell.cn/">CoolShell</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://martin.kleppmann.com/">martin kleppmann</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://www.skywind.me/blog/">skywind</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://duanple.com/">duanple</a>
+        
+    </div>
+    
+</footer>
+
+  
+  <!-- scripts list from theme config.yml -->
+  
+    <script src="//unpkg.com/swiper/swiper-bundle.min.js"></script>
+  
+    <script src="//cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+  
+
+
+<script>
+  (function(window, document, undefined) {
+
+    var timer = null;
+
+    function returnTop() {
+      cancelAnimationFrame(timer);
+      timer = requestAnimationFrame(function fn() {
+        var oTop = document.body.scrollTop || document.documentElement.scrollTop;
+        if (oTop > 0) {
+          document.body.scrollTop = document.documentElement.scrollTop = oTop - 50;
+          timer = requestAnimationFrame(fn);
+        } else {
+          cancelAnimationFrame(timer);
+        }
+      });
+    }
+
+    var hearts = [];
+    window.requestAnimationFrame = (function() {
+      return window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        function(callback) {
+          setTimeout(callback, 1000 / 60);
+        }
+    })();
+    init();
+
+    function init() {
+      css(".heart{z-index:9999;width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+      attachEvent();
+      gameloop();
+      addMenuEvent();
+    }
+
+    function gameloop() {
+      for (var i = 0; i < hearts.length; i++) {
+        if (hearts[i].alpha <= 0) {
+          document.body.removeChild(hearts[i].el);
+          hearts.splice(i, 1);
+          continue;
+        }
+        hearts[i].y--;
+        hearts[i].scale += 0.004;
+        hearts[i].alpha -= 0.013;
+        hearts[i].el.style.cssText = "left:" + hearts[i].x + "px;top:" + hearts[i].y + "px;opacity:" + hearts[i].alpha + ";transform:scale(" + hearts[i].scale + "," + hearts[i].scale + ") rotate(45deg);background:" + hearts[i].color;
+      }
+      requestAnimationFrame(gameloop);
+    }
+
+    /**
+     * 给logo设置点击事件
+     * 
+     * - 回到顶部
+     * - 出现爱心
+     */
+    function attachEvent() {
+      var old = typeof window.onclick === "function" && window.onclick;
+      var logo = document.getElementById("logo");
+      if (logo) {
+        logo.onclick = function(event) {
+          returnTop();
+          old && old();
+          createHeart(event);
+        }
+      }
+      
+    }
+
+    function createHeart(event) {
+      var d = document.createElement("div");
+      d.className = "heart";
+      hearts.push({
+        el: d,
+        x: event.clientX - 5,
+        y: event.clientY - 5,
+        scale: 1,
+        alpha: 1,
+        color: randomColor()
+      });
+      document.body.appendChild(d);
+    }
+
+    function css(css) {
+      var style = document.createElement("style");
+      style.type = "text/css";
+      try {
+        style.appendChild(document.createTextNode(css));
+      } catch (ex) {
+        style.styleSheet.cssText = css;
+      }
+      document.getElementsByTagName('head')[0].appendChild(style);
+    }
+
+    function randomColor() {
+      // return "rgb(" + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + ")";
+      return "#F44336";
+    }
+
+    function addMenuEvent() {
+      var menu = document.getElementById('menu-main-post');
+      if (menu) {
+        var toc = document.getElementById('toc');
+        if (toc) {
+          menu.onclick = function() {
+            if (toc) {
+              if (toc.style.display == 'block') {
+                toc.style.display = 'none';
+              } else {
+                toc.style.display = 'block';
+              }
+            }
+          };
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+    }
+
+  })(window, document);
+</script>
+
+  
+
+
+
+<script>(function (w, d, s, id) {
+            if (typeof (w.webpushr) !== 'undefined') return; w.webpushr = w.webpushr || function () { (w.webpushr.q = w.webpushr.q || []).push(arguments) }; var js, fjs = d.getElementsByTagName(s)[0]; js = d.createElement(s); js.id = id; js.async = 1; js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window, document, 'script', 'webpushr-jssdk'));webpushr('setup', { 'key': 'BPOxQK5zO7VR8Ja1xRzI_E6lKWqJqwAMSNJozmybmGC6-aujLX8k-lHdIAdb_BcX9po-j5bpVTyEEA6f9Kz0bqU' });</script></body>
+</html>

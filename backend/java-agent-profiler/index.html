@@ -1,0 +1,644 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#202020"/>
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta name="keywords" content="Java,FlameGraph," />
+  
+
+  
+    <meta name="description" content="各大平台上精选优质文章进行汇总" />
+  
+  
+  <link rel="icon" type="image/x-icon" href="/logo.png">
+  <title>JVM CPU Profiler技术原理及源码深度解析 [ 站在巨人的肩膀上 ]</title>
+  
+    <!-- stylesheets list from config.yml -->
+    
+      <link rel="stylesheet" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css">
+    
+      <link rel="stylesheet" href="//unpkg.com/swiper/swiper-bundle.min.css">
+    
+      <link rel="stylesheet" href="/css/xoxo.css">
+    
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-H58NSPXYPF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'G-H58NSPXYPF');
+  </script>
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="站在巨人的肩膀上" type="application/atom+xml">
+</head>
+
+
+<body>
+  <div class="nav-container">
+    <nav class="home-menu pure-menu pure-menu-horizontal">
+  <a class="pure-menu-heading" href="/">
+    <img class="avatar" src="https://www.hufeifei.cn/favicon.jpg">
+    <span class="title">站在巨人的肩膀上</span>
+  </a>
+
+  <ul class="pure-menu-list clearfix">
+      
+          
+            <li class="pure-menu-item"><a href="/" class="pure-menu-link">首页</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/tags" class="pure-menu-link">标签</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/atom.xml" class="pure-menu-link">RSS</a></li>
+          
+      
+  </ul>
+   
+</nav>
+  </div>
+
+  <div class="container" id="content-outer">
+    <div class="inner" id="content-inner">
+      <div class="post-container">
+  <article class="post" id="post">
+    <header class="post-header text-center">
+      <h1 class="title">
+        JVM CPU Profiler技术原理及源码深度解析
+      </h1>
+      <span>
+        
+        <time class="time" datetime="2021-12-01T00:00:00.000Z">
+          2021-12-01
+        </time>
+        
+      </span>
+      <span class="slash">/</span>
+      <span class="post-meta">
+        <span class="post-tags">
+          <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/FlameGraph/" rel="tag">FlameGraph</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/" rel="tag">Java</a></li></ul>
+        </span>
+      </span>
+      <span class="slash">/</span>
+      <span id="/backend/java-agent-profiler/" class="read leancloud_visitors" data-flag-title="JVM CPU Profiler技术原理及源码深度解析">
+        <span class="leancloud-visitors-count"></span> 点击
+      </span>
+      <span class="slash">/</span>
+      <span class="read">阅读耗时 51 分钟</span>
+    </header>
+
+    <div class="post-content">
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><h2 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h2><p>研发人员在遇到线上报警或需要优化系统性能时，常常需要分析程序运行行为和性能瓶颈。<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=Profiling%E6%8A%80%E6%9C%AF&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra=%7B%22sourceType%22:%22article%22,%22sourceId%22:86545748%7D">Profiling技术</a>是一种在应用运行时收集程序相关信息的动态分析手段，常用的JVM Profiler可以从多个方面对程序进行动态分析，如CPU、Memory、Thread、Classes、GC等，其中CPU Profiling的应用最为广泛。</p>
+<p>CPU Profiling经常被用于分析代码的执行热点，如“哪个方法占用CPU的执行时间最长”、“每个方法占用CPU的比例是多少”等等，通过CPU Profiling得到上述相关信息后，研发人员就可以轻松针对热点瓶颈进行分析和性能优化，进而突破性能瓶颈，大幅提升系统的吞吐量。</p>
+<h2 id="CPU-Profiler简介"><a href="#CPU-Profiler简介" class="headerlink" title="CPU Profiler简介"></a>CPU Profiler简介</h2><p>社区实现的JVM Profiler很多，比如已经商用且功能强大的<a target="_blank" rel="noopener" href="https://www.ej-technologies.com/products/jprofiler/overview.html">JProfiler</a>，也有免费开源的产品，如<a target="_blank" rel="noopener" href="https://github.com/uber-common/jvm-profiler">JVM-Profiler</a>，功能各有所长。我们日常使用的Intellij IDEA最新版内部也集成了一个简单好用的Profiler，详细的介绍参见<a target="_blank" rel="noopener" href="https://blog.jetbrains.com/idea/2018/09/intellij-idea-2018-3-eap-git-submodules-jvm-profiler-macos-and-linux-and-more/">官方Blog</a>。</p>
+<p>在用IDEA打开需要诊断的Java项目后，在“Preferences -&gt; Build, Execution, Deployment -&gt; Java Profiler”界面添加一个“CPU Profiler”，然后回到项目，单击右上角的“Run with Profiler”启动项目并开始CPU Profiling过程。一定时间后（推荐5min），在Profiler界面点击“Stop Profiling and Show Results”，即可看到Profiling的结果，包含火焰图和调用树，如下图所示：</p>
+<p><img src="https://pic1.zhimg.com/80/v2-ac27c0c0e77855d9c3cad0ad8c84dfd0_720w.jpg" alt="Intellij IDEA - 性能火焰图"></p>
+<p><img src="https://pic3.zhimg.com/80/v2-e6e1a7bef2ff9a0aa49eaf2a9a0e8592_720w.jpg" alt="Intellij IDEA - 调用堆栈树"></p>
+<p>火焰图是根据调用栈的样本集生成的可视化性能分析图，《<a target="_blank" rel="noopener" href="http://www.ruanyifeng.com/blog/2017/09/flame-graph.html">如何读懂火焰图？</a>》一文对火焰图进行了不错的讲解，大家可以参考一下。简而言之，看火焰图时我们需要关注“平顶”，因为那里就是我们程序的CPU热点。调用树是另一种可视化分析的手段，与火焰图一样，也是根据同一份样本集而生成，按需选择即可。</p>
+<p>这里要说明一下，因为我们没有在项目中引入任何依赖，仅仅是“Run with Profiler”，Profiler就能获取我们程序运行时的信息。这个功能其实是通过JVM Agent实现的，为了更好地帮助大家系统性的了解它，我们在这里先对JVM Agent做个简单的介绍。</p>
+<h2 id="JVM-Agent简介"><a href="#JVM-Agent简介" class="headerlink" title="JVM Agent简介"></a>JVM Agent简介</h2><p>JVM Agent是一个按一定规则编写的特殊<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=%E7%A8%8B%E5%BA%8F%E5%BA%93&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra=%7B%22sourceType%22:%22article%22,%22sourceId%22:86545748%7D">程序库</a>，可以在启动阶段通过命令行参数传递给JVM，<strong>作为一个伴生库与目标JVM运行在同一个进程中</strong>。在Agent中可以通过固定的接口获取JVM进程内的相关信息。Agent既可以是用C/C++/Rust编写的JVMTI Agent，也可以是用Java编写的Java Agent。</p>
+<p>执行Java命令，我们可以看到Agent相关的命令行参数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">-agentlib:&lt;库名&gt;[=&lt;选项&gt;]</span><br><span class="line">              加载本机代理库 &lt;库名&gt;, 例如 -agentlib:jdwp</span><br><span class="line">              另请参阅 -agentlib:jdwp=help</span><br><span class="line">-agentpath:&lt;路径名&gt;[=&lt;选项&gt;]</span><br><span class="line">              按完整路径名加载本机代理库</span><br><span class="line">-javaagent:&lt;jar 路径&gt;[=&lt;选项&gt;]</span><br><span class="line">              加载 Java 编程语言代理, 请参阅 java.lang.instrument</span><br></pre></td></tr></table></figure>
+
+<h2 id="JVMTI-Agent"><a href="#JVMTI-Agent" class="headerlink" title="JVMTI Agent"></a>JVMTI Agent</h2><p>JVMTI（JVM Tool Interface）是JVM提供的一套标准的C/C++编程接口，是实现Debugger、Profiler、Monitor、Thread Analyser等工具的统一基础，在主流Java虚拟机中都有实现。</p>
+<p>当我们要基于JVMTI实现一个Agent时，需要实现如下<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=%E5%85%A5%E5%8F%A3%E5%87%BD%E6%95%B0&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra=%7B%22sourceType%22:%22article%22,%22sourceId%22:86545748%7D">入口函数</a>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// $JAVA_HOME/include/jvmti.h</span></span><br><span class="line"></span><br><span class="line"><span class="function">JNIEXPORT jint JNICALL <span class="title">Agent_OnLoad</span><span class="params">(JavaVM *vm, <span class="keyword">char</span> *options, <span class="keyword">void</span> *reserved)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>使用C/C++实现该函数，并将代码编译为动态连接库（Linux上是.so），通过-agentpath参数将库的完整路径传递给Java进程，JVM就会在<strong>启动阶段</strong>的合适时机执行该函数。在函数内部，我们可以通过JavaVM指针参数拿到JNI和JVMTI的<strong>函数指针表</strong>，这样我们就拥有了与JVM进行各种复杂交互的能力。</p>
+<p>更多JVMTI相关的细节可以参考<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/12/docs/specs/jvmti.html">官方文档</a>。</p>
+<h2 id="Java-Agent"><a href="#Java-Agent" class="headerlink" title="Java Agent"></a>Java Agent</h2><p>在很多场景下，我们没有必要必须使用C/C++来开发JVMTI Agent，因为成本高且不易维护。JVM自身基于JVMTI封装了一套Java的<strong>Instrument API</strong>接口，允许使用Java语言开发Java Agent（只是一个jar包），大大降低了Agent的开发成本。社区开源的产品如<a target="_blank" rel="noopener" href="https://github.com/oldmanpushcart/greys-anatomy">Greys</a>、<a target="_blank" rel="noopener" href="https://github.com/alibaba/arthas">Arthas</a>、<a target="_blank" rel="noopener" href="https://github.com/alibaba/jvm-sandbox">JVM-Sandbox</a>、<a target="_blank" rel="noopener" href="https://github.com/uber-common/jvm-profiler">JVM-Profiler</a>等都是纯Java编写的，也是以Java Agent形式来运行。</p>
+<p>在Java Agent中，我们需要在jar包的MANIFEST.MF中将<strong>Premain-Class</strong>指定为一个入口类，并在该入口类中实现如下方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">premain</span><span class="params">(String args, Instrumentation ins)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// implement</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样打包出来的jar就是一个Java Agent，可以通过-javaagent参数将jar传递给Java进程伴随启动，JVM同样会在启动阶段的合适时机执行该方法。</p>
+<p>在该方法内部，参数<strong>Instrumentation</strong>接口提供了<strong>Retransform Classes</strong>的能力，我们利用该接口就可以<strong>对宿主进程的Class进行修改</strong>，实现方法耗时统计、故障注入、Trace等功能。Instrumentation接口提供的能力较为单一，仅与Class字节码操作相关，但由于我们现在已经处于<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=%E5%AE%BF%E4%B8%BB%E8%BF%9B%E7%A8%8B&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra=%7B%22sourceType%22:%22article%22,%22sourceId%22:86545748%7D">宿主进程</a>环境内，就可以<strong>利用JMX直接获取宿主进程的内存、线程、锁等信息</strong>。无论是Instrument API还是JMX，<strong>它们内部仍是统一基于JVMTI来实现</strong>。</p>
+<p>更多Instrument API相关的细节可以参考<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/12/docs/api/java.instrument/java/lang/instrument/package-summary.html">官方文档</a>。</p>
+<h2 id="CPU-Profiler原理解析"><a href="#CPU-Profiler原理解析" class="headerlink" title="CPU Profiler原理解析"></a>CPU Profiler原理解析</h2><p>在了解完Profiler如何以Agent的形式执行后，我们可以开始尝试构造一个简单的CPU Profiler。但在此之前，还有必要了解下CPU Profiling技术的两种实现方式及其区别。</p>
+<h3 id="Sampling-vs-Instrumentation"><a href="#Sampling-vs-Instrumentation" class="headerlink" title="Sampling vs Instrumentation"></a>Sampling vs Instrumentation</h3><p>使用过JProfiler的同学应该都知道，JProfiler的CPU Profiling功能提供了两种方式选项: <strong>Sampling</strong>和<strong>Instrumentation</strong>，它们也是实现CPU Profiler的两种手段。</p>
+<p>Sampling方式顾名思义，基于对StackTrace的“采样”进行实现，核心原理如下：</p>
+<ol>
+<li>引入Profiler依赖，或直接利用Agent技术注入目标JVM进程并启动Profiler。</li>
+<li>启动一个采样定时器，以固定的采样频率每隔一段时间（毫秒级）对所有线程的调用栈进行Dump。</li>
+<li>汇总并统计每次调用栈的Dump结果，在一定时间内采到足够的样本后，导出统计结果，内容是每个方法被采样到的次数及方法的调用关系。</li>
+</ol>
+<p>Instrumentation则是利用Instrument API，对所有必要的Class进行字节码增强，在进入每个方法前进行埋点，方法执行结束后统计本次方法执行耗时，最终进行汇总。二者都能得到想要的结果，那么它们有什么区别呢？或者说，孰优孰劣？</p>
+<p>Instrumentation方式对几乎所有方法添加了额外的AOP逻辑，<strong>这会导致对线上服务造成巨额的性能影响</strong>，但其优势是：<strong>绝对精准的方法调用次数、调用时间统计</strong>。</p>
+<p>Sampling方式基于无侵入的额外线程对所有线程的调用栈快照进行固定频率抽样，相对前者来说它的<strong>性能开销很低</strong>。但由于它基于“采样”的模式，以及JVM固有的<strong>只能在安全点（Safe Point）进行采样的“缺陷”</strong>，会导致统计结果存在一定的偏差。譬如说：某些方法执行时间极短，但执行频率很高，真实占用了大量的CPU Time，但Sampling Profiler的采样周期不能无限调小，这会导致性能开销骤增，所以会导致大量的样本调用栈中并不存在刚才提到的”高频小方法“，进而导致最终结果无法反映真实的CPU热点。更多Sampling相关的问题可以参考《<a target="_blank" rel="noopener" href="https://psy-lob-saw.blogspot.com/2016/02/why-most-sampling-java-profilers-are.html">Why (Most) Sampling Java Profilers Are Fucking Terrible</a>》。</p>
+<p>具体到“孰优孰劣”的问题层面，这两种实现技术并没有非常明显的高下之判，只有在分场景讨论下才有意义。Sampling由于低开销的特性，更适合用在CPU密集型的应用中，以及不可接受大量性能开销的线上服务中。而Instrumentation则更适合用在I/O密集的应用中、对性能开销不敏感以及确实需要精确统计的场景中。社区的Profiler更多的是基于Sampling来实现，本文也是基于Sampling来进行讲解。</p>
+<h3 id="基于Java-Agent-JMX实现"><a href="#基于Java-Agent-JMX实现" class="headerlink" title="基于Java Agent + JMX实现"></a>基于Java Agent + JMX实现</h3><p>一个最简单的Sampling CPU Profiler可以用Java Agent + JMX方式来实现。以Java Agent为入口，进入目标JVM进程后开启一个ScheduledExecutorService，定时利用JMX的threadMXBean.dumpAllThreads()来导出所有线程的StackTrace，最终汇总并导出即可。</p>
+<p>Uber的<a target="_blank" rel="noopener" href="https://github.com/uber-common/jvm-profiler">JVM-Profiler</a>实现原理也是如此，关键部分代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// com/uber/profiling/profilers/StacktraceCollectorProfiler.java</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * StacktraceCollectorProfiler等同于文中所述CpuProfiler，仅命名偏好不同而已</span></span><br><span class="line"><span class="comment"> * jvm-profiler的CpuProfiler指代的是CpuLoad指标的Profiler</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 实现了Profiler接口，外部由统一的ScheduledExecutorService对所有Profiler定时执行</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">profile</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    ThreadInfo[] threadInfos = threadMXBean.dumpAllThreads(<span class="keyword">false</span>, <span class="keyword">false</span>);</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    <span class="keyword">for</span> (ThreadInfo threadInfo : threadInfos) &#123;</span><br><span class="line">        String threadName = threadInfo.getThreadName();</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">        StackTraceElement[] stackTraceElements = threadInfo.getStackTrace();</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = stackTraceElements.length - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i--) &#123;</span><br><span class="line">            StackTraceElement stackTraceElement = stackTraceElements[i];</span><br><span class="line">            <span class="comment">// ...</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Uber提供的定时器默认Interval是100ms，对于CPU Profiler来说，这略显粗糙。但由于dumpAllThreads()的执行开销不容小觑，Interval不宜设置的过小，所以该方法的CPU Profiling结果会存在不小的误差。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/uber-common/jvm-profiler">JVM-Profiler</a>的优点在于支持多种指标的Profiling（StackTrace、CPUBusy、Memory、I/O、Method），且支持将Profiling结果通过Kafka上报回中心Server进行分析，也即支持集群诊断。</p>
+<h3 id="基于JVMTI-GetStackTrace实现"><a href="#基于JVMTI-GetStackTrace实现" class="headerlink" title="基于JVMTI + GetStackTrace实现"></a>基于JVMTI + GetStackTrace实现</h3><p>使用Java实现Profiler相对较简单，但也存在一些问题，譬如说Java Agent代码与业务代码共享AppClassLoader，被JVM直接加载的agent.jar如果引入了第三方依赖，可能会<strong>对业务Class造成污染</strong>。截止发稿时，JVM-Profiler都存在这个问题，它引入了Kafka-Client、http-Client、Jackson等组件，如果与业务代码中的组件版本发生冲突，可能会引发未知错误。Greys/Arthas/JVM-Sandbox的解决方式是分离入口与核心代码，使用定制的ClassLoader加载核心代码，避免影响业务代码。</p>
+<p>在更底层的C/C++层面，我们可以直接对接JVMTI接口，使用原生C API对JVM进行操作，功能更丰富更强大，但开发效率偏低。基于上节同样的原理开发CPU Profiler，使用JVMTI需要进行如下这些步骤：</p>
+<ol>
+<li>编写Agent_OnLoad()，在入口通过JNI的JavaVM*指针的GetEnv()函数拿到JVMTI的jvmtiEnv指针：</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// agent.c</span></span><br><span class="line"></span><br><span class="line"><span class="function">JNIEXPORT jint JNICALL <span class="title">Agent_OnLoad</span><span class="params">(JavaVM *vm, <span class="keyword">char</span> *options, <span class="keyword">void</span> *reserved)</span> </span>&#123;</span><br><span class="line">    jvmtiEnv *jvmti;</span><br><span class="line">    (*vm)-&gt;GetEnv((<span class="keyword">void</span> **)&amp;jvmti, JVMTI_VERSION_1_0);</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    <span class="keyword">return</span> JNI_OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>开启一个线程定时循环，定时使用jvmtiEnv指针配合调用如下几个<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=JVMTI%E5%87%BD%E6%95%B0&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra=%7B%22sourceType%22:%22article%22,%22sourceId%22:86545748%7D">JVMTI函数</a>：</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取所有线程的jthread</span></span><br><span class="line"><span class="function">jvmtiError <span class="title">GetAllThreads</span><span class="params">(jvmtiEnv *env, jint *threads_count_ptr, jthread **threads_ptr)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 根据jthread获取该线程信息（name、daemon、priority...）</span></span><br><span class="line"><span class="function">jvmtiError <span class="title">GetThreadInfo</span><span class="params">(jvmtiEnv *env, jthread thread, jvmtiThreadInfo* info_ptr)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 根据jthread获取该线程调用栈</span></span><br><span class="line"><span class="function">jvmtiError <span class="title">GetStackTrace</span><span class="params">(jvmtiEnv *env,</span></span></span><br><span class="line"><span class="params"><span class="function">                         jthread thread,</span></span></span><br><span class="line"><span class="params"><span class="function">                         jint start_depth,</span></span></span><br><span class="line"><span class="params"><span class="function">                         jint max_frame_count,</span></span></span><br><span class="line"><span class="params"><span class="function">                         jvmtiFrameInfo *frame_buffer,</span></span></span><br><span class="line"><span class="params"><span class="function">                         jint *count_ptr)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>主逻辑大致是：首先调用GetAllThreads()获取所有线程的“句柄”jthread，然后遍历根据jthread调用GetThreadInfo()获取线程信息，按线程名过滤掉不需要的线程后，继续遍历根据jthread调用GetStackTrace()获取线程的调用栈。</p>
+<ol start="3">
+<li>在Buffer中保存每一次的采样结果，最终生成必要的统计数据即可。</li>
+</ol>
+<p>按如上步骤即可实现基于JVMTI的CPU Profiler。但需要说明的是，即便是基于原生JVMTI接口使用GetStackTrace()的方式获取调用栈，也存在与JMX相同的问题——<strong>只能在安全点（Safe Point）进行采样</strong>。</p>
+<h4 id="SafePoint-Bias问题"><a href="#SafePoint-Bias问题" class="headerlink" title="SafePoint Bias问题"></a>SafePoint Bias问题</h4><p>基于Sampling的CPU Profiler通过采集程序在不同时间点的调用栈样本来近似地推算出热点方法，因此，从理论上来讲Sampling CPU Profiler必须遵循以下两个原则：</p>
+<ol>
+<li>样本必须足够多。</li>
+<li>程序中所有正在运行的代码点都必须以<strong>相同的概率</strong>被Profiler采样。</li>
+</ol>
+<p>如果只能在安全点采样，就违背了第二条原则。因为<strong>我们只能采集到位于安全点时刻的调用栈快照，意味着某些代码可能永远没有机会被采样，即使它真实耗费了大量的CPU执行时间</strong>，这种现象被称为“SafePoint Bias”。</p>
+<p>上文我们提到，基于JMX与基于JVMTI的Profiler实现都存在SafePoint Bias，但一个值得了解的细节是：<strong>单独来说，JVMTI的GetStackTrace()函数并不需要在Caller的安全点执行，但当调用GetStackTrace()获取其他线程的调用栈时，必须等待，直到目标线程进入安全点；而且，GetStackTrace()仅能通过单独的线程同步定时调用，不能在UNIX信号处理器的Handler中被异步调用。综合来说，GetStackTrace()存在与JMX一样的SafePoint Bias</strong>。更多安全点相关的知识可以参考《<a target="_blank" rel="noopener" href="https://psy-lob-saw.blogspot.com/2015/12/safepoints.html">Safepoints: Meaning, Side Effects and Overheads</a>》。</p>
+<p>那么，如何避免SafePoint Bias？社区提供了一种Hack思路——AsyncGetCallTrace。</p>
+<h3 id="基于JVMTI-AsyncGetCallTrace实现"><a href="#基于JVMTI-AsyncGetCallTrace实现" class="headerlink" title="基于JVMTI + AsyncGetCallTrace实现"></a>基于JVMTI + AsyncGetCallTrace实现</h3><p>如上节所述，假如我们拥有一个函数可以获取当前线程的调用栈且不受安全点干扰，另外它还支持在UNIX信号处理器中被异步调用，那么我们只需注册一个UNIX信号处理器，在Handler中调用该函数获取当前线程的调用栈即可。<strong>由于UNIX信号会被发送给进程的随机一线程进行处理</strong>，因此最终信号会均匀分布在所有线程上，也就均匀获取了所有线程的<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=%E8%B0%83%E7%94%A8%E6%A0%88%E6%A0%B7%E6%9C%AC&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra=%7B%22sourceType%22:%22article%22,%22sourceId%22:86545748%7D">调用栈样本</a>。</p>
+<p>OracleJDK/OpenJDK内部提供了这么一个函数——AsyncGetCallTrace，它的原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 栈帧</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line"> jint lineno;</span><br><span class="line"> jmethodID method_id;</span><br><span class="line">&#125; AGCT_CallFrame;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 调用栈</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    JNIEnv *env;</span><br><span class="line">    jint num_frames;</span><br><span class="line">    AGCT_CallFrame *frames;</span><br><span class="line">&#125; AGCT_CallTrace;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 根据ucontext将调用栈填充进trace指针</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">AsyncGetCallTrace</span><span class="params">(AGCT_CallTrace *trace, jint depth, <span class="keyword">void</span> *ucontext)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>通过原型可以看到，该函数的使用方式非常简洁，直接通过ucontext就能获取到完整的Java调用栈。</p>
+<p>顾名思义，AsyncGetCallTrace是“async”的，不受安全点影响，这样的话采样就可能发生在任何时间，包括Native代码执行期间、GC期间等，在这时我们是无法获取Java调用栈的，AGCT_CallTrace的num_frames字段正常情况下标识了获取到的调用栈深度，但在如前所述的<strong>异常情况下它就表示为负数，最常见的-2代表此刻正在GC</strong>。</p>
+<p>由于AsyncGetCallTrace非标准JVMTI函数，因此我们无法在jvmti.h中找到该函数声明，且由于其目标文件也早已链接进JVM二进制文件中，所以无法通过简单的声明来获取该函数的地址，这需要通过一些Trick方式来解决。简单说，Agent最终是作为动态链接库加载到目标JVM进程的地址空间中，因此可以在Agent_OnLoad内通过glibc提供的**dlsym()**函数拿到当前地址空间（即目标JVM进程地址空间）名为“AsyncGetCallTrace”的符号地址。这样就拿到了该函数的指针，按照上述原型进行类型转换后，就可以正常调用了。</p>
+<p>通过AsyncGetCallTrace实现CPU Profiler的大致流程：</p>
+<ol>
+<li>编写Agent_OnLoad()，在入口拿到jvmtiEnv和AsyncGetCallTrace指针，获取AsyncGetCallTrace方式如下:</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">void</span> <span class="params">(*AsyncGetCallTrace)</span><span class="params">(AGCT_CallTrace *traces, jint depth, <span class="keyword">void</span> *ucontext)</span></span>;</span><br><span class="line"><span class="comment">// ...</span></span><br><span class="line">AsyncGetCallTrace agct_ptr = (AsyncGetCallTrace)dlsym(RTLD_DEFAULT, <span class="string">&quot;AsyncGetCallTrace&quot;</span>);</span><br><span class="line"><span class="keyword">if</span> (agct_ptr == <span class="literal">NULL</span>) &#123;</span><br><span class="line">    <span class="keyword">void</span> *libjvm = dlopen(<span class="string">&quot;libjvm.so&quot;</span>, RTLD_NOW);</span><br><span class="line">    <span class="keyword">if</span> (!libjvm) &#123;</span><br><span class="line">        <span class="comment">// 处理dlerror()...</span></span><br><span class="line">    &#125;</span><br><span class="line">    agct_ptr = (AsyncGetCallTrace)dlsym(libjvm, <span class="string">&quot;AsyncGetCallTrace&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>在OnLoad阶段，我们还需要做一件事，即注册OnClassLoad和OnClassPrepare这两个Hook，<strong>原因是jmethodID是延迟分配的，使用AGCT获取Traces依赖预先分配好的数据。我们在OnClassPrepare的CallBack中尝试获取该Class的所有Methods，这样就使JVMTI提前分配了所有方法的jmethodID</strong>，如下所示：</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> JNICALL <span class="title">OnClassLoad</span><span class="params">(jvmtiEnv *jvmti, JNIEnv* jni, jthread thread, jclass klass)</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> JNICALL <span class="title">OnClassPrepare</span><span class="params">(jvmtiEnv *jvmti, JNIEnv *jni, jthread thread, jclass klass)</span> </span>&#123;</span><br><span class="line">    jint method_count;</span><br><span class="line">    jmethodID *methods;</span><br><span class="line">    jvmti-&gt;GetClassMethods(klass, &amp;method_count, &amp;methods);</span><br><span class="line">    <span class="keyword">delete</span> [] methods;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">jvmtiEventCallbacks callbacks = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">callbacks.ClassLoad = OnClassLoad;</span><br><span class="line">callbacks.ClassPrepare = OnClassPrepare;</span><br><span class="line">jvmti-&gt;SetEventCallbacks(&amp;callbacks, <span class="keyword">sizeof</span>(callbacks));</span><br><span class="line">jvmti-&gt;SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_CLASS_LOAD, <span class="literal">NULL</span>);</span><br><span class="line">jvmti-&gt;SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_CLASS_PREPARE, <span class="literal">NULL</span>);</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>利用SIGPROF信号来进行定时采样：</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这里信号handler传进来的的ucontext即AsyncGetCallTrace需要的ucontext</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">signal_handler</span><span class="params">(<span class="keyword">int</span> signo, <span class="keyword">siginfo_t</span> *siginfo, <span class="keyword">void</span> *ucontext)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 使用AsyncCallTrace进行采样，注意处理num_frames为负的异常情况</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 注册SIGPROF信号的handler</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">sigaction</span> <span class="title">sa</span>;</span></span><br><span class="line">sigemptyset(&amp;sa.sa_mask);</span><br><span class="line">sa.sa_sigaction = signal_handler;</span><br><span class="line">sa.sa_flags = SA_RESTART | SA_SIGINFO;</span><br><span class="line">sigaction(SIGPROF, &amp;sa, <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 定时产生SIGPROF信号</span></span><br><span class="line"><span class="comment">// interval是nanoseconds表示的采样间隔，AsyncGetCallTrace相对于同步采样来说可以适当高频一些</span></span><br><span class="line"><span class="keyword">long</span> sec = interval / <span class="number">1000000000</span>;</span><br><span class="line"><span class="keyword">long</span> usec = (interval % <span class="number">1000000000</span>) / <span class="number">1000</span>;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">itimerval</span> <span class="title">tv</span> =</span> &#123;&#123;sec, usec&#125;, &#123;sec, usec&#125;&#125;;</span><br><span class="line">setitimer(ITIMER_PROF, &amp;tv, <span class="literal">NULL</span>);</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>在Buffer中保存每一次的采样结果，最终生成必要的统计数据即可。</li>
+</ol>
+<p>按如上步骤即可实现基于AsyncGetCallTrace的CPU Profiler，这是社区中目前性能开销最低、相对效率最高的CPU Profiler实现方式，在Linux环境下结合perf_events还能做到同时采样Java栈与Native栈，也就能同时分析Native代码中存在的性能热点。该方式的典型开源实现有<a target="_blank" rel="noopener" href="https://github.com/jvm-profiling-tools/async-profiler">Async-Profiler</a>和<a target="_blank" rel="noopener" href="https://github.com/jvm-profiling-tools/honest-profiler">Honest-Profiler</a>，Async-Profiler实现质量较高，感兴趣的话建议大家阅读参考源码。有趣的是，IntelliJ IDEA内置的Java Profiler，其实就是Async-Profiler的包装。更多关于AsyncGetCallTrace的内容，大家可以参考《<a target="_blank" rel="noopener" href="http://psy-lob-saw.blogspot.com/2016/06/the-pros-and-cons-of-agct.html">The Pros and Cons of AsyncGetCallTrace Profilers</a>》。</p>
+<h2 id="生成性能火焰图"><a href="#生成性能火焰图" class="headerlink" title="生成性能火焰图"></a>生成性能火焰图</h2><p>现在我们拥有了采样调用栈的能力，但是调用栈样本集是以二维数组的数据结构形式存在于内存中的，如何将其转换为可视化的火焰图呢？</p>
+<p>火焰图通常是一个<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=svg%E6%96%87%E4%BB%B6&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra=%7B%22sourceType%22:%22article%22,%22sourceId%22:86545748%7D">svg文件</a>，部分优秀项目可以根据文本文件自动生成火焰图文件，仅对文本文件的格式有一定要求。<a target="_blank" rel="noopener" href="https://github.com/brendangregg/FlameGraph">FlameGraph</a>项目的核心只是一个Perl脚本，可以根据我们提供的调用栈文本生成相应的火焰图svg文件。调用栈的文本格式相当简单，如下所示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">base_func;func1;func2;func3 10</span><br><span class="line">base_func;funca;funcb 15</span><br></pre></td></tr></table></figure>
+
+<p>将我们采样到的调用栈样本集进行整合后，需输出如上所示的文本格式。每一行代表一“类“调用栈，空格左边是调用栈的方法名排列，以分号分割，左栈底右栈顶，空格右边是该样本出现的次数。</p>
+<p>将样本文件交给flamegraph.pl脚本执行，就能输出相应的火焰图了：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ flamegraph.pl stacktraces.txt &gt; stacktraces.svg</span><br></pre></td></tr></table></figure>
+
+<p>效果如下图所示：</p>
+<p><img src="https://pic3.zhimg.com/80/v2-64a07d373beb9eb31d7accd933331e0a_720w.jpg" alt="img"></p>
+<p>通过flamegraph.pl生成的火焰图</p>
+<h2 id="HotSpot的Dynamic-Attach机制解析"><a href="#HotSpot的Dynamic-Attach机制解析" class="headerlink" title="HotSpot的Dynamic Attach机制解析"></a>HotSpot的Dynamic Attach机制解析</h2><p>到目前为止，我们已经了解了CPU Profiler完整的工作原理，然而使用过JProfiler/Arthas的同学可能会有疑问，很多情况下可以直接对线上运行中的服务进行Profling，并不需要在Java进程的启动参数添加<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=Agent%E5%8F%82%E6%95%B0&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra=%7B%22sourceType%22:%22article%22,%22sourceId%22:86545748%7D">Agent参数</a>，这是通过什么手段做到的？答案是<strong>Dynamic Attach</strong>。</p>
+<p>JDK在1.6以后提供了Attach API，允许向运行中的JVM进程添加Agent，这项手段被广泛使用在各种Profiler和字节码增强工具中，其官方简介如下：</p>
+<blockquote>
+<p>This is a Sun extension that allows a tool to ‘attach’ to another process running Java code and launch a JVM TI agent or a java.lang.instrument agent in that process.</p>
+</blockquote>
+<p>总的来说，Dynamic Attach是HotSpot提供的一种特殊能力，它允许一个进程向另一个运行中的JVM进程发送一些命令并执行，命令并不限于加载Agent，还包括Dump内存、<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=Dump%E7%BA%BF%E7%A8%8B&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra=%7B%22sourceType%22:%22article%22,%22sourceId%22:86545748%7D">Dump线程</a>等等。</p>
+<h3 id="通过sun-tools进行Attach"><a href="#通过sun-tools进行Attach" class="headerlink" title="通过sun.tools进行Attach"></a>通过sun.tools进行Attach</h3><p>Attach虽然是HotSpot提供的能力，但JDK在Java层面也对其做了封装。</p>
+<p>前文已经提到，对于Java Agent来说，PreMain方法在Agent作为启动参数运行的时候执行，其实我们还可以额外实现一个AgentMain方法，并在MANIFEST.MF中将<strong>Agent-Class</strong>指定为该Class：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">agentmain</span><span class="params">(String args, Instrumentation ins)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// implement</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样打包出来的jar，既可以作为-javaagent参数启动，也可以被Attach到运行中的目标JVM进程。JDK已经封装了简单的API让我们直接Attach一个Java Agent，下面以Arthas中的代码进行演示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// com/taobao/arthas/core/Arthas.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.sun.tools.attach.VirtualMachine;</span><br><span class="line"><span class="keyword">import</span> com.sun.tools.attach.VirtualMachineDescriptor;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">attachAgent</span><span class="params">(Configure configure)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    VirtualMachineDescriptor virtualMachineDescriptor = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 拿到所有JVM进程，找出目标进程</span></span><br><span class="line">    <span class="keyword">for</span> (VirtualMachineDescriptor descriptor : VirtualMachine.list()) &#123;</span><br><span class="line">        String pid = descriptor.id();</span><br><span class="line">        <span class="keyword">if</span> (pid.equals(Integer.toString(configure.getJavaPid()))) &#123;</span><br><span class="line">            virtualMachineDescriptor = descriptor;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    VirtualMachine virtualMachine = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 针对某个JVM进程调用VirtualMachine.attach()方法，拿到VirtualMachine实例</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">null</span> == virtualMachineDescriptor) &#123;</span><br><span class="line">            virtualMachine = VirtualMachine.attach(<span class="string">&quot;&quot;</span> + configure.getJavaPid());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            virtualMachine = VirtualMachine.attach(virtualMachineDescriptor);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 调用VirtualMachine#loadAgent()，将arthasAgentPath指定的jar attach到目标JVM进程中</span></span><br><span class="line">        <span class="comment">// 第二个参数为attach参数，即agentmain的首个String参数args</span></span><br><span class="line">        virtualMachine.loadAgent(arthasAgentPath, configure.getArthasCore() + <span class="string">&quot;;&quot;</span> + configure.toString());</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">null</span> != virtualMachine) &#123;</span><br><span class="line">            <span class="comment">// 调用VirtualMachine#detach()释放</span></span><br><span class="line">            virtualMachine.detach();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="直接对HotSpot进行Attach"><a href="#直接对HotSpot进行Attach" class="headerlink" title="直接对HotSpot进行Attach"></a>直接对HotSpot进行Attach</h3><p>sun.tools封装的API足够简单易用，但只能使用Java编写，也只能用在Java Agent上，因此有些时候我们必须手工对JVM进程直接进行Attach。对于JVMTI，除了Agent_OnLoad()之外，我们还需实现一个Agent_OnAttach()函数，当将JVMTI Agent Attach到目标进程时，从该函数开始执行：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// $JAVA_HOME/include/jvmti.h</span></span><br><span class="line"></span><br><span class="line"><span class="function">JNIEXPORT jint JNICALL <span class="title">Agent_OnAttach</span><span class="params">(JavaVM *vm, <span class="keyword">char</span> *options, <span class="keyword">void</span> *reserved)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>下面我们以Async-Profiler中的jattach源码为线索，探究一下如何利用Attach机制给运行中的JVM进程发送命令。jattach是Async-Profiler提供的一个Driver，使用方式比较直观：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Usage:</span><br><span class="line">    jattach &lt;pid&gt; &lt;cmd&gt; [args ...]</span><br><span class="line">Args:</span><br><span class="line">    &lt;pid&gt;  目标JVM进程的进程ID</span><br><span class="line">    &lt;cmd&gt;  要执行的命令</span><br><span class="line">    &lt;args&gt; 命令参数</span><br></pre></td></tr></table></figure>
+
+<p>使用方式如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ jattach 1234 load /absolute/path/to/agent/libagent.so <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>执行上述命令，libagent.so就被加载到ID为1234的JVM进程中并开始执行Agent_OnAttach函数了。有一点需要注意，<strong>执行Attach的进程euid及egid，与被Attach的目标JVM进程必须相同</strong>。接下来开始分析<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=jattach%E6%BA%90%E7%A0%81&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra=%7B%22sourceType%22:%22article%22,%22sourceId%22:86545748%7D">jattach源码</a>。</p>
+<p>如下所示的Main函数描述了一次Attach的整体流程：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// async-profiler/src/jattach/jattach.c</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>** argv)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 解析命令行参数</span></span><br><span class="line">    <span class="comment">// 检查euid与egid</span></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!check_socket(nspid) &amp;&amp; !start_attach_mechanism(pid, nspid)) &#123;</span><br><span class="line">        perror(<span class="string">&quot;Could not start attach mechanism&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> fd = connect_socket(nspid);</span><br><span class="line">    <span class="keyword">if</span> (fd == <span class="number">-1</span>) &#123;</span><br><span class="line">        perror(<span class="string">&quot;Could not connect to socket&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Connected to remote JVM\n&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (!write_command(fd, argc - <span class="number">2</span>, argv + <span class="number">2</span>)) &#123;</span><br><span class="line">        perror(<span class="string">&quot;Error writing to socket&quot;</span>);</span><br><span class="line">        close(fd);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Response code = &quot;</span>);</span><br><span class="line">    fflush(<span class="built_in">stdout</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> result = read_response(fd);</span><br><span class="line">    close(fd);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>忽略掉命令行参数解析与检查euid和egid的过程。jattach首先调用了check_socket函数进行了“socket检查？”，check_socket源码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// async-profiler/src/jattach/jattach.c</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Check if remote JVM has already opened socket for Dynamic Attach</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">check_socket</span><span class="params">(<span class="keyword">int</span> pid)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">char</span> path[MAX_PATH];</span><br><span class="line">    <span class="built_in">snprintf</span>(path, MAX_PATH, <span class="string">&quot;%s/.java_pid%d&quot;</span>, get_temp_directory(), pid); <span class="comment">// get_temp_directory()在Linux下固定返回&quot;/tmp&quot;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">stat</span> <span class="title">stats</span>;</span></span><br><span class="line">    <span class="keyword">return</span> stat(path, &amp;stats) == <span class="number">0</span> &amp;&amp; S_ISSOCK(stats.st_mode);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们知道，UNIX操作系统提供了一种基于文件的Socket接口，称为“UNIX Socket”（一种常用的<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra=%7B%22sourceType%22:%22article%22,%22sourceId%22:86545748%7D">进程间通信</a>方式）。在该函数中使用S_ISSOCK宏来判断该文件是否被绑定到了UNIX Socket，如此看来，“/tmp/**.java_pid<pid>**”文件很有可能就是<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=%E5%A4%96%E9%83%A8%E8%BF%9B%E7%A8%8B&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra=%7B%22sourceType%22:%22article%22,%22sourceId%22:86545748%7D">外部进程</a>与JVM进程间通信的桥梁。</p>
+<p>查阅官方文档，得到如下描述：</p>
+<blockquote>
+<p>The attach listener thread then communicates with the source JVM in an OS dependent manner:</p>
+</blockquote>
+<ul>
+<li>On Solaris, the Doors IPC mechanism is used. The door is attached to a file in the file system so that clients can access it.</li>
+<li>On Linux, a Unix domain socket is used. This socket is bound to a file in the filesystem so that clients can access it.</li>
+<li>On Windows, the created thread is given the name of a pipe which is served by the client. The result of the operations are written to this pipe by the target JVM.</li>
+</ul>
+<p>证明了我们的猜想是正确的。目前为止check_socket函数的作用很容易理解了：<strong>判断外部进程与目标JVM进程之间是否已经建立了UNIX Socket连接</strong>。</p>
+<p>回到Main函数，在使用check_socket确定连接尚未建立后，紧接着调用start_attach_mechanism函数，函数名很直观地描述了它的作用，源码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// async-profiler/src/jattach/jattach.c</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Force remote JVM to start Attach listener.</span></span><br><span class="line"><span class="comment">// HotSpot will start Attach listener in response to SIGQUIT if it sees .attach_pid file</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">start_attach_mechanism</span><span class="params">(<span class="keyword">int</span> pid, <span class="keyword">int</span> nspid)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">char</span> path[MAX_PATH];</span><br><span class="line">    <span class="built_in">snprintf</span>(path, MAX_PATH, <span class="string">&quot;/proc/%d/cwd/.attach_pid%d&quot;</span>, nspid, nspid);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> fd = creat(path, <span class="number">0660</span>);</span><br><span class="line">    <span class="keyword">if</span> (fd == <span class="number">-1</span> || (close(fd) == <span class="number">0</span> &amp;&amp; !check_file_owner(path))) &#123;</span><br><span class="line">        <span class="comment">// Failed to create attach trigger in current directory. Retry in /tmp</span></span><br><span class="line">        <span class="built_in">snprintf</span>(path, MAX_PATH, <span class="string">&quot;%s/.attach_pid%d&quot;</span>, get_temp_directory(), nspid);</span><br><span class="line">        fd = creat(path, <span class="number">0660</span>);</span><br><span class="line">        <span class="keyword">if</span> (fd == <span class="number">-1</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        close(fd);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// We have to still use the host namespace pid here for the kill() call</span></span><br><span class="line">    kill(pid, SIGQUIT);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Start with 20 ms sleep and increment delay each iteration</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timespec</span> <span class="title">ts</span> =</span> &#123;<span class="number">0</span>, <span class="number">20000000</span>&#125;;</span><br><span class="line">    <span class="keyword">int</span> result;</span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        nanosleep(&amp;ts, <span class="literal">NULL</span>);</span><br><span class="line">        result = check_socket(nspid);</span><br><span class="line">    &#125; <span class="keyword">while</span> (!result &amp;&amp; (ts.tv_nsec += <span class="number">20000000</span>) &lt; <span class="number">300000000</span>);</span><br><span class="line"></span><br><span class="line">    unlink(path);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>start_attach_mechanism函数首先创建了一个名为“/tmp/<strong>.attach_pid<pid><strong>”的空文件，然后向目标JVM进程发送了一个</strong>SIGQUIT</strong>信号，这个信号似乎触发了JVM的某种机制？紧接着，start_attach_mechanism函数开始陷入了一种等待，每20ms调用一次check_socket函数检查连接是否被建立，如果等了300ms还没有成功就放弃。函数的最后调用Unlink删掉.attach_pid文件并返回。</p>
+<p>如此看来，HotSpot似乎提供了一种特殊的机制，只要给它发送一个SIGQUIT信号，并预先准备好.attach_pid文件，HotSpot会主动创建一个地址为“/tmp/.java_pid”的UNIX Socket，接下来主动Connect这个地址即可建立连接执行命令。</p>
+<p>查阅文档，得到如下描述：</p>
+<blockquote>
+<p>Dynamic attach has an attach listener thread in the target JVM. This is a thread that is started when the first attach request occurs. On Linux and Solaris, the client creates a file named .attach_pid(pid) and sends a SIGQUIT to the target JVM process. The existence of this file causes the SIGQUIT handler in HotSpot to start the attach listener thread. On Windows, the client uses the Win32 CreateRemoteThread function to create a new thread in the target process.</p>
+</blockquote>
+<p>这样一来就很明确了，<strong>在Linux上我们只需创建一个“/tmp/.attach_pid”文件，并向目标JVM进程发送一个SIGQUIT信号，HotSpot就会开始监听“/tmp/.java_pid”地址上的UNIX Socket，接收并执行相关Attach的命令</strong>。至于为什么一定要创建.attach_pid文件才可以触发Attach Listener的创建，经查阅资料，我们得到了两种说法：一是JVM不止接收从外部Attach进程发送的SIGQUIT信号，必须配合外部进程创建的外部文件才能确定这是一次Attach请求；二是为了安全。</p>
+<p>继续看jattach的源码，果不其然，它调用了connect_socket函数对“/tmp/.java_pid”进行连接，connect_socket源码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// async-profiler/src/jattach/jattach.c</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Connect to UNIX domain socket created by JVM for Dynamic Attach</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">connect_socket</span><span class="params">(<span class="keyword">int</span> pid)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> fd = socket(PF_UNIX, SOCK_STREAM, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span> (fd == <span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_un</span> <span class="title">addr</span>;</span></span><br><span class="line">    addr.sun_family = AF_UNIX;</span><br><span class="line">    <span class="built_in">snprintf</span>(addr.sun_path, <span class="keyword">sizeof</span>(addr.sun_path), <span class="string">&quot;%s/.java_pid%d&quot;</span>, get_temp_directory(), pid);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (connect(fd, (struct sockaddr*)&amp;addr, <span class="keyword">sizeof</span>(addr)) == <span class="number">-1</span>) &#123;</span><br><span class="line">        close(fd);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> fd;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一个很普通的Socket创建函数，返回Socket文件描述符。</p>
+<p>回到Main函数，主流程紧接着调用write_command函数向该Socket写入了从命令行传进来的参数，并且调用read_response函数接收从目标JVM进程返回的数据。两个很常见的Socket读写函数，源码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// async-profiler/src/jattach/jattach.c</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Send command with arguments to socket</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">write_command</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">int</span> argc, <span class="keyword">char</span>** argv)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Protocol version</span></span><br><span class="line">    <span class="keyword">if</span> (write(fd, <span class="string">&quot;1&quot;</span>, <span class="number">2</span>) &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="number">4</span>; i++) &#123;</span><br><span class="line">        <span class="keyword">const</span> <span class="keyword">char</span>* arg = i &lt; argc ? argv[i] : <span class="string">&quot;&quot;</span>;</span><br><span class="line">        <span class="keyword">if</span> (write(fd, arg, <span class="built_in">strlen</span>(arg) + <span class="number">1</span>) &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Mirror response from remote JVM to stdout</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">read_response</span><span class="params">(<span class="keyword">int</span> fd)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">char</span> buf[<span class="number">8192</span>];</span><br><span class="line">    <span class="keyword">ssize_t</span> bytes = read(fd, buf, <span class="keyword">sizeof</span>(buf) - <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">if</span> (bytes &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        perror(<span class="string">&quot;Error reading response&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// First line of response is the command result code</span></span><br><span class="line">    buf[bytes] = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span> result = atoi(buf);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        fwrite(buf, <span class="number">1</span>, bytes, <span class="built_in">stdout</span>);</span><br><span class="line">        bytes = read(fd, buf, <span class="keyword">sizeof</span>(buf));</span><br><span class="line">    &#125; <span class="keyword">while</span> (bytes &gt; <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>浏览write_command函数就可知外部进程与目标JVM进程之间发送的数据格式相当简单，基本如下所示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;PROTOCOL VERSION&gt;\0&lt;COMMAND&gt;\0&lt;ARG1&gt;\0&lt;ARG2&gt;\0&lt;ARG3&gt;\0</span><br></pre></td></tr></table></figure>
+
+<p>以先前我们使用的Load命令为例，发送给HotSpot时格式如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1\0load\0/absolute/path/to/agent/libagent.so\0true\0\0</span><br></pre></td></tr></table></figure>
+
+<p>至此，我们已经了解了如何手工对JVM进程直接进行Attach。</p>
+<h3 id="Attach补充介绍"><a href="#Attach补充介绍" class="headerlink" title="Attach补充介绍"></a>Attach补充介绍</h3><p>Load命令仅仅是HotSpot所支持的诸多命令中的一种，用于动态加载基于JVMTI的Agent，完整的命令表如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> AttachOperationFunctionInfo funcs[] = &#123;</span><br><span class="line">  &#123; <span class="string">&quot;agentProperties&quot;</span>,  get_agent_properties &#125;,</span><br><span class="line">  &#123; <span class="string">&quot;datadump&quot;</span>,         data_dump &#125;,</span><br><span class="line">  &#123; <span class="string">&quot;dumpheap&quot;</span>,         dump_heap &#125;,</span><br><span class="line">  &#123; <span class="string">&quot;load&quot;</span>,             JvmtiExport::load_agent_library &#125;,</span><br><span class="line">  &#123; <span class="string">&quot;properties&quot;</span>,       get_system_properties &#125;,</span><br><span class="line">  &#123; <span class="string">&quot;threaddump&quot;</span>,       thread_dump &#125;,</span><br><span class="line">  &#123; <span class="string">&quot;inspectheap&quot;</span>,      heap_inspection &#125;,</span><br><span class="line">  &#123; <span class="string">&quot;setflag&quot;</span>,          set_flag &#125;,</span><br><span class="line">  &#123; <span class="string">&quot;printflag&quot;</span>,        print_flag &#125;,</span><br><span class="line">  &#123; <span class="string">&quot;jcmd&quot;</span>,             jcmd &#125;,</span><br><span class="line">  &#123; <span class="literal">NULL</span>,               <span class="literal">NULL</span> &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>读者可以尝试下<a target="_blank" rel="noopener" href="https://www.zhihu.com/search?q=threaddump%E5%91%BD%E4%BB%A4&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra=%7B%22sourceType%22:%22article%22,%22sourceId%22:86545748%7D">threaddump命令</a>，然后对相同的进程进行jstack，对比观察输出，其实是完全相同的，其它命令大家可以自行进行探索。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>总的来说，善用各类Profiler是提升性能优化效率的一把利器，了解Profiler本身的实现原理更能帮助我们避免对工具的各种误用。CPU Profiler所依赖的Attach、JVMTI、Instrumentation、JMX等皆是JVM平台比较通用的技术，在此基础上，我们去实现Memory Profiler、Thread Profiler、GC Analyzer等工具也没有想象中那么神秘和复杂了。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/12/docs/specs/jvmti.html">JVM Tool Interface</a></li>
+<li><a target="_blank" rel="noopener" href="https://psy-lob-saw.blogspot.com/2016/06/the-pros-and-cons-of-agct.html">The Pros and Cons of AsyncGetCallTrace Profilers</a></li>
+<li><a target="_blank" rel="noopener" href="https://psy-lob-saw.blogspot.com/2016/02/why-most-sampling-java-profilers-are.html">Why (Most) Sampling Java Profilers Are Fucking Terrible</a></li>
+<li><a target="_blank" rel="noopener" href="https://psy-lob-saw.blogspot.com/2015/12/safepoints.html">Safepoints: Meaning, Side Effects and Overheads</a></li>
+<li><a target="_blank" rel="noopener" href="http://openjdk.java.net/groups/hotspot/docs/Serviceability.html">Serviceability in HotSpot</a></li>
+<li><a target="_blank" rel="noopener" href="http://www.ruanyifeng.com/blog/2017/09/flame-graph.html">如何读懂火焰图？</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.jetbrains.com/idea/2018/09/intellij-idea-2018-3-eap-git-submodules-jvm-profiler-macos-and-linux-and-more/">IntelliJ IDEA 2018.3 EAP: Git Submodules, JVM Profiler (macOS and Linux) and more</a></li>
+</ul>
+
+    </div>
+
+    <div>全文完。</div>
+  </article>
+  <div class="fix-container">
+    <div id="toc" class="fix-right">
+      
+<div class="toc-wrapper">
+  <strong class="toc-title">目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%95%E8%A8%80"><span class="toc-text">引言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#CPU-Profiler%E7%AE%80%E4%BB%8B"><span class="toc-text">CPU Profiler简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JVM-Agent%E7%AE%80%E4%BB%8B"><span class="toc-text">JVM Agent简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JVMTI-Agent"><span class="toc-text">JVMTI Agent</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Java-Agent"><span class="toc-text">Java Agent</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#CPU-Profiler%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90"><span class="toc-text">CPU Profiler原理解析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Sampling-vs-Instrumentation"><span class="toc-text">Sampling vs Instrumentation</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8EJava-Agent-JMX%E5%AE%9E%E7%8E%B0"><span class="toc-text">基于Java Agent + JMX实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8EJVMTI-GetStackTrace%E5%AE%9E%E7%8E%B0"><span class="toc-text">基于JVMTI + GetStackTrace实现</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#SafePoint-Bias%E9%97%AE%E9%A2%98"><span class="toc-text">SafePoint Bias问题</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8EJVMTI-AsyncGetCallTrace%E5%AE%9E%E7%8E%B0"><span class="toc-text">基于JVMTI + AsyncGetCallTrace实现</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%94%9F%E6%88%90%E6%80%A7%E8%83%BD%E7%81%AB%E7%84%B0%E5%9B%BE"><span class="toc-text">生成性能火焰图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#HotSpot%E7%9A%84Dynamic-Attach%E6%9C%BA%E5%88%B6%E8%A7%A3%E6%9E%90"><span class="toc-text">HotSpot的Dynamic Attach机制解析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%9A%E8%BF%87sun-tools%E8%BF%9B%E8%A1%8CAttach"><span class="toc-text">通过sun.tools进行Attach</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%9B%B4%E6%8E%A5%E5%AF%B9HotSpot%E8%BF%9B%E8%A1%8CAttach"><span class="toc-text">直接对HotSpot进行Attach</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Attach%E8%A1%A5%E5%85%85%E4%BB%8B%E7%BB%8D"><span class="toc-text">Attach补充介绍</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol>
+</div>
+
+      
+<div class="ads-banner">
+    <div class="swiper-wrapper">
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/gze2lfYy" title="买云服务器，参与礼品兑换、抽奖，最高送价值8000元IPad，还有Bose耳机、千元京东卡等您来！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E4%BC%81%E4%B8%9A%E7%9B%9B%E5%A4%8F%E6%9C%89%E7%A4%BC-345x200-d2146292109c1c9e1ae000a6c3ecde162d89e493.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/ecs_amd_test-0901?userCode=s4pthvp2" title="云服务器AMD二代火热公测">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/2480630_1634815908.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/LonPwhxX" title="DNSPod解析套餐全面升配降价，更高的套餐配置规格，更优的价格方案，全面提升可用性及响应率，专业版限时99元/年！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%E9%8D%93%EE%88%9B%E6%B9%B0-82de69db27c1e7984b871bdba4ea3dd5d5acda1f.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/7ec01pIF" title="云产品限时秒杀，爆款1核2G云服务器，首年74元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-788d0ee3eed06e913b85ddb6b178f8b9960c4684.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/minisite/goods?userCode=s4pthvp2" title="云小站特惠">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/6421642_1634812338.jpg" />
+            
+            <span>云小站特惠</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/95DUQ4ON" title="境外1核2G服务器低至2折，半价续费券限量免费领取！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A8%E7%90%83%E8%B4%AD_345%20200-dd004d4a4191fcbabcabea4fcd96f67d1e069f58.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SAIuJMWI" title="星星海SA2云服务器，1核2G首年99元起，高性价比首选">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%20%281%29-87905a297b9ba92f411e1e8fefc629b63cca5781.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/3YMiCK6w" title="推广者专属福利，新客户无门槛领取总价值高达2860元代金券，每种代金券限量500张，先到先得。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200--2953d058277cb63c6b1cd127285163335cd6751e.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/activity_selection?userCode=s4pthvp2" title="云服务器 精选特惠 新用户低至0.5折起 爆款免费试用3个月">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9125844_1634816292.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/qbSzF0sM" title="中小企业福利专场，多款刚需产品，满足企业通用场景需求，云服务器2.5折起">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-b28f7dee9552f4241ea6a543f15a9798049701d4.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/H6YmBFC4" title="云开发CloudBase，一站式高效开发平台，新用户选购低至0元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-a1b026a76d4ef2fc73b9fd976759da3a16715b44.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/daily/bestoffer?userCode=s4pthvp2" title="阿里云 爆款特惠 精选爆款产品低至0.5折">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9604134_1634812518.jpg" />
+            
+            <span>阿里云 爆款特惠 精选爆款产品低至0.5折</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/new?userCode=s4pthvp2" title="新人特惠专享 汇聚阿里云爆款云产品，云服务器1核2G n4 72.6元/年">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/3500689_1634812626.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/hDCEkRsS" title="ElasticSearch新用户特惠，快速实现日志分析、应用搜索，首购低至4折">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E8%85%BE%E8%AE%AF%E4%BA%913_345%20200_1-7aeb8eb451fd6de33676444898914b1ff3298996.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/YjfBwRLm" title="腾讯云数据库性能卓越稳定可靠，为您解决数据库运维难题">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A5%E9%97%A8%E4%BA%91%E6%95%B0%E6%8D%AE%E5%BA%93MYSQL-345x200-a68c566987f9bf687433e2cf4fbdc85ece6e2d93.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SDMIWAoV" title="腾讯云图，像PPT一样简单的数据可视化工具。5元搞定数据可视化，模板丰富，拖拖拽拽就能做出好看的可视化大屏。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-89eeba55a2f49008e686e1a51e14bfe79f63af13.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/8DvMAlwF" title="视频通信爆款 9.9 元起， 提供电商、教育、社交娱乐等多行业多场景的一站式解决方案，最快 1 天布局火爆赛道">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200-51cc0ac5a1b375c4269c679987e3bc7c62a2c592.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/care?userCode=s4pthvp2" title="云服务器老用户专享礼遇 实例升级低至 6.3折、续费低至 3.5折 限时折扣！">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/7740487_1634816569.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/VbUAuJ2j" title="即时通信 IM 首购 1 折特惠，仅需99.9元/月，支持直播电商、在线教育等多种热门应用场景">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD-15e14b2502f1e6df9e647ba452416d4a4f3dda04.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/6HS1Q41a" title="9.9元体验2万分钟实时音视频通话,支持1对1或多人音视频通话,单房可支持300人同时在线，10万人同时观看；全平台互通高品质通话">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%202-15a05a841743ffd2dc01731972dd7b3c2b46e357.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/Z3HKwaYY" title="云数据库MySQL基础版1元体验，为中小企业量身打造，单节点架构，保证数据可靠性">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E6%95%B0%E6%8D%AE%E5%BA%93%20SQL%20345x200-0f7c36787bd045c5a201bc29b01deab00bb4a3cd.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/pcReLJBk" title="专业版APP加固特惠5折起，可享免费兼容性测试">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-5d6e2cf6805432934eeb9f7800bd1a5d282906ae.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/xwWYC6oW" title="新客户首购 TPNS 特惠9.8元/万 DAU，新老客户低至6.5折，给您提供快速、稳定、安全、高效的用户促活利器">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%203-9f78293b201220263799ac53f85ae6cd13e0e8a7.png" />
+            
+        </a>
+        
+    </div>
+    <div aria-label="Previous" class="swiper-button-prev"></div>
+    <div aria-label="Next" class="swiper-button-next"></div>
+    <div class="swiper-pagination"></div>
+</div>
+<script>
+    window.addEventListener('load', function () {
+            let options = {"pagination":{"el":".swiper-pagination","type":"progressbar"},"navigation":{"nextEl":".swiper-button-next","prevEl":".swiper-button-prev"},"slidesPerView":1,"spaceBetween":10,"loop":true,"autoplay":{"delay":2000,"disableOnInteraction":false}} ;
+            var swiper = new Swiper(".ads-banner", options);
+        },
+        false);
+</script>
+
+    </div>
+  </div>
+</div>
+<div class="copyright">
+    <span>原文链接：</span>
+    <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/86545748">https://zhuanlan.zhihu.com/p/86545748</a>
+</div>
+<div class="share" style="width: 100%;">
+  <img src="https://www.hufeifei.cn/wechat-public-account.jpg" alt="Holmofy" style="margin: auto; display: block; width: 40%;min-width: 160px;max-width: 400px;"/>
+  <div style="margin: auto; text-align: center; font-size: 0.8em; color: grey;">老铁们关注走一走，不迷路</div>
+</div>
+
+  
+    <div class="post-nav">
+      <div class="post-nav-item post-nav-next">
+        
+          <span>〈 </span>
+          <a href="/backend/alimonitor-sunfire-architecture/" rel="next" title="谈阿里核心业务监控平台 SunFire 的技术架构">
+          谈阿里核心业务监控平台 SunFire 的技术架构
+          </a>
+        
+      </div>
+  
+      <div class="post-nav-item post-nav-prev">
+          
+          <a href="/backend/springboot-docker-image/" rel="prev" title="使用Spring Boot创建docker image">
+            使用Spring Boot创建docker image
+          </a>
+          <span>〉</span>
+        
+      </div>
+    </div>
+  
+
+<div id="vcomments" style="padding: 10px 50px;"></div>
+<script>
+    window.addEventListener('load', function () {
+        new Valine({"el":"#vcomments","enable":true,"appId":"8Yo6tv65sOStsPwvGSOAmOtM-gzGzoHsz","appKey":"IJPXPCV29V5ja34nj1JL3tQe","notify":false,"verify":false,"pageSize":10,"avatar":"mm","lang":"zh-cn","placeholder":"Just go go","visitor":true,"recordIP":true,"requiredFields":["nick"]});
+    });
+</script>
+
+    </div>
+
+    
+
+  </div>
+  <footer class="footer text-center">
+    <div id="bottom-inner">
+        <a class="bottom-item" href="https://www.hufeifei.cn">首页</a> |
+        <a class="bottom-item" href="https://blog.hufeifei.cn" target="_blank">个人博客</a> |
+        <a class="bottom-item" href="https://github.com/holmofy" target="_blank">GitHub</a>
+    </div>
+    
+    <div>
+        <span class="bottom-item">友情链接: </span>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://draveness.me/">draveness</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://coolshell.cn/">CoolShell</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://martin.kleppmann.com/">martin kleppmann</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://www.skywind.me/blog/">skywind</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://duanple.com/">duanple</a>
+        
+    </div>
+    
+</footer>
+
+  
+  <!-- scripts list from theme config.yml -->
+  
+    <script src="//unpkg.com/swiper/swiper-bundle.min.js"></script>
+  
+    <script src="//cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+  
+
+
+<script>
+  (function(window, document, undefined) {
+
+    var timer = null;
+
+    function returnTop() {
+      cancelAnimationFrame(timer);
+      timer = requestAnimationFrame(function fn() {
+        var oTop = document.body.scrollTop || document.documentElement.scrollTop;
+        if (oTop > 0) {
+          document.body.scrollTop = document.documentElement.scrollTop = oTop - 50;
+          timer = requestAnimationFrame(fn);
+        } else {
+          cancelAnimationFrame(timer);
+        }
+      });
+    }
+
+    var hearts = [];
+    window.requestAnimationFrame = (function() {
+      return window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        function(callback) {
+          setTimeout(callback, 1000 / 60);
+        }
+    })();
+    init();
+
+    function init() {
+      css(".heart{z-index:9999;width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+      attachEvent();
+      gameloop();
+      addMenuEvent();
+    }
+
+    function gameloop() {
+      for (var i = 0; i < hearts.length; i++) {
+        if (hearts[i].alpha <= 0) {
+          document.body.removeChild(hearts[i].el);
+          hearts.splice(i, 1);
+          continue;
+        }
+        hearts[i].y--;
+        hearts[i].scale += 0.004;
+        hearts[i].alpha -= 0.013;
+        hearts[i].el.style.cssText = "left:" + hearts[i].x + "px;top:" + hearts[i].y + "px;opacity:" + hearts[i].alpha + ";transform:scale(" + hearts[i].scale + "," + hearts[i].scale + ") rotate(45deg);background:" + hearts[i].color;
+      }
+      requestAnimationFrame(gameloop);
+    }
+
+    /**
+     * 给logo设置点击事件
+     * 
+     * - 回到顶部
+     * - 出现爱心
+     */
+    function attachEvent() {
+      var old = typeof window.onclick === "function" && window.onclick;
+      var logo = document.getElementById("logo");
+      if (logo) {
+        logo.onclick = function(event) {
+          returnTop();
+          old && old();
+          createHeart(event);
+        }
+      }
+      
+    }
+
+    function createHeart(event) {
+      var d = document.createElement("div");
+      d.className = "heart";
+      hearts.push({
+        el: d,
+        x: event.clientX - 5,
+        y: event.clientY - 5,
+        scale: 1,
+        alpha: 1,
+        color: randomColor()
+      });
+      document.body.appendChild(d);
+    }
+
+    function css(css) {
+      var style = document.createElement("style");
+      style.type = "text/css";
+      try {
+        style.appendChild(document.createTextNode(css));
+      } catch (ex) {
+        style.styleSheet.cssText = css;
+      }
+      document.getElementsByTagName('head')[0].appendChild(style);
+    }
+
+    function randomColor() {
+      // return "rgb(" + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + ")";
+      return "#F44336";
+    }
+
+    function addMenuEvent() {
+      var menu = document.getElementById('menu-main-post');
+      if (menu) {
+        var toc = document.getElementById('toc');
+        if (toc) {
+          menu.onclick = function() {
+            if (toc) {
+              if (toc.style.display == 'block') {
+                toc.style.display = 'none';
+              } else {
+                toc.style.display = 'block';
+              }
+            }
+          };
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+    }
+
+  })(window, document);
+</script>
+
+  
+
+
+
+<script>(function (w, d, s, id) {
+            if (typeof (w.webpushr) !== 'undefined') return; w.webpushr = w.webpushr || function () { (w.webpushr.q = w.webpushr.q || []).push(arguments) }; var js, fjs = d.getElementsByTagName(s)[0]; js = d.createElement(s); js.id = id; js.async = 1; js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window, document, 'script', 'webpushr-jssdk'));webpushr('setup', { 'key': 'BPOxQK5zO7VR8Ja1xRzI_E6lKWqJqwAMSNJozmybmGC6-aujLX8k-lHdIAdb_BcX9po-j5bpVTyEEA6f9Kz0bqU' });</script></body>
+</html>

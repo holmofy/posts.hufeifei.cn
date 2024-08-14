@@ -1,0 +1,508 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#202020"/>
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta name="keywords" content="node.js,npm," />
+  
+
+  
+    <meta name="description" content="各大平台上精选优质文章进行汇总" />
+  
+  
+  <link rel="icon" type="image/x-icon" href="/logo.png">
+  <title>npm 如何处理依赖与依赖冲突 [ 站在巨人的肩膀上 ]</title>
+  
+    <!-- stylesheets list from config.yml -->
+    
+      <link rel="stylesheet" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css">
+    
+      <link rel="stylesheet" href="//unpkg.com/swiper/swiper-bundle.min.css">
+    
+      <link rel="stylesheet" href="/css/xoxo.css">
+    
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-H58NSPXYPF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'G-H58NSPXYPF');
+  </script>
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="站在巨人的肩膀上" type="application/atom+xml">
+</head>
+
+
+<body>
+  <div class="nav-container">
+    <nav class="home-menu pure-menu pure-menu-horizontal">
+  <a class="pure-menu-heading" href="/">
+    <img class="avatar" src="https://www.hufeifei.cn/favicon.jpg">
+    <span class="title">站在巨人的肩膀上</span>
+  </a>
+
+  <ul class="pure-menu-list clearfix">
+      
+          
+            <li class="pure-menu-item"><a href="/" class="pure-menu-link">首页</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/tags" class="pure-menu-link">标签</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/atom.xml" class="pure-menu-link">RSS</a></li>
+          
+      
+  </ul>
+   
+</nav>
+  </div>
+
+  <div class="container" id="content-outer">
+    <div class="inner" id="content-inner">
+      <div class="post-container">
+  <article class="post" id="post">
+    <header class="post-header text-center">
+      <h1 class="title">
+        npm 如何处理依赖与依赖冲突
+      </h1>
+      <span>
+        
+        <time class="time" datetime="2021-11-04T00:00:00.000Z">
+          2021-11-04
+        </time>
+        
+      </span>
+      <span class="slash">/</span>
+      <span class="post-meta">
+        <span class="post-tags">
+          <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/node-js/" rel="tag">node.js</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/npm/" rel="tag">npm</a></li></ul>
+        </span>
+      </span>
+      <span class="slash">/</span>
+      <span id="/frontend/how-npm-handles-dependency-version-conflict/" class="read leancloud_visitors" data-flag-title="npm 如何处理依赖与依赖冲突">
+        <span class="leancloud-visitors-count"></span> 点击
+      </span>
+      <span class="slash">/</span>
+      <span class="read">阅读耗时 11 分钟</span>
+    </header>
+
+    <div class="post-content">
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><h2 id="依赖地狱"><a href="#依赖地狱" class="headerlink" title="依赖地狱"></a>依赖地狱</h2><p>早期版本的的 npm (v2) 管理模块依赖的方式并不复杂。它读取每个模块的依赖列表，并下载匹配版本的依赖模块到该模块目录内的 <code>node_modules</code> 文件夹下；如果该依赖又依赖了其他的模块，会继续下载该依赖的依赖到该模块目录的 <code>node_modules</code> 文件夹下——如此递归执行下去，最终形成一颗庞大的依赖树。</p>
+<p>例如，当前项目有依赖的模块 <code>A</code>, <code>B</code>, <code>A</code> 又依赖于模块 <code>C</code>, <code>D</code>, <code>B</code> 又依赖于模块 <code>C</code>, <code>E</code>，此时，项目的 <code>node_modules</code> 目录结构如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">root</span><br><span class="line">└── node_modules</span><br><span class="line">    ├── A</span><br><span class="line">    │   └── node_modules</span><br><span class="line">    │       ├── C</span><br><span class="line">    │       └── D</span><br><span class="line">    └── B</span><br><span class="line">        └── node_modules</span><br><span class="line">            ├── C</span><br><span class="line">            └── E</span><br></pre></td></tr></table></figure>
+
+<p>可以想象，这样做的确能尽量保证每个模块自身的可用性。但是，当项目规模达到一定程度时，也会造成许多问题：</p>
+<ol>
+<li>依赖树的层级非常深。如果需要定位某依赖的依赖，很难找到该依赖的文件所在（例如，如果想定位模块 <code>E</code>，就不得不先知道他在依赖树中的位置）；</li>
+<li>不同的依赖树分支里，可能有大量实际上是同样版本的依赖（例如，<code>A</code> 目录下的 <code>C</code> 和 <code>B</code> 目录下面的 <code>C</code> 如果版本一致，实际上完全一样）；</li>
+<li>安装时额外下载或拷贝了大量重复的资源，并且实际上也占用了大量的硬盘空间资源等（例如，<code>C</code> 模块在依赖目录中出现了两次）；</li>
+<li>安装速度慢，甚至因为目录层级太深导致文件路径太长的缘故，在 windows 系统下删除 <code>node_modules</code> 文件夹也可能失败！</li>
+</ol>
+<p>正是因为这些问题的存在，彼时的 <code>node_modules</code> 又被叫做<code>依赖地狱(Dependency Hell)</code>。</p>
+<h2 id="依赖共享与冲突"><a href="#依赖共享与冲突" class="headerlink" title="依赖共享与冲突"></a>依赖共享与冲突</h2><p>在 npm v3 版本之后，npm 采用了更合理的方式去解决之前的依赖地狱的问题。npm v3 尝试把依赖以及依赖的依赖都尽量的平铺在项目根目录下的 <code>node_modules</code> 文件夹下以<strong>共享使用</strong>；如果遇到因为需要的版本要求不一致导致冲突，没办法放在平铺目录下的，回退到 npm v2 的处理方式，在该模块下的 <code>node_modules</code> 里存放冲突的模块。</p>
+<p>例如，当前项目有依赖的模块 <code>A@1.0.0</code>, <code>B@1.0.0</code>, <code>A@1.0.0</code> 依赖于模块 <code>C@1.0.0</code>, <code>D@0.6.5</code>, <code>B@1.0.0</code> 又依赖于模块 <code>C@2.0.0</code>, <code>E@1.0.3</code>。注意，此时由于模块 <code>C</code> 的两个版本 <code>C@1.0.0</code> 和 <code>C@2.0.0</code> 被分别依赖，鉴于模块在同一个 <code>node_modules</code> 目录中是按照模块名目录存放，因此这两个版本没办法同时平铺在同一目录，因此，其中一个版本的 <code>C</code> 模块将会以 npm v2 的处理方式放入子 <code>node_modules</code> 目录中。</p>
+<p>那么，应该是哪一个版本的 <code>C</code> 会被这样处理呢？考虑以下操作时序：</p>
+<ol>
+<li><p>在空目录下，通过 <code>npm install --save A@1.0.0</code> 先安装 <code>A</code>。由于它和它的依赖在 <code>node_modules</code> 下都不会产生冲突，因此能够直接平铺的放入其中。此时目录结构如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">root</span><br><span class="line">└── node_modules</span><br><span class="line">    ├── A@1.0.0</span><br><span class="line">    ├── C@1.0.0</span><br><span class="line">    └── D@0.6.5</span><br></pre></td></tr></table></figure></li>
+<li><p>继续通过 <code>npm install --save B@1.0.0</code> 安装 <code>B</code>。<code>B</code> 自身以及它的依赖 <code>E</code> 也没有冲突，直接平铺放入 <code>node_modules</code> 下；但是 <code>B</code> 的另一依赖 <code>C@2.0.0</code> 因为 <code>C@1.0.0</code> 已经存在了，出现了版本冲突，它将不得不被放置于 <code>B</code> 目录下的 <code>node_modules</code> 中。此时目录结构如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">root</span><br><span class="line">└── node_modules</span><br><span class="line">    ├── A@1.0.0</span><br><span class="line">    ├── B@1.0.0</span><br><span class="line">    │   └── node_modules</span><br><span class="line">    │       └── C@2.0.0</span><br><span class="line">    ├── C@1.0.0</span><br><span class="line">    ├── D@0.6.5</span><br><span class="line">    └── E@1.0.3</span><br></pre></td></tr></table></figure>
+
+<p>通过以上分析可知，如果先安装 <code>B</code> 再安装 <code>A</code>，<code>C@1.0.0</code> 将位于 <code>A</code> 目录下的 <code>node_modules</code> 中。这说明：<strong>模块的安装顺序可能影响 <code>node_modules</code> 内的文件结构</strong>。</p>
+</li>
+<li><p>在上面的先 <code>A</code> 后 <code>B</code> 的情形下，继续安装依赖 <code>F@1.0.0</code>，它拥有依赖 <code>C@2.0.0</code> 和 <code>G@1.0.0</code>。类似的，它的依赖 <code>C@2.0.0</code> 因为版本冲突，不得不被放置于 <code>F</code> 的 <code>node_modules</code> 中。此时目录结构如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">root</span><br><span class="line">└── node_modules</span><br><span class="line">    ├── A@1.0.0</span><br><span class="line">    ├── B@1.0.0</span><br><span class="line">    │   └── node_modules</span><br><span class="line">    │       └── C@2.0.0</span><br><span class="line">    ├── C@1.0.0</span><br><span class="line">    ├── D@0.6.5</span><br><span class="line">    ├── E@1.0.3</span><br><span class="line">    └── F@1.0.0</span><br><span class="line">        └── node_modules</span><br><span class="line">            └── C@2.0.0</span><br></pre></td></tr></table></figure>
+
+<p>观察发现，模块 <code>C@2.0.0</code> 还是出现了冗余。然而，假如安装的顺序是 <code>B</code> <code>A</code> <code>F</code>，可以想象，将不会出现模块冗余的情况。这说明：<strong>模块安装顺序可能影响 <code>node_modules</code> 内的文件数量</strong>。</p>
+</li>
+<li><p>假设模块 <code>A</code> 的新版本 <code>A@2.0.0</code>，它不再依赖 <code>C@1.0.0</code> 而是 <code>C@2.0.0</code>， 现在在以上项目中执行 <code>npm install A@2</code>，将会发生以下操作：</p>
+<ul>
+<li>移除模块 <code>A@1.0.0</code>；</li>
+<li>移除模块 <code>C@1.0.0</code>，因为没有其他的模块依赖它；</li>
+<li>添加模块 <code>A@2.0.0</code>；</li>
+<li>在顶层 <code>node_modules</code> 中安装模块 <code>C@2.0.0</code>，因为顶层目录中没有版本冲突发生。</li>
+</ul>
+<p>此时的目录结构如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">root</span><br><span class="line">└── node_modules</span><br><span class="line">    ├── A@2.0.0</span><br><span class="line">    ├── B@1.0.0</span><br><span class="line">    │   └── node_modules</span><br><span class="line">    │       └── C@2.0.0</span><br><span class="line">    ├── C@2.0.0</span><br><span class="line">    ├── D@0.6.5</span><br><span class="line">    ├── E@1.0.3</span><br><span class="line">    └── F@1.0.0</span><br><span class="line">        └── node_modules</span><br><span class="line">            └── C@2.0.0</span><br></pre></td></tr></table></figure>
+
+<p>可以发现，目录中冗余了多个 <code>C@2.0.0</code> 模块！所幸 npm 提供了一个单独的命令 <code>npm dedupe</code> 用以去掉类似情况下产生的冗余拷贝。在 dedupe 之后，目录结构如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">root</span><br><span class="line">└── node_modules</span><br><span class="line">    ├── A@2.0.0</span><br><span class="line">    ├── B@1.0.0</span><br><span class="line">    ├── C@2.0.0</span><br><span class="line">    ├── D@0.6.5</span><br><span class="line">    ├── E@1.0.3</span><br><span class="line">    └── F@1.0.0</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>顺便提一句：<code>yarn</code> 在安装依赖时会自动执行 <code>dedupe</code> 操作：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> yarn dedupe</span></span><br><span class="line">yarn dedupe v1.17.3</span><br><span class="line">error The dedupe command isn&#x27;t necessary. `yarn install` will already dedupe.</span><br><span class="line">info Visit https://yarnpkg.com/en/docs/cli/dedupe for documentation about this command.</span><br></pre></td></tr></table></figure>
+
+<p>可见 yarn 在设计时得确是抓住了很多细小的点去改善使用体验。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://npm.github.io/how-npm-works-docs/index.html">https://npm.github.io/how-npm-works-docs/index.html</a></li>
+</ul>
+
+    </div>
+
+    <div>全文完。</div>
+  </article>
+  <div class="fix-container">
+    <div id="toc" class="fix-right">
+      
+<div class="toc-wrapper">
+  <strong class="toc-title">目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%9D%E8%B5%96%E5%9C%B0%E7%8B%B1"><span class="toc-text">依赖地狱</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%9D%E8%B5%96%E5%85%B1%E4%BA%AB%E4%B8%8E%E5%86%B2%E7%AA%81"><span class="toc-text">依赖共享与冲突</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol>
+</div>
+
+      
+<div class="ads-banner">
+    <div class="swiper-wrapper">
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/gze2lfYy" title="买云服务器，参与礼品兑换、抽奖，最高送价值8000元IPad，还有Bose耳机、千元京东卡等您来！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E4%BC%81%E4%B8%9A%E7%9B%9B%E5%A4%8F%E6%9C%89%E7%A4%BC-345x200-d2146292109c1c9e1ae000a6c3ecde162d89e493.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/ecs_amd_test-0901?userCode=s4pthvp2" title="云服务器AMD二代火热公测">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/2480630_1634815908.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/LonPwhxX" title="DNSPod解析套餐全面升配降价，更高的套餐配置规格，更优的价格方案，全面提升可用性及响应率，专业版限时99元/年！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%E9%8D%93%EE%88%9B%E6%B9%B0-82de69db27c1e7984b871bdba4ea3dd5d5acda1f.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/7ec01pIF" title="云产品限时秒杀，爆款1核2G云服务器，首年74元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-788d0ee3eed06e913b85ddb6b178f8b9960c4684.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/minisite/goods?userCode=s4pthvp2" title="云小站特惠">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/6421642_1634812338.jpg" />
+            
+            <span>云小站特惠</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/95DUQ4ON" title="境外1核2G服务器低至2折，半价续费券限量免费领取！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A8%E7%90%83%E8%B4%AD_345%20200-dd004d4a4191fcbabcabea4fcd96f67d1e069f58.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SAIuJMWI" title="星星海SA2云服务器，1核2G首年99元起，高性价比首选">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%20%281%29-87905a297b9ba92f411e1e8fefc629b63cca5781.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/3YMiCK6w" title="推广者专属福利，新客户无门槛领取总价值高达2860元代金券，每种代金券限量500张，先到先得。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200--2953d058277cb63c6b1cd127285163335cd6751e.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/activity_selection?userCode=s4pthvp2" title="云服务器 精选特惠 新用户低至0.5折起 爆款免费试用3个月">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9125844_1634816292.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/qbSzF0sM" title="中小企业福利专场，多款刚需产品，满足企业通用场景需求，云服务器2.5折起">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-b28f7dee9552f4241ea6a543f15a9798049701d4.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/H6YmBFC4" title="云开发CloudBase，一站式高效开发平台，新用户选购低至0元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-a1b026a76d4ef2fc73b9fd976759da3a16715b44.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/daily/bestoffer?userCode=s4pthvp2" title="阿里云 爆款特惠 精选爆款产品低至0.5折">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9604134_1634812518.jpg" />
+            
+            <span>阿里云 爆款特惠 精选爆款产品低至0.5折</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/new?userCode=s4pthvp2" title="新人特惠专享 汇聚阿里云爆款云产品，云服务器1核2G n4 72.6元/年">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/3500689_1634812626.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/hDCEkRsS" title="ElasticSearch新用户特惠，快速实现日志分析、应用搜索，首购低至4折">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E8%85%BE%E8%AE%AF%E4%BA%913_345%20200_1-7aeb8eb451fd6de33676444898914b1ff3298996.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/YjfBwRLm" title="腾讯云数据库性能卓越稳定可靠，为您解决数据库运维难题">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A5%E9%97%A8%E4%BA%91%E6%95%B0%E6%8D%AE%E5%BA%93MYSQL-345x200-a68c566987f9bf687433e2cf4fbdc85ece6e2d93.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SDMIWAoV" title="腾讯云图，像PPT一样简单的数据可视化工具。5元搞定数据可视化，模板丰富，拖拖拽拽就能做出好看的可视化大屏。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-89eeba55a2f49008e686e1a51e14bfe79f63af13.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/8DvMAlwF" title="视频通信爆款 9.9 元起， 提供电商、教育、社交娱乐等多行业多场景的一站式解决方案，最快 1 天布局火爆赛道">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200-51cc0ac5a1b375c4269c679987e3bc7c62a2c592.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/care?userCode=s4pthvp2" title="云服务器老用户专享礼遇 实例升级低至 6.3折、续费低至 3.5折 限时折扣！">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/7740487_1634816569.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/VbUAuJ2j" title="即时通信 IM 首购 1 折特惠，仅需99.9元/月，支持直播电商、在线教育等多种热门应用场景">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD-15e14b2502f1e6df9e647ba452416d4a4f3dda04.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/6HS1Q41a" title="9.9元体验2万分钟实时音视频通话,支持1对1或多人音视频通话,单房可支持300人同时在线，10万人同时观看；全平台互通高品质通话">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%202-15a05a841743ffd2dc01731972dd7b3c2b46e357.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/Z3HKwaYY" title="云数据库MySQL基础版1元体验，为中小企业量身打造，单节点架构，保证数据可靠性">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E6%95%B0%E6%8D%AE%E5%BA%93%20SQL%20345x200-0f7c36787bd045c5a201bc29b01deab00bb4a3cd.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/pcReLJBk" title="专业版APP加固特惠5折起，可享免费兼容性测试">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-5d6e2cf6805432934eeb9f7800bd1a5d282906ae.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/xwWYC6oW" title="新客户首购 TPNS 特惠9.8元/万 DAU，新老客户低至6.5折，给您提供快速、稳定、安全、高效的用户促活利器">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%203-9f78293b201220263799ac53f85ae6cd13e0e8a7.png" />
+            
+        </a>
+        
+    </div>
+    <div aria-label="Previous" class="swiper-button-prev"></div>
+    <div aria-label="Next" class="swiper-button-next"></div>
+    <div class="swiper-pagination"></div>
+</div>
+<script>
+    window.addEventListener('load', function () {
+            let options = {"pagination":{"el":".swiper-pagination","type":"progressbar"},"navigation":{"nextEl":".swiper-button-next","prevEl":".swiper-button-prev"},"slidesPerView":1,"spaceBetween":10,"loop":true,"autoplay":{"delay":2000,"disableOnInteraction":false}} ;
+            var swiper = new Swiper(".ads-banner", options);
+        },
+        false);
+</script>
+
+    </div>
+  </div>
+</div>
+<div class="copyright">
+    <span>原文链接：</span>
+    <a target="_blank" rel="noopener" href="http://aprilandjan.github.io/npm/2019/08/02/how-npm-handles-dependency-version-conflict/">http://aprilandjan.github.io/npm/2019/08/02/how-npm-handles-dependency-version-conflict/</a>
+</div>
+<div class="share" style="width: 100%;">
+  <img src="https://www.hufeifei.cn/wechat-public-account.jpg" alt="Holmofy" style="margin: auto; display: block; width: 40%;min-width: 160px;max-width: 400px;"/>
+  <div style="margin: auto; text-align: center; font-size: 0.8em; color: grey;">老铁们关注走一走，不迷路</div>
+</div>
+
+  
+    <div class="post-nav">
+      <div class="post-nav-item post-nav-next">
+        
+          <span>〈 </span>
+          <a href="/backend/nginx/" rel="next" title="Nginx为什么快到根本停不下来？">
+          Nginx为什么快到根本停不下来？
+          </a>
+        
+      </div>
+  
+      <div class="post-nav-item post-nav-prev">
+          
+          <a href="/backend/kubernetes-operator/" rel="prev" title="亲历者说：Kubernetes API 与 Operator，不为人知的开发者战争">
+            亲历者说：Kubernetes API 与 Operator，不为人知的开发者战争
+          </a>
+          <span>〉</span>
+        
+      </div>
+    </div>
+  
+
+<div id="vcomments" style="padding: 10px 50px;"></div>
+<script>
+    window.addEventListener('load', function () {
+        new Valine({"el":"#vcomments","enable":true,"appId":"8Yo6tv65sOStsPwvGSOAmOtM-gzGzoHsz","appKey":"IJPXPCV29V5ja34nj1JL3tQe","notify":false,"verify":false,"pageSize":10,"avatar":"mm","lang":"zh-cn","placeholder":"Just go go","visitor":true,"recordIP":true,"requiredFields":["nick"]});
+    });
+</script>
+
+    </div>
+
+    
+
+  </div>
+  <footer class="footer text-center">
+    <div id="bottom-inner">
+        <a class="bottom-item" href="https://www.hufeifei.cn">首页</a> |
+        <a class="bottom-item" href="https://blog.hufeifei.cn" target="_blank">个人博客</a> |
+        <a class="bottom-item" href="https://github.com/holmofy" target="_blank">GitHub</a>
+    </div>
+    
+    <div>
+        <span class="bottom-item">友情链接: </span>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://draveness.me/">draveness</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://coolshell.cn/">CoolShell</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://martin.kleppmann.com/">martin kleppmann</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://www.skywind.me/blog/">skywind</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://duanple.com/">duanple</a>
+        
+    </div>
+    
+</footer>
+
+  
+  <!-- scripts list from theme config.yml -->
+  
+    <script src="//unpkg.com/swiper/swiper-bundle.min.js"></script>
+  
+    <script src="//cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+  
+
+
+<script>
+  (function(window, document, undefined) {
+
+    var timer = null;
+
+    function returnTop() {
+      cancelAnimationFrame(timer);
+      timer = requestAnimationFrame(function fn() {
+        var oTop = document.body.scrollTop || document.documentElement.scrollTop;
+        if (oTop > 0) {
+          document.body.scrollTop = document.documentElement.scrollTop = oTop - 50;
+          timer = requestAnimationFrame(fn);
+        } else {
+          cancelAnimationFrame(timer);
+        }
+      });
+    }
+
+    var hearts = [];
+    window.requestAnimationFrame = (function() {
+      return window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        function(callback) {
+          setTimeout(callback, 1000 / 60);
+        }
+    })();
+    init();
+
+    function init() {
+      css(".heart{z-index:9999;width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+      attachEvent();
+      gameloop();
+      addMenuEvent();
+    }
+
+    function gameloop() {
+      for (var i = 0; i < hearts.length; i++) {
+        if (hearts[i].alpha <= 0) {
+          document.body.removeChild(hearts[i].el);
+          hearts.splice(i, 1);
+          continue;
+        }
+        hearts[i].y--;
+        hearts[i].scale += 0.004;
+        hearts[i].alpha -= 0.013;
+        hearts[i].el.style.cssText = "left:" + hearts[i].x + "px;top:" + hearts[i].y + "px;opacity:" + hearts[i].alpha + ";transform:scale(" + hearts[i].scale + "," + hearts[i].scale + ") rotate(45deg);background:" + hearts[i].color;
+      }
+      requestAnimationFrame(gameloop);
+    }
+
+    /**
+     * 给logo设置点击事件
+     * 
+     * - 回到顶部
+     * - 出现爱心
+     */
+    function attachEvent() {
+      var old = typeof window.onclick === "function" && window.onclick;
+      var logo = document.getElementById("logo");
+      if (logo) {
+        logo.onclick = function(event) {
+          returnTop();
+          old && old();
+          createHeart(event);
+        }
+      }
+      
+    }
+
+    function createHeart(event) {
+      var d = document.createElement("div");
+      d.className = "heart";
+      hearts.push({
+        el: d,
+        x: event.clientX - 5,
+        y: event.clientY - 5,
+        scale: 1,
+        alpha: 1,
+        color: randomColor()
+      });
+      document.body.appendChild(d);
+    }
+
+    function css(css) {
+      var style = document.createElement("style");
+      style.type = "text/css";
+      try {
+        style.appendChild(document.createTextNode(css));
+      } catch (ex) {
+        style.styleSheet.cssText = css;
+      }
+      document.getElementsByTagName('head')[0].appendChild(style);
+    }
+
+    function randomColor() {
+      // return "rgb(" + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + ")";
+      return "#F44336";
+    }
+
+    function addMenuEvent() {
+      var menu = document.getElementById('menu-main-post');
+      if (menu) {
+        var toc = document.getElementById('toc');
+        if (toc) {
+          menu.onclick = function() {
+            if (toc) {
+              if (toc.style.display == 'block') {
+                toc.style.display = 'none';
+              } else {
+                toc.style.display = 'block';
+              }
+            }
+          };
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+    }
+
+  })(window, document);
+</script>
+
+  
+
+
+
+<script>(function (w, d, s, id) {
+            if (typeof (w.webpushr) !== 'undefined') return; w.webpushr = w.webpushr || function () { (w.webpushr.q = w.webpushr.q || []).push(arguments) }; var js, fjs = d.getElementsByTagName(s)[0]; js = d.createElement(s); js.id = id; js.async = 1; js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window, document, 'script', 'webpushr-jssdk'));webpushr('setup', { 'key': 'BPOxQK5zO7VR8Ja1xRzI_E6lKWqJqwAMSNJozmybmGC6-aujLX8k-lHdIAdb_BcX9po-j5bpVTyEEA6f9Kz0bqU' });</script></body>
+</html>

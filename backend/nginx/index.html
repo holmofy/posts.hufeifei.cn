@@ -1,0 +1,681 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#202020"/>
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta name="keywords" content="Nginx,Multiplex," />
+  
+
+  
+    <meta name="description" content="各大平台上精选优质文章进行汇总" />
+  
+  
+  <link rel="icon" type="image/x-icon" href="/logo.png">
+  <title>Nginx为什么快到根本停不下来？ [ 站在巨人的肩膀上 ]</title>
+  
+    <!-- stylesheets list from config.yml -->
+    
+      <link rel="stylesheet" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css">
+    
+      <link rel="stylesheet" href="//unpkg.com/swiper/swiper-bundle.min.css">
+    
+      <link rel="stylesheet" href="/css/xoxo.css">
+    
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-H58NSPXYPF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'G-H58NSPXYPF');
+  </script>
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="站在巨人的肩膀上" type="application/atom+xml">
+</head>
+
+
+<body>
+  <div class="nav-container">
+    <nav class="home-menu pure-menu pure-menu-horizontal">
+  <a class="pure-menu-heading" href="/">
+    <img class="avatar" src="https://www.hufeifei.cn/favicon.jpg">
+    <span class="title">站在巨人的肩膀上</span>
+  </a>
+
+  <ul class="pure-menu-list clearfix">
+      
+          
+            <li class="pure-menu-item"><a href="/" class="pure-menu-link">首页</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/tags" class="pure-menu-link">标签</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/atom.xml" class="pure-menu-link">RSS</a></li>
+          
+      
+  </ul>
+   
+</nav>
+  </div>
+
+  <div class="container" id="content-outer">
+    <div class="inner" id="content-inner">
+      <div class="post-container">
+  <article class="post" id="post">
+    <header class="post-header text-center">
+      <h1 class="title">
+        Nginx为什么快到根本停不下来？
+      </h1>
+      <span>
+        
+        <time class="time" datetime="2021-11-01T00:00:00.000Z">
+          2021-11-01
+        </time>
+        
+      </span>
+      <span class="slash">/</span>
+      <span class="post-meta">
+        <span class="post-tags">
+          <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Multiplex/" rel="tag">Multiplex</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Nginx/" rel="tag">Nginx</a></li></ul>
+        </span>
+      </span>
+      <span class="slash">/</span>
+      <span id="/backend/nginx/" class="read leancloud_visitors" data-flag-title="Nginx为什么快到根本停不下来？">
+        <span class="leancloud-visitors-count"></span> 点击
+      </span>
+      <span class="slash">/</span>
+      <span class="read">阅读耗时 16 分钟</span>
+    </header>
+
+    <div class="post-content">
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><h2 id="基本原理"><a href="#基本原理" class="headerlink" title="基本原理"></a>基本原理</h2><h3 id="Nginx-的进程模型"><a href="#Nginx-的进程模型" class="headerlink" title="Nginx 的进程模型"></a>Nginx 的进程模型</h3><p><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/2/19/1705d5bae51f9935~tplv-t2oaga2asx-watermark.awebp" alt="img"></p>
+<p>Nginx 服务器，正常运行过程中：</p>
+<ol>
+<li><p><strong>多进程</strong>：一个 Master 进程、多个 Worker 进程</p>
+</li>
+<li><p>Master 进程：管理 Worker 进程</p>
+<ol>
+<li>对外接口：接收<code>外部的操作</code>（信号）</li>
+<li>对内转发：根据<code>外部的操作</code>的不同，通过<code>信号</code>管理 Worker</li>
+<li>监控：监控 worker 进程的运行状态，worker 进程异常终止后，自动重启 worker 进程</li>
+</ol>
+</li>
+<li><p>Worker 进程：所有 Worker 进程都是平等的</p>
+<ol>
+<li>实际处理：网络请求，由 Worker 进程处理；</li>
+</ol>
+</li>
+<li><p>Worker 进程数量：在 nginx.conf 中配置，一般设置为<code>核心数</code>，充分利用 CPU 资源，同时，避免进程数量过多，避免进程竞争 CPU 资源，增加上下文切换的损耗。</p>
+</li>
+</ol>
+<p>思考：</p>
+<ol>
+<li>请求是连接到 Nginx，Master 进程负责处理和转发？</li>
+<li>如何选定哪个 Worker 进程处理请求？请求的处理结果，是否还要经过 Master 进程？</li>
+</ol>
+<p><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/2/19/1705d5b0e5da5404~tplv-t2oaga2asx-watermark.awebp" alt="img"></p>
+<p>HTTP 连接建立和请求处理过程：</p>
+<ol>
+<li>Nginx 启动时，Master 进程，加载配置文件</li>
+<li>Master 进程，初始化监听的 socket</li>
+<li>Master 进程，fork 出多个 Worker 进程</li>
+<li>Worker 进程，竞争新的连接，获胜方通过三次握手，建立 Socket 连接，并处理请求</li>
+</ol>
+<p>Nginx 高性能、高并发：</p>
+<ol>
+<li>Nginx 采用：<code>多进程</code> + <code>异步非阻塞</code>方式（<code>IO 多路复用</code> epoll）</li>
+<li>请求的完整过程：<ol>
+<li>建立连接</li>
+<li>读取请求：解析请求</li>
+<li>处理请求</li>
+<li>响应请求</li>
+</ol>
+</li>
+<li>请求的完整过程，对应到底层，就是：读写 socket 事件</li>
+</ol>
+<h3 id="Nginx-的事件处理模型"><a href="#Nginx-的事件处理模型" class="headerlink" title="Nginx 的事件处理模型"></a>Nginx 的事件处理模型</h3><p>request：Nginx 中 http 请求。</p>
+<p>基本的 HTTP Web Server 工作模式：</p>
+<ol>
+<li><strong>接收请求</strong>：逐行读取<code>请求行</code>和<code>请求头</code>，判断段有请求体后，读取<code>请求体</code></li>
+<li><strong>处理请求</strong></li>
+<li><strong>返回响应</strong>：根据处理结果，生成相应的 HTTP 请求（<code>响应行</code>、<code>响应头</code>、<code>响应体</code>）</li>
+</ol>
+<p>Nginx 也是这个套路，整体流程一致。</p>
+<p><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/2/19/1705d5b0e423d8e8~tplv-t2oaga2asx-watermark.awebp" alt="img"></p>
+<h3 id="模块化体系结构"><a href="#模块化体系结构" class="headerlink" title="模块化体系结构"></a>模块化体系结构</h3><p><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/2/19/1705d5b14dab9ed8~tplv-t2oaga2asx-watermark.awebp" alt="img"></p>
+<p>nginx的模块根据其功能基本上可以分为以下几种类型：</p>
+<ul>
+<li><strong>event module</strong>: 搭建了独立于操作系统的事件处理机制的框架，及提供了各具体事件的处理。包括ngx_events_module， ngx_event_core_module和ngx_epoll_module等。nginx具体使用何种事件处理模块，这依赖于具体的操作系统和编译选项。</li>
+<li><strong>phase handler</strong>: 此类型的模块也被直接称为handler模块。主要负责处理客户端请求并产生待响应内容，比如ngx_http_static_module模块，负责客户端的静态页面请求处理并将对应的磁盘文件准备为响应内容输出。</li>
+<li><strong>output filter</strong>: 也称为filter模块，主要是负责对输出的内容进行处理，可以对输出进行修改。例如，可以实现对输出的所有html页面增加预定义的footbar一类的工作，或者对输出的图片的URL进行替换之类的工作。</li>
+<li><strong>upstream</strong>: upstream模块实现反向代理的功能，将真正的请求转发到后端服务器上，并从后端服务器上读取响应，发回客户端。upstream模块是一种特殊的handler，只不过响应内容不是真正由自己产生的，而是从后端服务器上读取的。</li>
+<li><strong>load-balancer</strong>: 负载均衡模块，实现特定的算法，在众多的后端服务器中，选择一个服务器出来作为某个请求的转发服务器。</li>
+</ul>
+<h2 id="常见问题剖析"><a href="#常见问题剖析" class="headerlink" title="常见问题剖析"></a>常见问题剖析</h2><h3 id="Nginx-vs-Apache"><a href="#Nginx-vs-Apache" class="headerlink" title="Nginx vs. Apache"></a>Nginx vs. Apache</h3><p>nginx vs. apache：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.oschina.net/translate/nginx-vs-apache">https://www.oschina.net/translate/nginx-vs-apache</a></li>
+</ul>
+<p>网络 IO 模型：</p>
+<ol>
+<li>nginx：IO 多路复用，<code>epoll</code>(FreeBSD上是 <code>kqueue</code> )<ol>
+<li>高性能</li>
+<li>高并发</li>
+<li>占用系统资源少</li>
+</ol>
+</li>
+<li>apache：阻塞 + 多进程/多线程<ol>
+<li>更稳定，bug 少</li>
+<li>模块更丰富</li>
+</ol>
+</li>
+</ol>
+<p>参考：<a target="_blank" rel="noopener" href="https://www.zhihu.com/question/19571087">https://www.zhihu.com/question/19571087</a></p>
+<p>场景：</p>
+<blockquote>
+<p>处理多个请求时，可以采用：<code>IO 多路复用</code> 或者 <code>阻塞 IO</code> +<code>多线程</code></p>
+<ol>
+<li><strong>IO 多路服用</strong>：<code>一个</code> <code>线程</code>，跟踪多个 socket 状态，哪个<code>就绪</code>，就读写哪个；</li>
+<li><strong>阻塞 IO</strong> + <strong>多线程</strong>：每一个请求，新建一个服务线程</li>
+</ol>
+</blockquote>
+<p><strong>思考</strong>：<code>IO 多路复用</code> 和 <code>多线程</code> 的适用场景？</p>
+<ul>
+<li><code>IO 多路复用</code>：单个连接的请求处理速度没有优势，适合 IO 密集型场景，事件驱动<ul>
+<li><strong>大并发量</strong>：只使用一个线程，处理大量的并发请求，降低<strong>上下文环境</strong>切换损耗，也不需要考虑并发问题，相对可以处理更多的请求；</li>
+<li>消耗更少的系统资源（不需要<code>线程调度开销</code>）</li>
+<li>适用于<code>长连接</code>的情况（多线程模式<code>长连接</code>容易造成<code>线程过多</code>，造成<code>频繁调度</code>）</li>
+</ul>
+</li>
+<li><code>阻塞IO</code>+ <code>多线程</code>：实现简单，可以不依赖系统调用，适合 CPU 密集型场景<ul>
+<li>每个线程，都需要时间和空间；</li>
+<li>线程数量增长时，线程调度开销指数增长</li>
+</ul>
+</li>
+</ul>
+<h3 id="Nginx-最大连接数"><a href="#Nginx-最大连接数" class="headerlink" title="Nginx 最大连接数"></a>Nginx 最大连接数</h3><p>基础背景：</p>
+<ol>
+<li>Nginx 是多进程模型，Worker 进程用于处理请求；</li>
+<li>单个进程的连接数（文件描述符 fd），有上限（<code>nofile</code>）：<code>ulimit -n</code></li>
+<li>Nginx 上配置单个 worker 进程的最大连接数：<code>worker_connections</code> 上限为 <code>nofile</code></li>
+<li>Nginx 上配置 worker 进程的数量：<code>worker_processes</code></li>
+</ol>
+<p>因此，Nginx 的最大连接数：</p>
+<ol>
+<li>Nginx 的最大连接数：<code>Worker 进程数量</code> x <code>单个 Worker 进程的最大连接数</code></li>
+<li>上面是 Nginx 作为通用服务器时，最大的连接数</li>
+<li>Nginx 作为<code>反向代理</code>服务器时，能够服务的最大连接数：（<code>Worker 进程数量</code> x <code>单个 Worker 进程的最大连接数</code>）/ 2。</li>
+<li>Nginx 反向代理时，会建立 <code>Client 的连接</code>和<code>后端 Web Server 的连接</code>，占用 2 个连接</li>
+</ol>
+<p>思考：</p>
+<blockquote>
+<ol>
+<li>每打开一个 socket 占用一个 fd</li>
+<li>为什么，<code>一个进程</code>能够打开的 fd 数量有限制？</li>
+</ol>
+</blockquote>
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><h3 id="HTTP-请求和响应"><a href="#HTTP-请求和响应" class="headerlink" title="HTTP 请求和响应"></a>HTTP 请求和响应</h3><ul>
+<li>HTTP 请求：<ol>
+<li>请求行：<code>method</code>、<code>uri</code>、<code>http version</code></li>
+<li>请求头</li>
+<li>请求体</li>
+</ol>
+</li>
+<li>HTTP 响应：<ol>
+<li>响应行：<code>http version</code>、<code>status code</code></li>
+<li>响应头</li>
+<li>响应体</li>
+</ol>
+</li>
+</ul>
+<h3 id="IO-模型"><a href="#IO-模型" class="headerlink" title="IO 模型"></a>IO 模型</h3><p>场景：</p>
+<blockquote>
+<p>处理多个请求时，可以采用：<code>IO 多路复用</code> 或者 <code>阻塞 IO</code> +<code>多线程</code></p>
+<ol>
+<li><strong>IO 多路服用</strong>：<code>一个</code> <code>线程</code>，跟踪多个 socket 状态，哪个<code>就绪</code>，就读写哪个；</li>
+<li><strong>阻塞 IO</strong> + <strong>多线程</strong>：每一个请求，新建一个服务线程</li>
+</ol>
+</blockquote>
+<p>思考：<code>IO 多路复用</code> 和 <code>多线程</code> 的适用场景？</p>
+<ul>
+<li><code>IO 多路复用</code>：单个连接的请求处理速度没有优势<ul>
+<li><strong>大并发量</strong>：只使用一个线程，处理大量的并发请求，降低<strong>上下文环境</strong>切换损耗，也不需要考虑并发问题，相对可以处理更多的请求；</li>
+<li>消耗更少的系统资源（不需要<code>线程调度开销</code>）</li>
+<li>适用于<code>长连接</code>的情况（多线程模式<code>长连接</code>容易造成<code>线程过多</code>，造成<code>频繁调度</code>）</li>
+</ul>
+</li>
+<li><code>阻塞IO</code>+ <code>多线程</code>：实现简单，可以不依赖系统调用。<ul>
+<li>每个线程，都需要时间和空间；</li>
+<li>线程数量增长时，线程调度开销指数增长</li>
+</ul>
+</li>
+</ul>
+<h4 id="select-poll-和-epoll-比较"><a href="#select-poll-和-epoll-比较" class="headerlink" title="select/poll 和 epoll 比较"></a>select/poll 和 epoll 比较</h4><p>详细内容，参考：</p>
+<ul>
+<li><a href="https://link.juejin.cn/?target=http://www.cnblogs.com/wiessharling/p/4106295.html">select poll epoll三者之间的比较</a></li>
+</ul>
+<p>select/poll 系统调用：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// select 系统调用</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">select</span><span class="params">(<span class="keyword">int</span> maxfdp,fd_set *readfds,</span></span></span><br><span class="line"><span class="params"><span class="function">           fd_set *writefds,</span></span></span><br><span class="line"><span class="params"><span class="function">           fd_set *errorfds,</span></span></span><br><span class="line"><span class="params"><span class="function">           struct timeval *timeout)</span></span>;</span><br><span class="line"><span class="comment">// poll 系统调用</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">poll</span><span class="params">(struct pollfd fds[], <span class="keyword">nfds_t</span> nfds, <span class="keyword">int</span> timeout)</span></span></span><br></pre></td></tr></table></figure>
+
+<p><strong>select</strong>：</p>
+<ul>
+<li>查询 fd_set 中，是否有<code>就绪</code>的 <code>fd</code>，可以设定一个<code>超时时间</code>，当有 fd (File descripter) 就绪或超时返回；</li>
+<li>fd_set 是一个<code>位集合</code>，大小是在<code>编译内核</code>时的常量，默认大小为 1024</li>
+<li>特点：<ul>
+<li><strong>连接数限制</strong>，fd_set 可表示的 fd 数量太小了；</li>
+<li><strong>线性扫描</strong>：判断 fd 是否就绪，需要遍历一边 fd_set；</li>
+<li><strong>数据复制</strong>：用户空间和内核空间，复制<strong>连接就绪状态</strong>信息</li>
+</ul>
+</li>
+</ul>
+<p><strong>poll</strong>：</p>
+<ul>
+<li><p>解决了连接数限制：</p>
+<ul>
+<li>poll 中将 select 中的 fd_set 替换成了一个 pollfd <code>数组</code></li>
+<li>解决 <code>fd 数量过小</code>的问题</li>
+</ul>
+</li>
+<li><p><strong>数据复制</strong>：用户空间和内核空间，复制<strong>连接就绪状态</strong>信息</p>
+</li>
+</ul>
+<p><strong>epoll</strong>： event 事件驱动</p>
+<ul>
+<li><p>事件机制：避免线性扫描</p>
+<ul>
+<li>为每个 fd，<code>注册</code>一个<code>监听事件</code></li>
+<li>fd 变更为<code>就绪</code>时，将 fd 添加到<code>就绪链表</code></li>
+</ul>
+</li>
+<li><p><strong>fd 数量</strong>：无限制（OS 级别的限制，单个进程能打开多少个 fd）</p>
+</li>
+</ul>
+<p>select，poll，epoll：</p>
+<ol>
+<li><p><code>I/O多路复用</code>的机制；</p>
+</li>
+<li><p><code>I/O多路复用</code>就通过一种机制，可以监视多个描述符，一旦某个描述符就绪（一般是读就绪或者写就绪），能够通知程序进行相应的读写操作。</p>
+<ol>
+<li> 监视<code>多个文件描述符</code></li>
+</ol>
+</li>
+<li><p>但select，poll，epoll本质上都是<code>同步I/O</code></p>
+<ol>
+<li><code>用户进程</code>负责<code>读写</code>（从<code>内核空间</code>拷贝到<code>用户空间</code>），读写过程中，用户进程是阻塞的；</li>
+<li><code>异步 IO</code>，无需用户进程负责读写，异步IO，会负责从<code>内核空间</code>拷贝到<code>用户空间</code>；</li>
+</ol>
+</li>
+</ol>
+<h3 id="Nginx-的并发处理能力"><a href="#Nginx-的并发处理能力" class="headerlink" title="Nginx 的并发处理能力"></a>Nginx 的并发处理能力</h3><p>关于 Nginx 的并发处理能力：</p>
+<ul>
+<li>并发连接数，一般优化后，峰值能保持在 1~3w 左右。（内存和 CPU 核心数不同，会有进一步优化空间）</li>
+</ul>
+
+    </div>
+
+    <div>全文完。</div>
+  </article>
+  <div class="fix-container">
+    <div id="toc" class="fix-right">
+      
+<div class="toc-wrapper">
+  <strong class="toc-title">目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="toc-text">基本原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Nginx-%E7%9A%84%E8%BF%9B%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="toc-text">Nginx 的进程模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Nginx-%E7%9A%84%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86%E6%A8%A1%E5%9E%8B"><span class="toc-text">Nginx 的事件处理模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A8%A1%E5%9D%97%E5%8C%96%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="toc-text">模块化体系结构</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E5%89%96%E6%9E%90"><span class="toc-text">常见问题剖析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Nginx-vs-Apache"><span class="toc-text">Nginx vs. Apache</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Nginx-%E6%9C%80%E5%A4%A7%E8%BF%9E%E6%8E%A5%E6%95%B0"><span class="toc-text">Nginx 最大连接数</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%99%84%E5%BD%95"><span class="toc-text">附录</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#HTTP-%E8%AF%B7%E6%B1%82%E5%92%8C%E5%93%8D%E5%BA%94"><span class="toc-text">HTTP 请求和响应</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IO-%E6%A8%A1%E5%9E%8B"><span class="toc-text">IO 模型</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#select-poll-%E5%92%8C-epoll-%E6%AF%94%E8%BE%83"><span class="toc-text">select&#x2F;poll 和 epoll 比较</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Nginx-%E7%9A%84%E5%B9%B6%E5%8F%91%E5%A4%84%E7%90%86%E8%83%BD%E5%8A%9B"><span class="toc-text">Nginx 的并发处理能力</span></a></li></ol></li></ol>
+</div>
+
+      
+<div class="ads-banner">
+    <div class="swiper-wrapper">
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/gze2lfYy" title="买云服务器，参与礼品兑换、抽奖，最高送价值8000元IPad，还有Bose耳机、千元京东卡等您来！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E4%BC%81%E4%B8%9A%E7%9B%9B%E5%A4%8F%E6%9C%89%E7%A4%BC-345x200-d2146292109c1c9e1ae000a6c3ecde162d89e493.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/ecs_amd_test-0901?userCode=s4pthvp2" title="云服务器AMD二代火热公测">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/2480630_1634815908.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/LonPwhxX" title="DNSPod解析套餐全面升配降价，更高的套餐配置规格，更优的价格方案，全面提升可用性及响应率，专业版限时99元/年！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%E9%8D%93%EE%88%9B%E6%B9%B0-82de69db27c1e7984b871bdba4ea3dd5d5acda1f.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/7ec01pIF" title="云产品限时秒杀，爆款1核2G云服务器，首年74元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-788d0ee3eed06e913b85ddb6b178f8b9960c4684.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/minisite/goods?userCode=s4pthvp2" title="云小站特惠">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/6421642_1634812338.jpg" />
+            
+            <span>云小站特惠</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/95DUQ4ON" title="境外1核2G服务器低至2折，半价续费券限量免费领取！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A8%E7%90%83%E8%B4%AD_345%20200-dd004d4a4191fcbabcabea4fcd96f67d1e069f58.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SAIuJMWI" title="星星海SA2云服务器，1核2G首年99元起，高性价比首选">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%20%281%29-87905a297b9ba92f411e1e8fefc629b63cca5781.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/3YMiCK6w" title="推广者专属福利，新客户无门槛领取总价值高达2860元代金券，每种代金券限量500张，先到先得。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200--2953d058277cb63c6b1cd127285163335cd6751e.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/activity_selection?userCode=s4pthvp2" title="云服务器 精选特惠 新用户低至0.5折起 爆款免费试用3个月">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9125844_1634816292.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/qbSzF0sM" title="中小企业福利专场，多款刚需产品，满足企业通用场景需求，云服务器2.5折起">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-b28f7dee9552f4241ea6a543f15a9798049701d4.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/H6YmBFC4" title="云开发CloudBase，一站式高效开发平台，新用户选购低至0元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-a1b026a76d4ef2fc73b9fd976759da3a16715b44.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/daily/bestoffer?userCode=s4pthvp2" title="阿里云 爆款特惠 精选爆款产品低至0.5折">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9604134_1634812518.jpg" />
+            
+            <span>阿里云 爆款特惠 精选爆款产品低至0.5折</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/new?userCode=s4pthvp2" title="新人特惠专享 汇聚阿里云爆款云产品，云服务器1核2G n4 72.6元/年">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/3500689_1634812626.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/hDCEkRsS" title="ElasticSearch新用户特惠，快速实现日志分析、应用搜索，首购低至4折">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E8%85%BE%E8%AE%AF%E4%BA%913_345%20200_1-7aeb8eb451fd6de33676444898914b1ff3298996.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/YjfBwRLm" title="腾讯云数据库性能卓越稳定可靠，为您解决数据库运维难题">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A5%E9%97%A8%E4%BA%91%E6%95%B0%E6%8D%AE%E5%BA%93MYSQL-345x200-a68c566987f9bf687433e2cf4fbdc85ece6e2d93.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SDMIWAoV" title="腾讯云图，像PPT一样简单的数据可视化工具。5元搞定数据可视化，模板丰富，拖拖拽拽就能做出好看的可视化大屏。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-89eeba55a2f49008e686e1a51e14bfe79f63af13.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/8DvMAlwF" title="视频通信爆款 9.9 元起， 提供电商、教育、社交娱乐等多行业多场景的一站式解决方案，最快 1 天布局火爆赛道">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200-51cc0ac5a1b375c4269c679987e3bc7c62a2c592.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/care?userCode=s4pthvp2" title="云服务器老用户专享礼遇 实例升级低至 6.3折、续费低至 3.5折 限时折扣！">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/7740487_1634816569.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/VbUAuJ2j" title="即时通信 IM 首购 1 折特惠，仅需99.9元/月，支持直播电商、在线教育等多种热门应用场景">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD-15e14b2502f1e6df9e647ba452416d4a4f3dda04.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/6HS1Q41a" title="9.9元体验2万分钟实时音视频通话,支持1对1或多人音视频通话,单房可支持300人同时在线，10万人同时观看；全平台互通高品质通话">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%202-15a05a841743ffd2dc01731972dd7b3c2b46e357.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/Z3HKwaYY" title="云数据库MySQL基础版1元体验，为中小企业量身打造，单节点架构，保证数据可靠性">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E6%95%B0%E6%8D%AE%E5%BA%93%20SQL%20345x200-0f7c36787bd045c5a201bc29b01deab00bb4a3cd.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/pcReLJBk" title="专业版APP加固特惠5折起，可享免费兼容性测试">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-5d6e2cf6805432934eeb9f7800bd1a5d282906ae.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/xwWYC6oW" title="新客户首购 TPNS 特惠9.8元/万 DAU，新老客户低至6.5折，给您提供快速、稳定、安全、高效的用户促活利器">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%203-9f78293b201220263799ac53f85ae6cd13e0e8a7.png" />
+            
+        </a>
+        
+    </div>
+    <div aria-label="Previous" class="swiper-button-prev"></div>
+    <div aria-label="Next" class="swiper-button-next"></div>
+    <div class="swiper-pagination"></div>
+</div>
+<script>
+    window.addEventListener('load', function () {
+            let options = {"pagination":{"el":".swiper-pagination","type":"progressbar"},"navigation":{"nextEl":".swiper-button-next","prevEl":".swiper-button-prev"},"slidesPerView":1,"spaceBetween":10,"loop":true,"autoplay":{"delay":2000,"disableOnInteraction":false}} ;
+            var swiper = new Swiper(".ads-banner", options);
+        },
+        false);
+</script>
+
+    </div>
+  </div>
+</div>
+<div class="copyright">
+    <span>原文链接：</span>
+    <a target="_blank" rel="noopener" href="https://juejin.cn/post/6844904067991502855">https://juejin.cn/post/6844904067991502855</a>
+</div>
+<div class="share" style="width: 100%;">
+  <img src="https://www.hufeifei.cn/wechat-public-account.jpg" alt="Holmofy" style="margin: auto; display: block; width: 40%;min-width: 160px;max-width: 400px;"/>
+  <div style="margin: auto; text-align: center; font-size: 0.8em; color: grey;">老铁们关注走一走，不迷路</div>
+</div>
+
+  
+    <div class="post-nav">
+      <div class="post-nav-item post-nav-next">
+        
+          <span>〈 </span>
+          <a href="/backend/google-paper-opensource/" rel="next" title="Google论文、开源与云计算">
+          Google论文、开源与云计算
+          </a>
+        
+      </div>
+  
+      <div class="post-nav-item post-nav-prev">
+          
+          <a href="/frontend/how-npm-handles-dependency-version-conflict/" rel="prev" title="npm 如何处理依赖与依赖冲突">
+            npm 如何处理依赖与依赖冲突
+          </a>
+          <span>〉</span>
+        
+      </div>
+    </div>
+  
+
+<div id="vcomments" style="padding: 10px 50px;"></div>
+<script>
+    window.addEventListener('load', function () {
+        new Valine({"el":"#vcomments","enable":true,"appId":"8Yo6tv65sOStsPwvGSOAmOtM-gzGzoHsz","appKey":"IJPXPCV29V5ja34nj1JL3tQe","notify":false,"verify":false,"pageSize":10,"avatar":"mm","lang":"zh-cn","placeholder":"Just go go","visitor":true,"recordIP":true,"requiredFields":["nick"]});
+    });
+</script>
+
+    </div>
+
+    
+
+  </div>
+  <footer class="footer text-center">
+    <div id="bottom-inner">
+        <a class="bottom-item" href="https://www.hufeifei.cn">首页</a> |
+        <a class="bottom-item" href="https://blog.hufeifei.cn" target="_blank">个人博客</a> |
+        <a class="bottom-item" href="https://github.com/holmofy" target="_blank">GitHub</a>
+    </div>
+    
+    <div>
+        <span class="bottom-item">友情链接: </span>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://draveness.me/">draveness</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://coolshell.cn/">CoolShell</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://martin.kleppmann.com/">martin kleppmann</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://www.skywind.me/blog/">skywind</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://duanple.com/">duanple</a>
+        
+    </div>
+    
+</footer>
+
+  
+  <!-- scripts list from theme config.yml -->
+  
+    <script src="//unpkg.com/swiper/swiper-bundle.min.js"></script>
+  
+    <script src="//cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+  
+
+
+<script>
+  (function(window, document, undefined) {
+
+    var timer = null;
+
+    function returnTop() {
+      cancelAnimationFrame(timer);
+      timer = requestAnimationFrame(function fn() {
+        var oTop = document.body.scrollTop || document.documentElement.scrollTop;
+        if (oTop > 0) {
+          document.body.scrollTop = document.documentElement.scrollTop = oTop - 50;
+          timer = requestAnimationFrame(fn);
+        } else {
+          cancelAnimationFrame(timer);
+        }
+      });
+    }
+
+    var hearts = [];
+    window.requestAnimationFrame = (function() {
+      return window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        function(callback) {
+          setTimeout(callback, 1000 / 60);
+        }
+    })();
+    init();
+
+    function init() {
+      css(".heart{z-index:9999;width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+      attachEvent();
+      gameloop();
+      addMenuEvent();
+    }
+
+    function gameloop() {
+      for (var i = 0; i < hearts.length; i++) {
+        if (hearts[i].alpha <= 0) {
+          document.body.removeChild(hearts[i].el);
+          hearts.splice(i, 1);
+          continue;
+        }
+        hearts[i].y--;
+        hearts[i].scale += 0.004;
+        hearts[i].alpha -= 0.013;
+        hearts[i].el.style.cssText = "left:" + hearts[i].x + "px;top:" + hearts[i].y + "px;opacity:" + hearts[i].alpha + ";transform:scale(" + hearts[i].scale + "," + hearts[i].scale + ") rotate(45deg);background:" + hearts[i].color;
+      }
+      requestAnimationFrame(gameloop);
+    }
+
+    /**
+     * 给logo设置点击事件
+     * 
+     * - 回到顶部
+     * - 出现爱心
+     */
+    function attachEvent() {
+      var old = typeof window.onclick === "function" && window.onclick;
+      var logo = document.getElementById("logo");
+      if (logo) {
+        logo.onclick = function(event) {
+          returnTop();
+          old && old();
+          createHeart(event);
+        }
+      }
+      
+    }
+
+    function createHeart(event) {
+      var d = document.createElement("div");
+      d.className = "heart";
+      hearts.push({
+        el: d,
+        x: event.clientX - 5,
+        y: event.clientY - 5,
+        scale: 1,
+        alpha: 1,
+        color: randomColor()
+      });
+      document.body.appendChild(d);
+    }
+
+    function css(css) {
+      var style = document.createElement("style");
+      style.type = "text/css";
+      try {
+        style.appendChild(document.createTextNode(css));
+      } catch (ex) {
+        style.styleSheet.cssText = css;
+      }
+      document.getElementsByTagName('head')[0].appendChild(style);
+    }
+
+    function randomColor() {
+      // return "rgb(" + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + ")";
+      return "#F44336";
+    }
+
+    function addMenuEvent() {
+      var menu = document.getElementById('menu-main-post');
+      if (menu) {
+        var toc = document.getElementById('toc');
+        if (toc) {
+          menu.onclick = function() {
+            if (toc) {
+              if (toc.style.display == 'block') {
+                toc.style.display = 'none';
+              } else {
+                toc.style.display = 'block';
+              }
+            }
+          };
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+    }
+
+  })(window, document);
+</script>
+
+  
+
+
+
+<script>(function (w, d, s, id) {
+            if (typeof (w.webpushr) !== 'undefined') return; w.webpushr = w.webpushr || function () { (w.webpushr.q = w.webpushr.q || []).push(arguments) }; var js, fjs = d.getElementsByTagName(s)[0]; js = d.createElement(s); js.id = id; js.async = 1; js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window, document, 'script', 'webpushr-jssdk'));webpushr('setup', { 'key': 'BPOxQK5zO7VR8Ja1xRzI_E6lKWqJqwAMSNJozmybmGC6-aujLX8k-lHdIAdb_BcX9po-j5bpVTyEEA6f9Kz0bqU' });</script></body>
+</html>

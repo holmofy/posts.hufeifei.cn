@@ -1,0 +1,579 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#202020"/>
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta name="keywords" content="Regex," />
+  
+
+  
+    <meta name="description" content="各大平台上精选优质文章进行汇总" />
+  
+  
+  <link rel="icon" type="image/x-icon" href="/logo.png">
+  <title>深入理解正则表达式高级教程 [ 站在巨人的肩膀上 ]</title>
+  
+    <!-- stylesheets list from config.yml -->
+    
+      <link rel="stylesheet" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css">
+    
+      <link rel="stylesheet" href="//unpkg.com/swiper/swiper-bundle.min.css">
+    
+      <link rel="stylesheet" href="/css/xoxo.css">
+    
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-H58NSPXYPF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'G-H58NSPXYPF');
+  </script>
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="站在巨人的肩膀上" type="application/atom+xml">
+</head>
+
+
+<body>
+  <div class="nav-container">
+    <nav class="home-menu pure-menu pure-menu-horizontal">
+  <a class="pure-menu-heading" href="/">
+    <img class="avatar" src="https://www.hufeifei.cn/favicon.jpg">
+    <span class="title">站在巨人的肩膀上</span>
+  </a>
+
+  <ul class="pure-menu-list clearfix">
+      
+          
+            <li class="pure-menu-item"><a href="/" class="pure-menu-link">首页</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/tags" class="pure-menu-link">标签</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/atom.xml" class="pure-menu-link">RSS</a></li>
+          
+      
+  </ul>
+   
+</nav>
+  </div>
+
+  <div class="container" id="content-outer">
+    <div class="inner" id="content-inner">
+      <div class="post-container">
+  <article class="post" id="post">
+    <header class="post-header text-center">
+      <h1 class="title">
+        深入理解正则表达式高级教程
+      </h1>
+      <span>
+        
+        <time class="time" datetime="2021-10-02T00:00:00.000Z">
+          2021-10-02
+        </time>
+        
+      </span>
+      <span class="slash">/</span>
+      <span class="post-meta">
+        <span class="post-tags">
+          <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Regex/" rel="tag">Regex</a></li></ul>
+        </span>
+      </span>
+      <span class="slash">/</span>
+      <span id="/basic/deep-regex/" class="read leancloud_visitors" data-flag-title="深入理解正则表达式高级教程">
+        <span class="leancloud-visitors-count"></span> 点击
+      </span>
+      <span class="slash">/</span>
+      <span class="read">阅读耗时 29 分钟</span>
+    </header>
+
+    <div class="post-content">
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><p>本文是一篇正则表达式高级教程，主要通过对正则表达式几个概念的介绍，深入探讨正则表达式高级功能，以期达到通俗化解释正则表达式高深概念的目的。</p>
+<p>深入理解正则表达式应用</p>
+<p>[TOC]</p>
+<p>前面已经写过一篇文章《<a href="http://posts.hufeifei.cn/baisc/regex-basic">我眼里的正则表达式（入门）</a>》介绍过正则表达式的基础和基本套路<strong>正则三段论</strong>：<strong>定锚点，去噪点，取数据</strong>了，接下来这篇文章，补充一点相对高级的概念：</p>
+<blockquote>
+<p>概念一：按单字符匹配<br>概念二：匹配优先和不匹配优先<br>概念三：贪婪模式与非贪婪模式<br>概念四：环视（断言）<br>概念五：平衡组<br>概念六：模式修饰符<br>附：正则三段论应用</p>
+</blockquote>
+<h3 id="概念一：按单字符匹配"><a href="#概念一：按单字符匹配" class="headerlink" title="概念一：按单字符匹配"></a>概念一：按单字符匹配</h3><p>正则里面的数据都是按照单个字符来进行匹配的，这个通过数值区间的例子最容易体现出来，比如，示例一：</p>
+<p>我要匹配<code>0-15</code>的数值区间，用正则来写的话，便是<code>[0-9]|1[0-5]</code>，这里，便是把0-9这种单字符的情况，和10-15这种多字符的情况拆分开了，使用分支<code>|</code>来区分开，表示要么是0-9，要么是10-15。<br>上面是两位数值的情况，现在延伸至1-65535，我个人的处理思想是从大到小，一块块分解：</p>
+<blockquote>
+<p>65530-65535  ==&gt;  <code>6553[0-5]</code>          末位区间0-5<br>65500-65529  ==&gt;  <code>655[0-2][0-9]</code>      第四位区间0-2，末位区间0-9<br>65000-65499  ==&gt;  <code>65[0-4][0-9]&#123;2&#125;</code>    第三位区间0-4，后两位0-9<br>60000-64999  ==&gt;  <code>6[0-4][0-9]&#123;3&#125;</code>     第二位区间0-4，后三位0-9<br>10000-59999  ==&gt;  <code>[1-5][0-9]&#123;4&#125;</code>      第一位区间1-5，后四位0-9<br>1-9999       ==&gt;  <code>[1-9][0-9]&#123;0,3&#125;</code>    第一位只能是1-9，后三位可有可无</p>
+</blockquote>
+<p>最后组合起来：<br><code>(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]&#123;2&#125;|6[0-4][0-9]&#123;3&#125;|[1-5][0-9]&#123;4&#125;|[1-9][0-9]&#123;0,3&#125;)</code><br>便得到1-65535匹配正则。</p>
+<p>根据数据处理需求，可以在正则前后加上<code>^</code>和<code>$</code>，以匹配整个数据串，或者前后加入<code>\b</code>，把它当做单词边界处理。<strong>没有限定字符的边界往往是js正则判断中常见的错误之一</strong>。</p>
+<h3 id="概念二：匹配优先和不匹配优先"><a href="#概念二：匹配优先和不匹配优先" class="headerlink" title="概念二：匹配优先和不匹配优先"></a>概念二：匹配优先和不匹配优先</h3><p>匹配优先和不匹配优先从字面理解也是比较容易的，所谓匹配优先，就是，能匹配我就先匹配；不匹配优先就是，能不匹配我就先不匹配，这段匹配先跳过，先看看后面的匹配能不能通过。</p>
+<h3 id="概念三：贪婪模式与非贪婪模式"><a href="#概念三：贪婪模式与非贪婪模式" class="headerlink" title="概念三：贪婪模式与非贪婪模式"></a>概念三：贪婪模式与非贪婪模式</h3><p>正则的贪婪模式和非贪婪模式是一个比较容易混淆的概念，不过，我们可以这么理解，一个人很贪婪，所以他会能拿多少拿多少，换过来，那就是贪婪模式下的正则表达式，能匹配多少就匹配多少，尽可能最多。而非贪婪模式，则是能不匹配就不匹配，尽可能最少。</p>
+<p>下面举个例子，示例二：</p>
+<blockquote>
+<p>需求：匹配1后面跟任意个0<br>源串：10001<br>使用贪婪模式：<code>10*</code>       结果：1000 和 1<br>使用非贪婪模式：<code>10*?</code>    结果：1 和 1</p>
+</blockquote>
+<p>首先，<code>*</code>是匹配0个或多个的意思。</p>
+<blockquote>
+<p>贪婪模式下，它表示，首先匹配一个1，然后匹配1后面的0，最多可以匹配3个0，因此得到1000，然后第二次又匹配到一个1，但是后面没有0，因此得到1；<br>非贪婪模式下，它表示，首先匹配一个1，然后1后面的0，能不匹配就不匹配了，所以，它每次都只是匹配了一个1。</p>
+</blockquote>
+<p>看到这里，也许，有些人觉得，哎呀，我懂了！<br>那么，下来我们改改，看看你是不是真懂了。</p>
+<p>示例三：</p>
+<blockquote>
+<p>需求：匹配1后面跟任意个0，再跟一个1<br>源串：10001<br>使用贪婪模式：<code>10*1</code>       结果：10001<br>使用非贪婪模式：<code>10*?1</code>    结果：10001</p>
+</blockquote>
+<p>为什么这两次的结果一样了？</p>
+<p>因为，正则表达式要判断完这整个正则才算成功，这种情况下，</p>
+<blockquote>
+<p>贪婪模式，首先匹配一个1，然后匹配1后面尽可能多的0，发现3个，再匹配0后面的一个1，正则表达式匹配完，完成匹配，得到10001；<br>非贪婪模式，首先匹配一个1，然后，<code>0*?</code>是非贪婪模式，它不想匹配了（非贪婪模式不匹配优先），看看后面是不是1了？然后发现哎妈呀，后面是个0啊，然后它回头，不能再偷懒了，用<code>0*?</code>匹配一个0吧，然后匹配到10，又不想匹配了，看看后面有没有1了，还是没有，又回去用<code>0*?</code>匹配掉一个0，得到100，继续偷懒，但是发现后面还不是1，然后又用<code>0*?</code>匹配得到1000，最后，发现真不容易啊，终于看到1了，匹配得到10001，正则表达式匹配完，完成匹配。</p>
+</blockquote>
+<p>看到这里，是不是懂了？<br><strong>那究竟哪个模式好呢？</strong></p>
+<p>什么时候使用贪婪模式，什么时候使用非贪婪模式，哪个性能好，哪个性能不好，不能一概而论，要根据情况分析。<br>下面我举个例子：<br>源码：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">&quot;http://www.zjmainstay.cn/my-regexp&quot;</span> <span class="attr">target</span>=<span class="string">&quot;_blank&quot;</span> <span class="attr">title</span>=<span class="string">&quot;我眼里的正则表达式（入门）&quot;</span>&gt;</span>我眼里的正则表达式（入门）<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">title</span>=<span class="string">&quot;我眼里的正则表达式（入门）&quot;</span> <span class="attr">href</span>=<span class="string">&quot;http://www.zjmainstay.cn/my-regexp&quot;</span> <span class="attr">target</span>=<span class="string">&quot;_blank&quot;</span>&gt;</span>我眼里的正则表达式（入门）<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>正则1：<code>&lt;a [^&gt;]*?href=&quot;([^&quot;]*?)&quot;[^&gt;]*?&gt;([^&lt;]*?)&lt;/a&gt;</code>（238次）<br>正则2：<code>&lt;a [^&gt;]*?href=&quot;([^&quot;]*)&quot;[^&gt;]*&gt;([^&lt;]*)&lt;/a&gt;</code>（65次）<br>正则3：<code>&lt;a [^&gt;]*href=&quot;([^&quot;]*)&quot;[^&gt;]*&gt;([^&lt;]*)&lt;/a&gt;</code>（136次）<br>附：执行次数的获取请下载正则表达式测试工具：<a target="_blank" rel="noopener" href="http://www.zjmainstay.cn/download/category/4-regexp?download=21:regexbuddy">RegexBuddy 4.1.0-正则测试工具.rar</a>，使用里面的Debug功能。</p>
+<p>正则1是通用写法，正则2是在确定字符不会溢出的情况下消除非贪婪模式，正则3是证明并不是全部消除非贪婪模式就是最优。</p>
+<p>因此，关于贪婪模式好还是非贪婪模式好的讨论，只能说根据需求而定，不过，在平时的时候用，一般使用非贪婪模式较多，因为贪婪模式经常会由于<code>元字符范围限制不严谨</code>而导致匹配越界，得到非预期结果。</p>
+<p>在确定的数据结构里，可以尝试使用<code>[^&gt;]*&gt;</code>这样的排除字符贪婪模式替换非贪婪模式，提升匹配的效率。注意，贪婪部分（<code>[^&gt;]*</code>）的匹配，最好不要越过其后面的字符（<code>&gt;</code>），否则会导致贪婪模式下的回溯，如正则3，<code>[^&gt;]*</code>的匹配越过了href，一直匹配到<code>&gt;</code>为止，而这时候再匹配href，会匹配不到而导致多次回溯处理，直到回溯到href前的位置，后面才继续了下去。</p>
+<p>另外，需要注意一点，无论使用贪婪模式还是非贪婪模式，在不同语言需要注意回溯次数和嵌套次数的限制，比如在PHP中，<code>pcre.backtrack_limit=100000</code>，<code>pcre.recursion_limit=100000</code>。</p>
+<h3 id="概念四：环视（断言-零宽断言）"><a href="#概念四：环视（断言-零宽断言）" class="headerlink" title="概念四：环视（断言/零宽断言）"></a>概念四：环视（断言/零宽断言）</h3><p>环视，在不同的地方又称之为零宽断言，简称断言。<br>用一句通俗的话解释：<br>环视，就是先从全局环顾一遍正则，（然后断定结果，）再做进一步匹配处理。<br>断言，就是先从全局环顾一遍正则，然后断定结果，再做进一步匹配处理。</p>
+<p>两个虽然字面不一样，意思却是同一个，都是做全局观望，再做进一步处理。</p>
+<p>环视的作用相当于<strong>对其所在位置加了一个附加条件，只有满足这个条件，环视子表达式才能匹配成功</strong>。</p>
+<p>环视主要有以下4个用法：<br><code>(?&lt;=exp)</code> 匹配前面是exp的数据<br><code>(?&lt;!exp)</code> 匹配前面不是exp的数据<br><code>(?=exp)</code> 匹配后面是exp的数据<br><code>(?!exp)</code> 匹配后面不是exp的数据</p>
+<p>示例四：<br><code>(?&lt;=B)AAA</code> 匹配前面是B的数据，即BAAA匹配，而CAAA不匹配<br><code>(?&lt;!B)AAA</code> 匹配前面不是B的数据，即CAAA匹配，而BAAA不匹配<br><code>AAA(?=B)</code> 匹配后面是B的数据，即AAAB匹配，而AAAC不匹配<br><code>AAA(?!B)</code> 匹配后面不是B的数据，即AAAC能匹配，而AAAB不能匹配</p>
+<p>另外，还会看到<code>(?!B)[A-Z]</code>这种写法，其实它是<code>[A-Z]范围</code>里，<code>排除B</code>的意思，前置的<code>(?!B)</code>只是对后面数据的一个限定，从而达到过滤匹配的效果。</p>
+<p>因此，环视做排除处理是比较实用的，比如，示例五：</p>
+<blockquote>
+<p>需求：字母、数字组合，不区分大小写，不能纯数字或者纯字母，6-16个字符。<br>通用正则：<code>^[a-z0-9]&#123;6,16&#125;$</code>    字母数字组合，6-16个字符<br>    排除纯字母：<code>(?!^[a-z]+$)</code><br>排除纯数字：<code>(?!^[0-9]+$)</code><br>    组合起来：<code>(?!^[a-z]+$)(?!^[0-9]+$)^[a-z0-9]&#123;6,16&#125;$</code></p>
+</blockquote>
+<p>注意，<strong>环视部分是不占宽度的</strong>，所以有零宽断言的叫法。<br>所谓不占宽度，可以分成两部分理解：<br>1、环视的匹配结果不纳入数据结果<br>2、环视它匹配过的地方，下次还能用它继续匹配。</p>
+<p>如果不是环视，则匹配过的地方，不能再匹配第二次了。</p>
+<p>上面示例四体现了：<strong>环视的匹配结果不纳入数据结果</strong>，它的结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(?&lt;=B)AAA     源串：BAAA  结果：AAA</span><br><span class="line">(?&lt;!B)AAA     源串：CAAA  结果：AAAAAA</span><br><span class="line">(?=B)      源串：AAAB  结果：AAAAAA</span><br><span class="line">(?!B)      源串：AAAC  结果：AAA</span><br></pre></td></tr></table></figure>
+
+<p>而示例五体现了：<strong>环视它匹配过的地方，下次还能用它继续匹配</strong><br>因为，整个匹配过程中，正则表达式一共走了3次字符串匹配，第一次匹配不全部是字母，第二次匹配不全部是数字，第三次匹配全部是字母数字组合，6-16个字符。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">扩展部分：</span><br><span class="line">`[A-Z](?&lt;=B)`   [A-Z]范围等于B</span><br><span class="line">`[A-Z](?&lt;!B)`   [A-Z]范围排除B</span><br><span class="line">`(?!B)[A-Z]`    [A-Z]范围排除B</span><br></pre></td></tr></table></figure>
+
+<h3 id="概念五：平衡组"><a href="#概念五：平衡组" class="headerlink" title="概念五：平衡组"></a>概念五：平衡组</h3><p>平衡组并不是所有程序语言都支持，而我本人使用的PHP语言就不支持，所以平时接触也是比较少的。</p>
+<p>平衡组主要用到下面四个语法：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(?&#x27;group&#x27;) 把捕获的内容命名为group,并压入堆栈(Stack)    </span><br><span class="line">(?&#x27;-group&#x27;) 从堆栈上弹出最后压入堆栈的名为group的捕获内容，如果堆栈本来为空，则本分组的匹配失败    </span><br><span class="line">(?(group)yes|no) 如果堆栈上存在以名为group的捕获内容的话，继续匹配yes部分的表达式，否则继续匹配no部分    </span><br><span class="line">(?!) 零宽负向先行断言，由于没有后缀表达式，如没有(?!B)的B，试图匹配总是失败</span><br></pre></td></tr></table></figure>
+
+<p>在PHP中是支持(?(group)yes|no)语法的，这里的group是分组编号，即子模式编号，如(A)?(?(1)yes|no) ，匹配Ayes 和 no</p>
+<p>下面这里引用《<a target="_blank" rel="noopener" href="http://deerchao.net/tutorials/regex/regex.htm#balancedgroup">正则表达式30分钟入门教程#平衡组</a>》关于&lt;&gt;配对匹配的例子，展示平衡组用法，</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&lt;                         #最外层的左括号</span><br><span class="line">	[^&lt;&gt;]*                #最外层的左括号后面的不是括号的内容</span><br><span class="line">    (</span><br><span class="line">    	(</span><br><span class="line">        	(?&#x27;Open&#x27;&lt;)    #碰到了左括号，在黑板上写一个&quot;Open&quot;</span><br><span class="line">            [^&lt;&gt;]*       #匹配左括号后面的不是括号的内容</span><br><span class="line">        )+</span><br><span class="line">        (</span><br><span class="line">        	(?&#x27;-Open&#x27;&gt;)   #碰到了右括号，擦掉一个&quot;Open&quot;</span><br><span class="line">            [^&lt;&gt;]*        #匹配右括号后面不是括号的内容</span><br><span class="line">        )+</span><br><span class="line">    )*</span><br><span class="line">    (?(Open)(?!))         #在遇到最外层的右括号时，判断黑板上还有没有没擦掉的&quot;Open&quot;；如果还有，则匹配失败</span><br><span class="line">&gt;                         #最外层的右括号</span><br><span class="line"></span><br><span class="line">平衡组的一个最常见的应用就是匹配HTML,下面这个例子可以匹配嵌套的&lt;div&gt;标签：</span><br><span class="line">&lt;div[^&gt;]*&gt;[^&lt;&gt;]*(((?&#x27;Open&#x27;&lt;div[^&gt;]*&gt;)[^&lt;&gt;]*)+((?&#x27;-Open&#x27;&lt;/div&gt;)[^&lt;&gt;]*)+)*(?(Open)(?!))&lt;/div&gt;</span><br></pre></td></tr></table></figure>
+
+<h3 id="概念六：模式修饰符"><a href="#概念六：模式修饰符" class="headerlink" title="概念六：模式修饰符"></a>概念六：模式修饰符</h3><p>模式修饰符在许多程序语言中都支持的，比如最常见的是<code>i</code>，不区分大小写，如javascript里的/[a-z0-9]/i，表示匹配字母数字，不区分大小写。</p>
+<p>本人在写php正则时常用的模式修饰符主要有<code>i</code>和<code>s</code>，如：<br><code>$pattern = &#39;#[a-z0-9]+#is&#39;;</code></p>
+<p>模式修饰符s的作用主要是的<code>.</code>能够匹配换行，在处理换行数据时，通常会用到。</p>
+<p>在PHP中，模式修饰符有两种用法，一种是上面的，在分隔符后面的模式修饰符，它的作用范围是全局；另一种是在正则表达式中间的。<br>例如：</p>
+<blockquote>
+<p>正则：<code>/((?i)[A-Z]+)c/</code><br>测试字符：abcABC<br>匹配：abc<br>说明：局部（ab）的大小写被忽略了，<code>(?i)</code>的作用范围在分组1内</p>
+</blockquote>
+<p>如果把正则改成：<code>/([A-Z]+)c/i</code>，则匹配结果将是：<code>abcABC</code><br>示例地址：<a target="_blank" rel="noopener" href="https://regex101.com/r/tS8pP3/1">PHP正则表达式中间的模式修饰符</a></p>
+<p>关于PHP模式修饰符的讲解，请查看<a target="_blank" rel="noopener" href="http://www.zjmainstay.cn/php-manual">PHP手册</a>中的《<a target="_blank" rel="noopener" href="http://php.net/manual/zh/reference.pcre.pattern.modifiers.php">PHP模式修饰符</a>》。</p>
+<h3 id="七：正则三段论应用"><a href="#七：正则三段论应用" class="headerlink" title="七：正则三段论应用"></a>七：正则三段论应用</h3><p>《<a href="//posts.hufeifei.cn/basic/regex-basic">我眼里的正则表达式（入门）</a>》 和 本文《<a href="http://posts.hufeifei.cn/basic/deep-regexp">深入正则表达式应用</a>》几乎倾尽本人正则学习全部思想，但是很多读者反馈，看晕了！看到如此点评，实属无奈，因此，有必要追加本节，来个整体统筹运用，希望能让大家犹如拨云见月，洞悉其中的精义。</p>
+<h4 id="正则三段论：定锚点，去噪点，取数据"><a href="#正则三段论：定锚点，去噪点，取数据" class="headerlink" title="正则三段论：定锚点，去噪点，取数据"></a>正则三段论：定锚点，去噪点，取数据</h4><p>两篇文章中，最重要的部分当属<strong>正则三段论</strong>：<strong>定锚点，去噪点，取数据</strong>，它是整个正则处理过程中的灵魂，它贯穿整个正则撰写过程。</p>
+<p>下面举例说明它的思想，示例六：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">源数据：标题：深入正则表达式应用，作者：Zjmainstay</span><br><span class="line">需求：匹配作者名字</span><br></pre></td></tr></table></figure>
+
+<p>我要从源数据取到<strong>Zjmainstay</strong>这个作者名，那么，在这里，<strong>作者：</strong>就是我们所说的锚点，因为在上面这段数据中它能够唯一定位到我们的数据<strong>Zjmainstay</strong>（就在它后面），因此，我们得到</p>
+<p>(1) 定锚点：<strong>作者：</strong></p>
+<p>而在这里，我们不需要关心标题什么的，因此，<strong>标题：深入正则表达式应用，</strong>就是我们的噪点，因此，我们得到</p>
+<p>(2) 去噪点</p>
+<p>最后，我们确定<strong>作者：</strong>后面就是我们的数据，这个数据可以是任意字符，因此，我们得到正则：<br><code>作者：(.*)</code></p>
+<p>而噪点部分，因为不会对数据取值造成干扰，直接去掉，不需要引入正则中。</p>
+<p>下面再举一个噪点干扰的例子，示例七：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">源数据： &lt;a href=&quot;http://www.zjmainstay.cn/my-regexp&quot; class=&quot;demo8&quot; title=&quot;正则三段论应用举例&quot;&gt;正则表达式入门教程&lt;/a&gt;</span><br><span class="line">需求：提取链接和标题，还有a标签的文字</span><br></pre></td></tr></table></figure>
+
+<p>看到这个源数据和需求，我们必须定位好锚点，主要有：</p>
+<ol>
+<li><code>&lt;a</code> //必须是a标签</li>
+<li><code>href=&quot; 和 &quot;</code> //href=””的内容得到链接</li>
+<li><code>title=&quot; 和 &quot;</code> //title=””的内容得到标题</li>
+<li><code>&gt; 和 &lt;/a&gt;</code> //&gt;和&lt;/a&gt;的内容得到标签文字</li>
+</ol>
+<p>然后，其他的都是噪点，使用.*?替代，需要提取的数据部分使用括号获取子模式，得到分组数据，因此得到正则：<br><code>&lt;a href=&quot;(.*?)&quot;.*?title=&quot;(.*?)&quot;&gt;(.*?)&lt;/a&gt;</code></p>
+<p>看到这里，也许有朋友觉得，我还是不会写，那么，再来一个更简单的构建方法，细化步骤，从源串逐步得到正则，示例八：</p>
+<blockquote>
+<ol>
+<li>直接拷贝源串，特殊字符处理转义（本例没特殊字符） <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">&quot;http://www.zjmainstay.cn/my-regexp&quot;</span> <span class="attr">class</span>=<span class="string">&quot;demo8&quot;</span> <span class="attr">title</span>=<span class="string">&quot;正则三段论应用举例&quot;</span>&gt;</span>正则表达式入门教程<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li>从左到右，一段段转化 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">2.1 &lt;a href=&quot;(.*?)&quot; class=&quot;demo8&quot; title=&quot;正则三段论应用举例&quot;&gt;正则表达式入门教程&lt;/a&gt;</span><br><span class="line">2.2 &lt;a href=&quot;(.*?)&quot;.*?title=&quot;正则三段论应用举例&quot;&gt;正则表达式入门教程&lt;/a&gt;</span><br><span class="line">2.3 &lt;a href=&quot;(.*?)&quot;.*?title=&quot;(.*?)&quot;&gt;正则表达式入门教程&lt;/a&gt;</span><br><span class="line">2.4 &lt;a href=&quot;(.*?)&quot;.*?title=&quot;(.*?)&quot;&gt;(.*?)&lt;/a&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li>得到最终的正则<br><code>&lt;a href=&quot;(.*?)&quot;.*?title=&quot;(.*?)&quot;&gt;(.*?)&lt;/a&gt;</code></li>
+</ol>
+</blockquote>
+<p>至此，正则三段论的基本思想已经展示完毕，大家还有什么不解请评论留言，本人看到会第一时间给予回复。</p>
+<p>熟悉正则三段论处理思想，剩下的便是基本语义的熟练程度了，这个通过多用多练可以达到熟能生巧的境界。</p>
+<p>最后留下一句<strong>至尊提醒</strong>：<code>.</code>是<strong>万能字符</strong>，大家看着用，遇到换行使用<code>[\s\S]</code>替换<code>.</code>即可。</p>
+<p>（完）</p>
+<p>附：</p>
+<p><strong>正则表达式速查表</strong>：<a target="_blank" rel="noopener" href="https://cs.hufeifei.cn/regex/">https://cs.hufeifei.cn/regex/</a></p>
+<p><strong>正则测试工具</strong> <a target="_blank" rel="noopener" href="http://www.zjmainstay.cn/download/category/4-regexp?download=21:regexbuddy">RegexBuddy 4.1.0-正则测试工具.rar</a></p>
+<p><strong>正则表达式工具RegexBuddy使用教程</strong> <a target="_blank" rel="noopener" href="http://www.zjmainstay.cn/regex-tool-regexbuddy">正则表达式工具RegexBuddy使用教程</a></p>
+<p><strong>Mac 正则表达式工具</strong> <a target="_blank" rel="noopener" href="https://github.com/Zjmainstay/RegexTesterForMac">Mac正则表达式测试工具</a></p>
+
+    </div>
+
+    <div>全文完。</div>
+  </article>
+  <div class="fix-container">
+    <div id="toc" class="fix-right">
+      
+<div class="toc-wrapper">
+  <strong class="toc-title">目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A6%82%E5%BF%B5%E4%B8%80%EF%BC%9A%E6%8C%89%E5%8D%95%E5%AD%97%E7%AC%A6%E5%8C%B9%E9%85%8D"><span class="toc-text">概念一：按单字符匹配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A6%82%E5%BF%B5%E4%BA%8C%EF%BC%9A%E5%8C%B9%E9%85%8D%E4%BC%98%E5%85%88%E5%92%8C%E4%B8%8D%E5%8C%B9%E9%85%8D%E4%BC%98%E5%85%88"><span class="toc-text">概念二：匹配优先和不匹配优先</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A6%82%E5%BF%B5%E4%B8%89%EF%BC%9A%E8%B4%AA%E5%A9%AA%E6%A8%A1%E5%BC%8F%E4%B8%8E%E9%9D%9E%E8%B4%AA%E5%A9%AA%E6%A8%A1%E5%BC%8F"><span class="toc-text">概念三：贪婪模式与非贪婪模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A6%82%E5%BF%B5%E5%9B%9B%EF%BC%9A%E7%8E%AF%E8%A7%86%EF%BC%88%E6%96%AD%E8%A8%80-%E9%9B%B6%E5%AE%BD%E6%96%AD%E8%A8%80%EF%BC%89"><span class="toc-text">概念四：环视（断言&#x2F;零宽断言）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A6%82%E5%BF%B5%E4%BA%94%EF%BC%9A%E5%B9%B3%E8%A1%A1%E7%BB%84"><span class="toc-text">概念五：平衡组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A6%82%E5%BF%B5%E5%85%AD%EF%BC%9A%E6%A8%A1%E5%BC%8F%E4%BF%AE%E9%A5%B0%E7%AC%A6"><span class="toc-text">概念六：模式修饰符</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%83%EF%BC%9A%E6%AD%A3%E5%88%99%E4%B8%89%E6%AE%B5%E8%AE%BA%E5%BA%94%E7%94%A8"><span class="toc-text">七：正则三段论应用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A3%E5%88%99%E4%B8%89%E6%AE%B5%E8%AE%BA%EF%BC%9A%E5%AE%9A%E9%94%9A%E7%82%B9%EF%BC%8C%E5%8E%BB%E5%99%AA%E7%82%B9%EF%BC%8C%E5%8F%96%E6%95%B0%E6%8D%AE"><span class="toc-text">正则三段论：定锚点，去噪点，取数据</span></a></li></ol></li></ol>
+</div>
+
+      
+<div class="ads-banner">
+    <div class="swiper-wrapper">
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/gze2lfYy" title="买云服务器，参与礼品兑换、抽奖，最高送价值8000元IPad，还有Bose耳机、千元京东卡等您来！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E4%BC%81%E4%B8%9A%E7%9B%9B%E5%A4%8F%E6%9C%89%E7%A4%BC-345x200-d2146292109c1c9e1ae000a6c3ecde162d89e493.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/ecs_amd_test-0901?userCode=s4pthvp2" title="云服务器AMD二代火热公测">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/2480630_1634815908.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/LonPwhxX" title="DNSPod解析套餐全面升配降价，更高的套餐配置规格，更优的价格方案，全面提升可用性及响应率，专业版限时99元/年！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%E9%8D%93%EE%88%9B%E6%B9%B0-82de69db27c1e7984b871bdba4ea3dd5d5acda1f.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/7ec01pIF" title="云产品限时秒杀，爆款1核2G云服务器，首年74元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-788d0ee3eed06e913b85ddb6b178f8b9960c4684.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/minisite/goods?userCode=s4pthvp2" title="云小站特惠">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/6421642_1634812338.jpg" />
+            
+            <span>云小站特惠</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/95DUQ4ON" title="境外1核2G服务器低至2折，半价续费券限量免费领取！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A8%E7%90%83%E8%B4%AD_345%20200-dd004d4a4191fcbabcabea4fcd96f67d1e069f58.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SAIuJMWI" title="星星海SA2云服务器，1核2G首年99元起，高性价比首选">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%20%281%29-87905a297b9ba92f411e1e8fefc629b63cca5781.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/3YMiCK6w" title="推广者专属福利，新客户无门槛领取总价值高达2860元代金券，每种代金券限量500张，先到先得。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200--2953d058277cb63c6b1cd127285163335cd6751e.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/activity_selection?userCode=s4pthvp2" title="云服务器 精选特惠 新用户低至0.5折起 爆款免费试用3个月">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9125844_1634816292.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/qbSzF0sM" title="中小企业福利专场，多款刚需产品，满足企业通用场景需求，云服务器2.5折起">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-b28f7dee9552f4241ea6a543f15a9798049701d4.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/H6YmBFC4" title="云开发CloudBase，一站式高效开发平台，新用户选购低至0元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-a1b026a76d4ef2fc73b9fd976759da3a16715b44.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/daily/bestoffer?userCode=s4pthvp2" title="阿里云 爆款特惠 精选爆款产品低至0.5折">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9604134_1634812518.jpg" />
+            
+            <span>阿里云 爆款特惠 精选爆款产品低至0.5折</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/new?userCode=s4pthvp2" title="新人特惠专享 汇聚阿里云爆款云产品，云服务器1核2G n4 72.6元/年">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/3500689_1634812626.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/hDCEkRsS" title="ElasticSearch新用户特惠，快速实现日志分析、应用搜索，首购低至4折">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E8%85%BE%E8%AE%AF%E4%BA%913_345%20200_1-7aeb8eb451fd6de33676444898914b1ff3298996.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/YjfBwRLm" title="腾讯云数据库性能卓越稳定可靠，为您解决数据库运维难题">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A5%E9%97%A8%E4%BA%91%E6%95%B0%E6%8D%AE%E5%BA%93MYSQL-345x200-a68c566987f9bf687433e2cf4fbdc85ece6e2d93.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SDMIWAoV" title="腾讯云图，像PPT一样简单的数据可视化工具。5元搞定数据可视化，模板丰富，拖拖拽拽就能做出好看的可视化大屏。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-89eeba55a2f49008e686e1a51e14bfe79f63af13.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/8DvMAlwF" title="视频通信爆款 9.9 元起， 提供电商、教育、社交娱乐等多行业多场景的一站式解决方案，最快 1 天布局火爆赛道">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200-51cc0ac5a1b375c4269c679987e3bc7c62a2c592.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/care?userCode=s4pthvp2" title="云服务器老用户专享礼遇 实例升级低至 6.3折、续费低至 3.5折 限时折扣！">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/7740487_1634816569.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/VbUAuJ2j" title="即时通信 IM 首购 1 折特惠，仅需99.9元/月，支持直播电商、在线教育等多种热门应用场景">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD-15e14b2502f1e6df9e647ba452416d4a4f3dda04.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/6HS1Q41a" title="9.9元体验2万分钟实时音视频通话,支持1对1或多人音视频通话,单房可支持300人同时在线，10万人同时观看；全平台互通高品质通话">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%202-15a05a841743ffd2dc01731972dd7b3c2b46e357.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/Z3HKwaYY" title="云数据库MySQL基础版1元体验，为中小企业量身打造，单节点架构，保证数据可靠性">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E6%95%B0%E6%8D%AE%E5%BA%93%20SQL%20345x200-0f7c36787bd045c5a201bc29b01deab00bb4a3cd.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/pcReLJBk" title="专业版APP加固特惠5折起，可享免费兼容性测试">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-5d6e2cf6805432934eeb9f7800bd1a5d282906ae.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/xwWYC6oW" title="新客户首购 TPNS 特惠9.8元/万 DAU，新老客户低至6.5折，给您提供快速、稳定、安全、高效的用户促活利器">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%203-9f78293b201220263799ac53f85ae6cd13e0e8a7.png" />
+            
+        </a>
+        
+    </div>
+    <div aria-label="Previous" class="swiper-button-prev"></div>
+    <div aria-label="Next" class="swiper-button-next"></div>
+    <div class="swiper-pagination"></div>
+</div>
+<script>
+    window.addEventListener('load', function () {
+            let options = {"pagination":{"el":".swiper-pagination","type":"progressbar"},"navigation":{"nextEl":".swiper-button-next","prevEl":".swiper-button-prev"},"slidesPerView":1,"spaceBetween":10,"loop":true,"autoplay":{"delay":2000,"disableOnInteraction":false}} ;
+            var swiper = new Swiper(".ads-banner", options);
+        },
+        false);
+</script>
+
+    </div>
+  </div>
+</div>
+<div class="copyright">
+    <span>原文链接：</span>
+    <a target="_blank" rel="noopener" href="http://www.zjmainstay.cn/deep-regexp">http://www.zjmainstay.cn/deep-regexp</a>
+</div>
+<div class="share" style="width: 100%;">
+  <img src="https://www.hufeifei.cn/wechat-public-account.jpg" alt="Holmofy" style="margin: auto; display: block; width: 40%;min-width: 160px;max-width: 400px;"/>
+  <div style="margin: auto; text-align: center; font-size: 0.8em; color: grey;">老铁们关注走一走，不迷路</div>
+</div>
+
+  
+    <div class="post-nav">
+      <div class="post-nav-item post-nav-next">
+        
+          <span>〈 </span>
+          <a href="/basic/regex-basic/" rel="next" title="我眼里的正则表达式入门教程">
+          我眼里的正则表达式入门教程
+          </a>
+        
+      </div>
+  
+      <div class="post-nav-item post-nav-prev">
+          
+          <a href="/backend/k8s-basic/" rel="prev" title="Kubernetes解决了哪些问题">
+            Kubernetes解决了哪些问题
+          </a>
+          <span>〉</span>
+        
+      </div>
+    </div>
+  
+
+<div id="vcomments" style="padding: 10px 50px;"></div>
+<script>
+    window.addEventListener('load', function () {
+        new Valine({"el":"#vcomments","enable":true,"appId":"8Yo6tv65sOStsPwvGSOAmOtM-gzGzoHsz","appKey":"IJPXPCV29V5ja34nj1JL3tQe","notify":false,"verify":false,"pageSize":10,"avatar":"mm","lang":"zh-cn","placeholder":"Just go go","visitor":true,"recordIP":true,"requiredFields":["nick"]});
+    });
+</script>
+
+    </div>
+
+    
+
+  </div>
+  <footer class="footer text-center">
+    <div id="bottom-inner">
+        <a class="bottom-item" href="https://www.hufeifei.cn">首页</a> |
+        <a class="bottom-item" href="https://blog.hufeifei.cn" target="_blank">个人博客</a> |
+        <a class="bottom-item" href="https://github.com/holmofy" target="_blank">GitHub</a>
+    </div>
+    
+    <div>
+        <span class="bottom-item">友情链接: </span>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://draveness.me/">draveness</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://coolshell.cn/">CoolShell</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://martin.kleppmann.com/">martin kleppmann</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://www.skywind.me/blog/">skywind</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://duanple.com/">duanple</a>
+        
+    </div>
+    
+</footer>
+
+  
+  <!-- scripts list from theme config.yml -->
+  
+    <script src="//unpkg.com/swiper/swiper-bundle.min.js"></script>
+  
+    <script src="//cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+  
+
+
+<script>
+  (function(window, document, undefined) {
+
+    var timer = null;
+
+    function returnTop() {
+      cancelAnimationFrame(timer);
+      timer = requestAnimationFrame(function fn() {
+        var oTop = document.body.scrollTop || document.documentElement.scrollTop;
+        if (oTop > 0) {
+          document.body.scrollTop = document.documentElement.scrollTop = oTop - 50;
+          timer = requestAnimationFrame(fn);
+        } else {
+          cancelAnimationFrame(timer);
+        }
+      });
+    }
+
+    var hearts = [];
+    window.requestAnimationFrame = (function() {
+      return window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        function(callback) {
+          setTimeout(callback, 1000 / 60);
+        }
+    })();
+    init();
+
+    function init() {
+      css(".heart{z-index:9999;width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+      attachEvent();
+      gameloop();
+      addMenuEvent();
+    }
+
+    function gameloop() {
+      for (var i = 0; i < hearts.length; i++) {
+        if (hearts[i].alpha <= 0) {
+          document.body.removeChild(hearts[i].el);
+          hearts.splice(i, 1);
+          continue;
+        }
+        hearts[i].y--;
+        hearts[i].scale += 0.004;
+        hearts[i].alpha -= 0.013;
+        hearts[i].el.style.cssText = "left:" + hearts[i].x + "px;top:" + hearts[i].y + "px;opacity:" + hearts[i].alpha + ";transform:scale(" + hearts[i].scale + "," + hearts[i].scale + ") rotate(45deg);background:" + hearts[i].color;
+      }
+      requestAnimationFrame(gameloop);
+    }
+
+    /**
+     * 给logo设置点击事件
+     * 
+     * - 回到顶部
+     * - 出现爱心
+     */
+    function attachEvent() {
+      var old = typeof window.onclick === "function" && window.onclick;
+      var logo = document.getElementById("logo");
+      if (logo) {
+        logo.onclick = function(event) {
+          returnTop();
+          old && old();
+          createHeart(event);
+        }
+      }
+      
+    }
+
+    function createHeart(event) {
+      var d = document.createElement("div");
+      d.className = "heart";
+      hearts.push({
+        el: d,
+        x: event.clientX - 5,
+        y: event.clientY - 5,
+        scale: 1,
+        alpha: 1,
+        color: randomColor()
+      });
+      document.body.appendChild(d);
+    }
+
+    function css(css) {
+      var style = document.createElement("style");
+      style.type = "text/css";
+      try {
+        style.appendChild(document.createTextNode(css));
+      } catch (ex) {
+        style.styleSheet.cssText = css;
+      }
+      document.getElementsByTagName('head')[0].appendChild(style);
+    }
+
+    function randomColor() {
+      // return "rgb(" + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + ")";
+      return "#F44336";
+    }
+
+    function addMenuEvent() {
+      var menu = document.getElementById('menu-main-post');
+      if (menu) {
+        var toc = document.getElementById('toc');
+        if (toc) {
+          menu.onclick = function() {
+            if (toc) {
+              if (toc.style.display == 'block') {
+                toc.style.display = 'none';
+              } else {
+                toc.style.display = 'block';
+              }
+            }
+          };
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+    }
+
+  })(window, document);
+</script>
+
+  
+
+
+
+<script>(function (w, d, s, id) {
+            if (typeof (w.webpushr) !== 'undefined') return; w.webpushr = w.webpushr || function () { (w.webpushr.q = w.webpushr.q || []).push(arguments) }; var js, fjs = d.getElementsByTagName(s)[0]; js = d.createElement(s); js.id = id; js.async = 1; js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window, document, 'script', 'webpushr-jssdk'));webpushr('setup', { 'key': 'BPOxQK5zO7VR8Ja1xRzI_E6lKWqJqwAMSNJozmybmGC6-aujLX8k-lHdIAdb_BcX9po-j5bpVTyEEA6f9Kz0bqU' });</script></body>
+</html>

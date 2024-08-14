@@ -1,0 +1,684 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#202020"/>
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta name="keywords" content="LSM-Tree," />
+  
+
+  
+    <meta name="description" content="各大平台上精选优质文章进行汇总" />
+  
+  
+  <link rel="icon" type="image/x-icon" href="/logo.png">
+  <title>深入浅出分析LSM树（日志结构合并树） [ 站在巨人的肩膀上 ]</title>
+  
+    <!-- stylesheets list from config.yml -->
+    
+      <link rel="stylesheet" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css">
+    
+      <link rel="stylesheet" href="//unpkg.com/swiper/swiper-bundle.min.css">
+    
+      <link rel="stylesheet" href="/css/xoxo.css">
+    
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-H58NSPXYPF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'G-H58NSPXYPF');
+  </script>
+<meta name="generator" content="Hexo 5.4.0"><style>mjx-container[jax="SVG"] {
+  direction: ltr;
+}
+
+mjx-container[jax="SVG"] > svg {
+  overflow: visible;
+}
+
+mjx-container[jax="SVG"][display="true"] {
+  display: block;
+  text-align: center;
+  margin: 1em 0;
+}
+
+mjx-container[jax="SVG"][justify="left"] {
+  text-align: left;
+}
+
+mjx-container[jax="SVG"][justify="right"] {
+  text-align: right;
+}
+
+g[data-mml-node="merror"] > g {
+  fill: red;
+  stroke: red;
+}
+
+g[data-mml-node="merror"] > rect[data-background] {
+  fill: yellow;
+  stroke: none;
+}
+
+g[data-mml-node="mtable"] > line[data-line] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > rect[data-frame] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > .mjx-dashed {
+  stroke-dasharray: 140;
+}
+
+g[data-mml-node="mtable"] > .mjx-dotted {
+  stroke-linecap: round;
+  stroke-dasharray: 0,140;
+}
+
+g[data-mml-node="mtable"] > svg {
+  overflow: visible;
+}
+
+[jax="SVG"] mjx-tool {
+  display: inline-block;
+  position: relative;
+  width: 0;
+  height: 0;
+}
+
+[jax="SVG"] mjx-tool > mjx-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+mjx-tool > mjx-tip {
+  display: inline-block;
+  padding: .2em;
+  border: 1px solid #888;
+  font-size: 70%;
+  background-color: #F8F8F8;
+  color: black;
+  box-shadow: 2px 2px 5px #AAAAAA;
+}
+
+g[data-mml-node="maction"][data-toggle] {
+  cursor: pointer;
+}
+
+mjx-status {
+  display: block;
+  position: fixed;
+  left: 1em;
+  bottom: 1em;
+  min-width: 25%;
+  padding: .2em .4em;
+  border: 1px solid #888;
+  font-size: 90%;
+  background-color: #F8F8F8;
+  color: black;
+}
+
+foreignObject[data-mjx-xml] {
+  font-family: initial;
+  line-height: normal;
+  overflow: visible;
+}
+
+.MathJax path {
+  stroke-width: 3;
+}
+
+mjx-container[display="true"] {
+  overflow: auto hidden;
+}
+
+mjx-container[display="true"] + br {
+  display: none;
+}
+</style><link rel="alternate" href="/atom.xml" title="站在巨人的肩膀上" type="application/atom+xml">
+</head>
+
+
+<body>
+  <div class="nav-container">
+    <nav class="home-menu pure-menu pure-menu-horizontal">
+  <a class="pure-menu-heading" href="/">
+    <img class="avatar" src="https://www.hufeifei.cn/favicon.jpg">
+    <span class="title">站在巨人的肩膀上</span>
+  </a>
+
+  <ul class="pure-menu-list clearfix">
+      
+          
+            <li class="pure-menu-item"><a href="/" class="pure-menu-link">首页</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/tags" class="pure-menu-link">标签</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/atom.xml" class="pure-menu-link">RSS</a></li>
+          
+      
+  </ul>
+   
+</nav>
+  </div>
+
+  <div class="container" id="content-outer">
+    <div class="inner" id="content-inner">
+      <div class="post-container">
+  <article class="post" id="post">
+    <header class="post-header text-center">
+      <h1 class="title">
+        深入浅出分析LSM树（日志结构合并树）
+      </h1>
+      <span>
+        
+        <time class="time" datetime="2022-08-02T00:00:00.000Z">
+          2022-08-02
+        </time>
+        
+      </span>
+      <span class="slash">/</span>
+      <span class="post-meta">
+        <span class="post-tags">
+          <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LSM-Tree/" rel="tag">LSM-Tree</a></li></ul>
+        </span>
+      </span>
+      <span class="slash">/</span>
+      <span id="/lsm-tree/" class="read leancloud_visitors" data-flag-title="深入浅出分析LSM树（日志结构合并树）">
+        <span class="leancloud-visitors-count"></span> 点击
+      </span>
+      <span class="slash">/</span>
+      <span class="read">阅读耗时 24 分钟</span>
+    </header>
+
+    <div class="post-content">
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><h2 id="零、前言"><a href="#零、前言" class="headerlink" title="零、前言"></a>零、前言</h2><p>最近在调研NoSQL数据库，发现RocksDB、LevelDB、HBase以及Prometheus等，其底层的存储引擎都是基于LSM树，于是决定花时间彻底吃透LSM树这一数据结构。</p>
+<p>不幸的是，在查阅资料学习的过程中，发现网上各种文章汗牛充栋、抄来抄去，不是文不对题就是不知所云。</p>
+<p>一气之下决定自己写一篇出来消消气，便有了这篇文章。。。</p>
+<p>PS：学了这么多数据结构，LSM-Tree应该是最年轻的一个，它在1996年被设计出来(属老鼠的)，年纪比我还小~</p>
+<p>相比于B/B+树或者倒排索引，LSM-Tree采用了“疯狂到不顾一切”的干啥都磁盘顺序写的方案，赋予了它无与伦比的写吞吐量。</p>
+<h2 id="一、LSM树数据结构定义"><a href="#一、LSM树数据结构定义" class="headerlink" title="一、LSM树数据结构定义"></a>一、LSM树数据结构定义</h2><p>查阅了一些资料，LSM树并没有一种固定死的实现方式，更多的是一种将：</p>
+<p>“磁盘顺序写” + “多个树(状数据结构)” + “冷热（新老）数据分级” + “定期归并” + “非原地更新”这几种特性统一在一起的思想。</p>
+<p>为了方便后续的讲解分析，我们尝试先对LSM树做一个定义。</p>
+<p>LSM树的定义：</p>
+<ol>
+<li>LSM树是一个横跨内存和磁盘的，包含多颗”子树”的一个森林。</li>
+<li>LSM树分为Level 0，Level 1，Level 2 … Level n 多颗子树，其中只有Level 0在内存中，其余Level 1-n在磁盘中。</li>
+<li>内存中的Level 0子树一般采用排序树（红黑树/AVL树）、跳表或者TreeMap等这类有序的数据结构，方便后续顺序写磁盘。</li>
+<li>磁盘中的Level 1-n子树，本质是数据排好序后顺序写到磁盘上的文件，只是叫做树而已。</li>
+<li>每一层的子树都有一个阈值大小，达到阈值后会进行合并，合并结果写入下一层。</li>
+<li>只有内存中数据允许原地更新，磁盘上数据的变更只允许追加写，不做原地更新。<br>以上6条定义组成了LSM树，如图1所示。</li>
+</ol>
+<p><img src="https://pic4.zhimg.com/80/v2-9359003a0c88626b33979b784982e9ab_1440w.jpg" alt="LSM树的组成和定义"></p>
+<ul>
+<li>图1中分成了左侧绿色的内存部分和右侧蓝色的磁盘部分（定义1）。</li>
+<li>图1左侧绿色的内存部分只包含Level 0树，右侧蓝色的磁盘部分则包含Level 1-n等多棵”树”（定义2）</li>
+<li>图1左侧绿色的内存部分中Level 0是一颗二叉排序树（定义3）。注意这里的有序性，该性质决定了LSM树优异的读写性能。</li>
+<li>图1右侧蓝色的磁盘部分所包含的Level 1到Level n多颗树，虽然叫做“树”，但本质是按数据key排好序后，顺序写在磁盘上的一个个文件（定义4） ，注意这里再次出现了有序性。</li>
+<li>内存中的Level 0树在达到阈值后，会在内存中遍历排好序的Level 0树并顺序写入磁盘的Level 1。同样的，在磁盘中的Level n（n&gt;0）达到阈值时，则会将Level n层的多个文件进行归并，写入Level n+1层。（定义5）</li>
+<li>除了内存中的Level 0层做原地更新外，对已写入磁盘上的数据，都采用Append形式的磁盘顺序写，即更新和删除操作并不去修改老数据，只是简单的追加新数据。图1中右侧蓝色的磁盘部分，Level 1和Level 2均包含key为2的数据，同时图1左侧绿色内存中的Level 0树也包含key为2的数据节点。（定义6）</li>
+</ul>
+<p>下面我们遵循LSM树的6条定义，通过动图对LSM树的增、删、改、查和归并进行详细分析。</p>
+<h2 id="二、插入操作"><a href="#二、插入操作" class="headerlink" title="二、插入操作"></a>二、插入操作</h2><p>LSM树的插入较简单，数据无脑往内存中的Level 0排序树丢即可，并不关心该数据是否已经在内存或磁盘中存在。（已经存在该数据的话，则场景转换成更新操作，详见第四部分）</p>
+<p>图2展示了，新数据直接插入Level 0树的过程。</p>
+<p><img src="https://vdn6.vzuu.com/SD/b8494042-21d0-11ec-8331-6ad01c902347.mp4?pkey=AAVDwY2TcaW2d_7ijDc-8u5T-5xlKGNCqNA9jDGhxTMJ4WxbuLqwp88WkAH39SvTwjCKsbV01Iyi1Zjkckr1FcZl&c=avc.0.0&f=mp4&pu=078babd7&bu=078babd7&expiration=1661843826&v=ks6"></p>
+<p>如上图2所示，我们依次插入了key=9、1、6的数据，这三个数据均按照key的大小，插入内存里的Level 0排序树中。该操作复杂度为树高log(n)，n是Level 0树的数据量，可见代价很低，能实现极高的写吞吐量。</p>
+<h2 id="三、删除操作"><a href="#三、删除操作" class="headerlink" title="三、删除操作"></a>三、删除操作</h2><p>LSM树的删除操作并不是直接删除数据，而是通过一种叫“墓碑标记”的特殊数据来标识数据的删除。</p>
+<p>删除操作分为：<code>待删除数据在内存中</code>、<code>待删除数据在磁盘中</code> 和 <code>该数据根本不存在</code>三种情况。</p>
+<h3 id="3-1-待删除数据在内存中："><a href="#3-1-待删除数据在内存中：" class="headerlink" title="3.1 待删除数据在内存中："></a>3.1 待删除数据在内存中：</h3><p>如图3所示，展示了待删除数据在内存中的删除过程。我们不能简单地将Level 0树中的黄色节点2删除，而是应该采用墓碑标记将其覆盖（思考题：为什么不能直接删除而是要用墓碑标记覆盖呢）</p>
+<p><img src="https://pic4.zhimg.com/v2-7b764ddb2404b3b3e2d3f19b917a7bf3_b.webp" alt="LSM树删除操作示例——待删除数据在内存中时"></p>
+<h3 id="3-2-待删除数据在磁盘中："><a href="#3-2-待删除数据在磁盘中：" class="headerlink" title="3.2 待删除数据在磁盘中："></a>3.2 待删除数据在磁盘中：</h3><p>如图4所示，展示了待删除数据在磁盘上时的删除过程。我们并不去修改磁盘上的数据（理都不理它），而是直接向内存中的Level 0树中插入墓碑标记即可。</p>
+<p><img src="https://pic4.zhimg.com/v2-6130424a556ba99a040bcd474371d347_b.webp" alt="LSM树删除操作示例——待删除数据在磁盘中时"></p>
+<h3 id="3-3-待删除数据根本不存在："><a href="#3-3-待删除数据根本不存在：" class="headerlink" title="3.3 待删除数据根本不存在："></a>3.3 待删除数据根本不存在：</h3><p>这种情况等价于在内存的Level 0树中新增一条墓碑标记，场景转换为情况3.2的内存中插入墓碑标记操作。</p>
+<p>综合看待上述三种情况，发现不论数据有没有、在哪里，删除操作都是等价于向Level 0树中写入墓碑标记。该操作复杂度为树高log(n)，代价很低。</p>
+<h2 id="四、修改操作"><a href="#四、修改操作" class="headerlink" title="四、修改操作"></a>四、修改操作</h2><p>LSM树的修改操作和删除操作很像，也是分为三种情况：<code>待修改数据在内存中</code>、<code>在磁盘中</code>和 <code>该数据根本不存在</code>。</p>
+<h3 id="4-1-待修改数据在内存中："><a href="#4-1-待修改数据在内存中：" class="headerlink" title="4.1 待修改数据在内存中："></a>4.1 待修改数据在内存中：</h3><p><img src="https://pic4.zhimg.com/v2-238724222503b9be0316c3554c5ae29f_b.webp" alt="LSM树修改操作示例——待修改数据在内存中时"></p>
+<p>如图5所示，展示了待修改数据在内存中的操作过程。新的蓝色的key=7的数据，直接定位到内存中Level 0树上黄色的老的key=7的位置，将其覆盖即可。</p>
+<h3 id="4-2-待修改数据在磁盘中："><a href="#4-2-待修改数据在磁盘中：" class="headerlink" title="4.2 待修改数据在磁盘中："></a>4.2 待修改数据在磁盘中：</h3><p><img src="https://pic3.zhimg.com/v2-482e280b9b27876ff5302b845c95353e_b.webp" alt="LSM树修改操作示例——待修改数据在磁盘中时"></p>
+<p>如图6所示，展示了待修改数据在磁盘中的操作过程。LSM树并不会去磁盘中的Level 1树上原地更新老的key=7的数据，而是直接将新的蓝色的节点7插入内存中的Level 0树中。</p>
+<h3 id="4-3-该数据根本不存在："><a href="#4-3-该数据根本不存在：" class="headerlink" title="4.3 该数据根本不存在："></a>4.3 该数据根本不存在：</h3><p>此场景等价于情况b，直接向内存中的Level 0树插入新的数据即可。</p>
+<p>综上4.1、4.2、4.3三种情况可以看出，修改操作都是对内存中Level 0进行覆盖/新增操作。该操作复杂度为树高log(n)，代价很低。</p>
+<p>我们会发现，LSM树的增加、删除、修改（这三个都属于写操作）都是在内存中倒腾，完全没涉及到磁盘操作，所以速度飞快，写吞吐量高的离谱。。。</p>
+<h2 id="五、查询操作"><a href="#五、查询操作" class="headerlink" title="五、查询操作"></a>五、查询操作</h2><p>LSM树的查询操作会按顺序查找Level 0、Level 1、Level 2 … Level n 每一颗树，一旦匹配便返回目标数据，不再继续查询。该策略保证了查到的一定是目标key最新版本的数据（有点MVCC的感觉）。</p>
+<p>我们来分场景分析：依然分为 <code>待查询数据在内存中</code> 和 <code>待查询数据在磁盘中</code> 两种情况。</p>
+<h3 id="5-1-待查询数据在内存中："><a href="#5-1-待查询数据在内存中：" class="headerlink" title="5.1 待查询数据在内存中："></a>5.1 待查询数据在内存中：</h3><p>如图7所示，展示了待查询数据在内存中时的查询过程。</p>
+<p><img src="https://pic4.zhimg.com/v2-49a19f8261209dfda34b0901fa6c2e77_b.webp" alt="LSM树查询操作示例——待查询数据在内存中时"></p>
+<p>沿着内存中已排好序的Level 0树递归向下比较查询，返回目标节点即可。我们注意到磁盘上的Level 1树中同样包括一个key=6的较老的数据。但LSM树查询的时候会按照Level 0、1、2 … n的顺序查询，一旦查到第一个就返回，因此磁盘上老的key=6的数据没人理它，更不会作为结果被返回。</p>
+<h3 id="5-2-待查询数据在磁盘中："><a href="#5-2-待查询数据在磁盘中：" class="headerlink" title="5.2 待查询数据在磁盘中："></a>5.2 待查询数据在磁盘中：</h3><p>如图8所示，展示了待查询数据在磁盘上时的查询过程。</p>
+<p><img src="https://vdn.vzuu.com/SD/7b5d5564-21d1-11ec-b7c1-3a28dfb2838d.mp4?disable_local_cache=1&bu=078babd7&c=avc.0.0&f=mp4&expiration=1661761026&auth_key=1661761026-0-0-34096a369e904db9843921c686e773bb&v=ali&pu=078babd7" alt="LSM树查询操作示例——待查询数据在磁盘中时"></p>
+<p>先查询内存中的Level 0树，没查到便查询磁盘中的Level 1树，还是没查到，于是查询磁盘中的Level 2树，匹配后返回key=6的数据。</p>
+<p>综合上述两种情况，我们发现，LSM树的查询操作相对来说代价比较高，需要从Level 0到Level n一直顺序查下去。极端情况是LSM树中不存在该数据，则需要把整个库从Level 0到Level n给扫了一遍，然后返回查无此人（可以通过 布隆过滤器 + 建立稀疏索引 来优化查询操作）。代价大于以B/B+树为基本数据结构的传统RDB存储引擎。</p>
+<h2 id="六、合并操作"><a href="#六、合并操作" class="headerlink" title="六、合并操作"></a>六、合并操作</h2><p>合并操作是LSM树的核心（毕竟LSM树的名字就叫: 日志结构合并树，直接点名了合并这一操作）</p>
+<p>之所以在增、删、改、查这四个基本操作之外还需要合并操作：一是因为内存不是无限大，Level 0树达到阈值时，需要将数据从内存刷到磁盘中，这是合并操作的第一个场景；二是需要对磁盘上达到阈值的顺序文件进行归并，并将归并结果写入下一层，归并过程中会清理重复的数据和被删除的数据(墓碑标记)。我们分别对上述两个场景进行分析：</p>
+<h3 id="6-1-内存数据写入磁盘的场景："><a href="#6-1-内存数据写入磁盘的场景：" class="headerlink" title="6.1 内存数据写入磁盘的场景："></a>6.1 内存数据写入磁盘的场景：</h3><p>如图9所示，展示了内存中Level 0树在达到阈值后，归并写入磁盘Level 1树的场景。</p>
+<p><img src="https://pic4.zhimg.com/v2-52dc81ca11590af2c57a248b106f889f_b.webp" alt="LSM树合并操作示例——内存数据写入磁盘"></p>
+<p>对内存中的Level 0树进行中序遍历，将数据顺序写入磁盘的Level 1层即可，我们可以看到因为Level 0树是已经排好序的，所以写入的Level 1中的新块也是有序的（有序性保证了查询和归并操作的高效）。此时磁盘的Level 1层有两个Block块。</p>
+<h3 id="6-2-磁盘中多个块的归并："><a href="#6-2-磁盘中多个块的归并：" class="headerlink" title="6.2 磁盘中多个块的归并："></a>6.2 磁盘中多个块的归并：</h3><p>如图10所示，该图展示了磁盘中Level 1层达到阈值时，对其包含的两个Block块进行归并，并将归并结果写入Level 2层的过程。</p>
+<p><img src="https://vdn6.vzuu.com/SD/47cada78-21d6-11ec-bf49-362c95d6552e.mp4?pkey=AAVt2c002M_K16jt9Hs0ANxxksTXkRgAO_c5neGOwgVGShthIeH7nWOcfewoHINd68d-iAR0Qdsv2uceM0I1efJ9&c=avc.0.0&f=mp4&pu=078babd7&bu=078babd7&expiration=1661843826&v=ks6" alt="LSM树合并操作示例——磁盘上的多个块合并"></p>
+<p>我们注意到key=5和key=7的数据同时存在于较老的Block 1和较新的Block 2中。而归并的过程是保留较新的数据，于是我们看到结果中，key=5和7的数据都是红色的（来自于较新的Block2）。</p>
+<p>综上我们可以看到，不论是场景6.1还是场景6.2，由于原始数据都是有序的，因此归并的过程只需要对数据集进行一次扫描即可，复杂度为O(n)。</p>
+<h2 id="七、优缺点分析"><a href="#七、优缺点分析" class="headerlink" title="七、优缺点分析"></a>七、优缺点分析</h2><p>以上便是对LSM树的增、删、改、查和归并五种核心操作的详细分析。</p>
+<p>可以看到LSM树将增、删、改这三种操作都转化为内存insert + 磁盘顺序写(当Level 0满的时候)，通过这种方式得到了无与伦比的写吞吐量。</p>
+<p>LSM树的查询能力则相对被弱化，相比于B+树的最多3~4次磁盘IO，LSM树则要从Level 0一路查询Level n，极端情况下等于做了全表扫描。（即便做了稀疏索引，也是lg(N0)+lg(N1)+…+lg(Nn)的复杂度，大于B+树的lg(N0+N1+…+Nn)的时间复杂度）。</p>
+<p>同时，LSM树只append追加不原地修改的特性引入了归并操作，归并操作涉及到大量的磁盘IO，比较消耗性能，需要合理设置触发该操作的参数。</p>
+<p>综上我们可以给出LSM树的优缺点：</p>
+<ul>
+<li><p>优：增、删、改操作飞快，写吞吐量极大。</p>
+</li>
+<li><p>缺：读操作性能相对被弱化；不擅长区间范围的读操作；归并操作较耗费资源。</p>
+</li>
+</ul>
+<p>LSMTree的增、删、改、查四种基本操作的时间复杂度分析如下所示：</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>平均代价</th>
+<th>最坏情况代价</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>插入</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>删除</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>修改</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>查找</td>
+<td>lgN</td>
+<td>lgN</td>
+</tr>
+</tbody></table>
+<h2 id="八、总结"><a href="#八、总结" class="headerlink" title="八、总结"></a>八、总结</h2><p>以上是对LSM树基本操作以及优缺点的分析，我们可以据此得出LSM树的设计原则：</p>
+<p>先内存再磁盘</p>
+<p>内存原地更新</p>
+<p>磁盘追加更新</p>
+<p>归并保留新值</p>
+<p>如果说B/B+树的读写性能基本平衡的话，LSM树的设计原则通过舍弃部分读性能，换取了无与伦比的写性能。该数据结构适合用于写吞吐量远远大于读吞吐量的场景，得到了NoSQL届的喜爱和好评。</p>
+
+    </div>
+
+    <div>全文完。</div>
+  </article>
+  <div class="fix-container">
+    <div id="toc" class="fix-right">
+      
+<div class="toc-wrapper">
+  <strong class="toc-title">目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9B%B6%E3%80%81%E5%89%8D%E8%A8%80"><span class="toc-text">零、前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81LSM%E6%A0%91%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%AE%9A%E4%B9%89"><span class="toc-text">一、LSM树数据结构定义</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%8F%92%E5%85%A5%E6%93%8D%E4%BD%9C"><span class="toc-text">二、插入操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%88%A0%E9%99%A4%E6%93%8D%E4%BD%9C"><span class="toc-text">三、删除操作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%BE%85%E5%88%A0%E9%99%A4%E6%95%B0%E6%8D%AE%E5%9C%A8%E5%86%85%E5%AD%98%E4%B8%AD%EF%BC%9A"><span class="toc-text">3.1 待删除数据在内存中：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E5%BE%85%E5%88%A0%E9%99%A4%E6%95%B0%E6%8D%AE%E5%9C%A8%E7%A3%81%E7%9B%98%E4%B8%AD%EF%BC%9A"><span class="toc-text">3.2 待删除数据在磁盘中：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E5%BE%85%E5%88%A0%E9%99%A4%E6%95%B0%E6%8D%AE%E6%A0%B9%E6%9C%AC%E4%B8%8D%E5%AD%98%E5%9C%A8%EF%BC%9A"><span class="toc-text">3.3 待删除数据根本不存在：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E4%BF%AE%E6%94%B9%E6%93%8D%E4%BD%9C"><span class="toc-text">四、修改操作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%BE%85%E4%BF%AE%E6%94%B9%E6%95%B0%E6%8D%AE%E5%9C%A8%E5%86%85%E5%AD%98%E4%B8%AD%EF%BC%9A"><span class="toc-text">4.1 待修改数据在内存中：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%BE%85%E4%BF%AE%E6%94%B9%E6%95%B0%E6%8D%AE%E5%9C%A8%E7%A3%81%E7%9B%98%E4%B8%AD%EF%BC%9A"><span class="toc-text">4.2 待修改数据在磁盘中：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E8%AF%A5%E6%95%B0%E6%8D%AE%E6%A0%B9%E6%9C%AC%E4%B8%8D%E5%AD%98%E5%9C%A8%EF%BC%9A"><span class="toc-text">4.3 该数据根本不存在：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%9F%A5%E8%AF%A2%E6%93%8D%E4%BD%9C"><span class="toc-text">五、查询操作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%BE%85%E6%9F%A5%E8%AF%A2%E6%95%B0%E6%8D%AE%E5%9C%A8%E5%86%85%E5%AD%98%E4%B8%AD%EF%BC%9A"><span class="toc-text">5.1 待查询数据在内存中：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E5%BE%85%E6%9F%A5%E8%AF%A2%E6%95%B0%E6%8D%AE%E5%9C%A8%E7%A3%81%E7%9B%98%E4%B8%AD%EF%BC%9A"><span class="toc-text">5.2 待查询数据在磁盘中：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%90%88%E5%B9%B6%E6%93%8D%E4%BD%9C"><span class="toc-text">六、合并操作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E5%86%85%E5%AD%98%E6%95%B0%E6%8D%AE%E5%86%99%E5%85%A5%E7%A3%81%E7%9B%98%E7%9A%84%E5%9C%BA%E6%99%AF%EF%BC%9A"><span class="toc-text">6.1 内存数据写入磁盘的场景：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E7%A3%81%E7%9B%98%E4%B8%AD%E5%A4%9A%E4%B8%AA%E5%9D%97%E7%9A%84%E5%BD%92%E5%B9%B6%EF%BC%9A"><span class="toc-text">6.2 磁盘中多个块的归并：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E4%BC%98%E7%BC%BA%E7%82%B9%E5%88%86%E6%9E%90"><span class="toc-text">七、优缺点分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-text">八、总结</span></a></li></ol>
+</div>
+
+      
+<div class="ads-banner">
+    <div class="swiper-wrapper">
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/gze2lfYy" title="买云服务器，参与礼品兑换、抽奖，最高送价值8000元IPad，还有Bose耳机、千元京东卡等您来！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E4%BC%81%E4%B8%9A%E7%9B%9B%E5%A4%8F%E6%9C%89%E7%A4%BC-345x200-d2146292109c1c9e1ae000a6c3ecde162d89e493.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/ecs_amd_test-0901?userCode=s4pthvp2" title="云服务器AMD二代火热公测">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/2480630_1634815908.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/LonPwhxX" title="DNSPod解析套餐全面升配降价，更高的套餐配置规格，更优的价格方案，全面提升可用性及响应率，专业版限时99元/年！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%E9%8D%93%EE%88%9B%E6%B9%B0-82de69db27c1e7984b871bdba4ea3dd5d5acda1f.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/7ec01pIF" title="云产品限时秒杀，爆款1核2G云服务器，首年74元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-788d0ee3eed06e913b85ddb6b178f8b9960c4684.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/minisite/goods?userCode=s4pthvp2" title="云小站特惠">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/6421642_1634812338.jpg" />
+            
+            <span>云小站特惠</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/95DUQ4ON" title="境外1核2G服务器低至2折，半价续费券限量免费领取！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A8%E7%90%83%E8%B4%AD_345%20200-dd004d4a4191fcbabcabea4fcd96f67d1e069f58.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SAIuJMWI" title="星星海SA2云服务器，1核2G首年99元起，高性价比首选">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%20%281%29-87905a297b9ba92f411e1e8fefc629b63cca5781.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/3YMiCK6w" title="推广者专属福利，新客户无门槛领取总价值高达2860元代金券，每种代金券限量500张，先到先得。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200--2953d058277cb63c6b1cd127285163335cd6751e.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/activity_selection?userCode=s4pthvp2" title="云服务器 精选特惠 新用户低至0.5折起 爆款免费试用3个月">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9125844_1634816292.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/qbSzF0sM" title="中小企业福利专场，多款刚需产品，满足企业通用场景需求，云服务器2.5折起">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-b28f7dee9552f4241ea6a543f15a9798049701d4.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/H6YmBFC4" title="云开发CloudBase，一站式高效开发平台，新用户选购低至0元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-a1b026a76d4ef2fc73b9fd976759da3a16715b44.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/daily/bestoffer?userCode=s4pthvp2" title="阿里云 爆款特惠 精选爆款产品低至0.5折">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9604134_1634812518.jpg" />
+            
+            <span>阿里云 爆款特惠 精选爆款产品低至0.5折</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/new?userCode=s4pthvp2" title="新人特惠专享 汇聚阿里云爆款云产品，云服务器1核2G n4 72.6元/年">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/3500689_1634812626.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/hDCEkRsS" title="ElasticSearch新用户特惠，快速实现日志分析、应用搜索，首购低至4折">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E8%85%BE%E8%AE%AF%E4%BA%913_345%20200_1-7aeb8eb451fd6de33676444898914b1ff3298996.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/YjfBwRLm" title="腾讯云数据库性能卓越稳定可靠，为您解决数据库运维难题">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A5%E9%97%A8%E4%BA%91%E6%95%B0%E6%8D%AE%E5%BA%93MYSQL-345x200-a68c566987f9bf687433e2cf4fbdc85ece6e2d93.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SDMIWAoV" title="腾讯云图，像PPT一样简单的数据可视化工具。5元搞定数据可视化，模板丰富，拖拖拽拽就能做出好看的可视化大屏。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-89eeba55a2f49008e686e1a51e14bfe79f63af13.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/8DvMAlwF" title="视频通信爆款 9.9 元起， 提供电商、教育、社交娱乐等多行业多场景的一站式解决方案，最快 1 天布局火爆赛道">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200-51cc0ac5a1b375c4269c679987e3bc7c62a2c592.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/care?userCode=s4pthvp2" title="云服务器老用户专享礼遇 实例升级低至 6.3折、续费低至 3.5折 限时折扣！">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/7740487_1634816569.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/VbUAuJ2j" title="即时通信 IM 首购 1 折特惠，仅需99.9元/月，支持直播电商、在线教育等多种热门应用场景">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD-15e14b2502f1e6df9e647ba452416d4a4f3dda04.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/6HS1Q41a" title="9.9元体验2万分钟实时音视频通话,支持1对1或多人音视频通话,单房可支持300人同时在线，10万人同时观看；全平台互通高品质通话">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%202-15a05a841743ffd2dc01731972dd7b3c2b46e357.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/Z3HKwaYY" title="云数据库MySQL基础版1元体验，为中小企业量身打造，单节点架构，保证数据可靠性">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E6%95%B0%E6%8D%AE%E5%BA%93%20SQL%20345x200-0f7c36787bd045c5a201bc29b01deab00bb4a3cd.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/pcReLJBk" title="专业版APP加固特惠5折起，可享免费兼容性测试">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-5d6e2cf6805432934eeb9f7800bd1a5d282906ae.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/xwWYC6oW" title="新客户首购 TPNS 特惠9.8元/万 DAU，新老客户低至6.5折，给您提供快速、稳定、安全、高效的用户促活利器">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%203-9f78293b201220263799ac53f85ae6cd13e0e8a7.png" />
+            
+        </a>
+        
+    </div>
+    <div aria-label="Previous" class="swiper-button-prev"></div>
+    <div aria-label="Next" class="swiper-button-next"></div>
+    <div class="swiper-pagination"></div>
+</div>
+<script>
+    window.addEventListener('load', function () {
+            let options = {"pagination":{"el":".swiper-pagination","type":"progressbar"},"navigation":{"nextEl":".swiper-button-next","prevEl":".swiper-button-prev"},"slidesPerView":1,"spaceBetween":10,"loop":true,"autoplay":{"delay":2000,"disableOnInteraction":false}} ;
+            var swiper = new Swiper(".ads-banner", options);
+        },
+        false);
+</script>
+
+    </div>
+  </div>
+</div>
+<div class="copyright">
+    <span>原文链接：</span>
+    <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/415799237">https://zhuanlan.zhihu.com/p/415799237</a>
+</div>
+<div class="share" style="width: 100%;">
+  <img src="https://www.hufeifei.cn/wechat-public-account.jpg" alt="Holmofy" style="margin: auto; display: block; width: 40%;min-width: 160px;max-width: 400px;"/>
+  <div style="margin: auto; text-align: center; font-size: 0.8em; color: grey;">老铁们关注走一走，不迷路</div>
+</div>
+
+  
+    <div class="post-nav">
+      <div class="post-nav-item post-nav-next">
+        
+          <span>〈 </span>
+          <a href="/algorithm/image-hash/" rel="next" title="基于内容的图像搜索实现">
+          基于内容的图像搜索实现
+          </a>
+        
+      </div>
+  
+      <div class="post-nav-item post-nav-prev">
+          
+          <a href="/db/vector-search/" rel="prev" title="13 种高维向量检索算法全解析！">
+            13 种高维向量检索算法全解析！
+          </a>
+          <span>〉</span>
+        
+      </div>
+    </div>
+  
+
+<div id="vcomments" style="padding: 10px 50px;"></div>
+<script>
+    window.addEventListener('load', function () {
+        new Valine({"el":"#vcomments","enable":true,"appId":"8Yo6tv65sOStsPwvGSOAmOtM-gzGzoHsz","appKey":"IJPXPCV29V5ja34nj1JL3tQe","notify":false,"verify":false,"pageSize":10,"avatar":"mm","lang":"zh-cn","placeholder":"Just go go","visitor":true,"recordIP":true,"requiredFields":["nick"]});
+    });
+</script>
+
+    </div>
+
+    
+
+  </div>
+  <footer class="footer text-center">
+    <div id="bottom-inner">
+        <a class="bottom-item" href="https://www.hufeifei.cn">首页</a> |
+        <a class="bottom-item" href="https://blog.hufeifei.cn" target="_blank">个人博客</a> |
+        <a class="bottom-item" href="https://github.com/holmofy" target="_blank">GitHub</a>
+    </div>
+    
+    <div>
+        <span class="bottom-item">友情链接: </span>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://draveness.me/">draveness</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://coolshell.cn/">CoolShell</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://martin.kleppmann.com/">martin kleppmann</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://www.skywind.me/blog/">skywind</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://duanple.com/">duanple</a>
+        
+    </div>
+    
+</footer>
+
+  
+  <!-- scripts list from theme config.yml -->
+  
+    <script src="//unpkg.com/swiper/swiper-bundle.min.js"></script>
+  
+    <script src="//cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+  
+
+
+<script>
+  (function(window, document, undefined) {
+
+    var timer = null;
+
+    function returnTop() {
+      cancelAnimationFrame(timer);
+      timer = requestAnimationFrame(function fn() {
+        var oTop = document.body.scrollTop || document.documentElement.scrollTop;
+        if (oTop > 0) {
+          document.body.scrollTop = document.documentElement.scrollTop = oTop - 50;
+          timer = requestAnimationFrame(fn);
+        } else {
+          cancelAnimationFrame(timer);
+        }
+      });
+    }
+
+    var hearts = [];
+    window.requestAnimationFrame = (function() {
+      return window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        function(callback) {
+          setTimeout(callback, 1000 / 60);
+        }
+    })();
+    init();
+
+    function init() {
+      css(".heart{z-index:9999;width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+      attachEvent();
+      gameloop();
+      addMenuEvent();
+    }
+
+    function gameloop() {
+      for (var i = 0; i < hearts.length; i++) {
+        if (hearts[i].alpha <= 0) {
+          document.body.removeChild(hearts[i].el);
+          hearts.splice(i, 1);
+          continue;
+        }
+        hearts[i].y--;
+        hearts[i].scale += 0.004;
+        hearts[i].alpha -= 0.013;
+        hearts[i].el.style.cssText = "left:" + hearts[i].x + "px;top:" + hearts[i].y + "px;opacity:" + hearts[i].alpha + ";transform:scale(" + hearts[i].scale + "," + hearts[i].scale + ") rotate(45deg);background:" + hearts[i].color;
+      }
+      requestAnimationFrame(gameloop);
+    }
+
+    /**
+     * 给logo设置点击事件
+     * 
+     * - 回到顶部
+     * - 出现爱心
+     */
+    function attachEvent() {
+      var old = typeof window.onclick === "function" && window.onclick;
+      var logo = document.getElementById("logo");
+      if (logo) {
+        logo.onclick = function(event) {
+          returnTop();
+          old && old();
+          createHeart(event);
+        }
+      }
+      
+    }
+
+    function createHeart(event) {
+      var d = document.createElement("div");
+      d.className = "heart";
+      hearts.push({
+        el: d,
+        x: event.clientX - 5,
+        y: event.clientY - 5,
+        scale: 1,
+        alpha: 1,
+        color: randomColor()
+      });
+      document.body.appendChild(d);
+    }
+
+    function css(css) {
+      var style = document.createElement("style");
+      style.type = "text/css";
+      try {
+        style.appendChild(document.createTextNode(css));
+      } catch (ex) {
+        style.styleSheet.cssText = css;
+      }
+      document.getElementsByTagName('head')[0].appendChild(style);
+    }
+
+    function randomColor() {
+      // return "rgb(" + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + ")";
+      return "#F44336";
+    }
+
+    function addMenuEvent() {
+      var menu = document.getElementById('menu-main-post');
+      if (menu) {
+        var toc = document.getElementById('toc');
+        if (toc) {
+          menu.onclick = function() {
+            if (toc) {
+              if (toc.style.display == 'block') {
+                toc.style.display = 'none';
+              } else {
+                toc.style.display = 'block';
+              }
+            }
+          };
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+    }
+
+  })(window, document);
+</script>
+
+  
+
+
+
+<script>(function (w, d, s, id) {
+            if (typeof (w.webpushr) !== 'undefined') return; w.webpushr = w.webpushr || function () { (w.webpushr.q = w.webpushr.q || []).push(arguments) }; var js, fjs = d.getElementsByTagName(s)[0]; js = d.createElement(s); js.id = id; js.async = 1; js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window, document, 'script', 'webpushr-jssdk'));webpushr('setup', { 'key': 'BPOxQK5zO7VR8Ja1xRzI_E6lKWqJqwAMSNJozmybmGC6-aujLX8k-lHdIAdb_BcX9po-j5bpVTyEEA6f9Kz0bqU' });</script></body>
+</html>

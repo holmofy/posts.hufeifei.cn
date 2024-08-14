@@ -1,0 +1,647 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#202020"/>
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta name="keywords" content="Alibaba,monitor,Sunfire," />
+  
+
+  
+    <meta name="description" content="各大平台上精选优质文章进行汇总" />
+  
+  
+  <link rel="icon" type="image/x-icon" href="/logo.png">
+  <title>谈阿里核心业务监控平台 SunFire 的技术架构 [ 站在巨人的肩膀上 ]</title>
+  
+    <!-- stylesheets list from config.yml -->
+    
+      <link rel="stylesheet" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css">
+    
+      <link rel="stylesheet" href="//unpkg.com/swiper/swiper-bundle.min.css">
+    
+      <link rel="stylesheet" href="/css/xoxo.css">
+    
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-H58NSPXYPF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'G-H58NSPXYPF');
+  </script>
+<meta name="generator" content="Hexo 5.4.0"><style>mjx-container[jax="SVG"] {
+  direction: ltr;
+}
+
+mjx-container[jax="SVG"] > svg {
+  overflow: visible;
+}
+
+mjx-container[jax="SVG"][display="true"] {
+  display: block;
+  text-align: center;
+  margin: 1em 0;
+}
+
+mjx-container[jax="SVG"][justify="left"] {
+  text-align: left;
+}
+
+mjx-container[jax="SVG"][justify="right"] {
+  text-align: right;
+}
+
+g[data-mml-node="merror"] > g {
+  fill: red;
+  stroke: red;
+}
+
+g[data-mml-node="merror"] > rect[data-background] {
+  fill: yellow;
+  stroke: none;
+}
+
+g[data-mml-node="mtable"] > line[data-line] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > rect[data-frame] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > .mjx-dashed {
+  stroke-dasharray: 140;
+}
+
+g[data-mml-node="mtable"] > .mjx-dotted {
+  stroke-linecap: round;
+  stroke-dasharray: 0,140;
+}
+
+g[data-mml-node="mtable"] > svg {
+  overflow: visible;
+}
+
+[jax="SVG"] mjx-tool {
+  display: inline-block;
+  position: relative;
+  width: 0;
+  height: 0;
+}
+
+[jax="SVG"] mjx-tool > mjx-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+mjx-tool > mjx-tip {
+  display: inline-block;
+  padding: .2em;
+  border: 1px solid #888;
+  font-size: 70%;
+  background-color: #F8F8F8;
+  color: black;
+  box-shadow: 2px 2px 5px #AAAAAA;
+}
+
+g[data-mml-node="maction"][data-toggle] {
+  cursor: pointer;
+}
+
+mjx-status {
+  display: block;
+  position: fixed;
+  left: 1em;
+  bottom: 1em;
+  min-width: 25%;
+  padding: .2em .4em;
+  border: 1px solid #888;
+  font-size: 90%;
+  background-color: #F8F8F8;
+  color: black;
+}
+
+foreignObject[data-mjx-xml] {
+  font-family: initial;
+  line-height: normal;
+  overflow: visible;
+}
+
+.MathJax path {
+  stroke-width: 3;
+}
+
+mjx-container[display="true"] {
+  overflow: auto hidden;
+}
+
+mjx-container[display="true"] + br {
+  display: none;
+}
+</style><link rel="alternate" href="/atom.xml" title="站在巨人的肩膀上" type="application/atom+xml">
+</head>
+
+
+<body>
+  <div class="nav-container">
+    <nav class="home-menu pure-menu pure-menu-horizontal">
+  <a class="pure-menu-heading" href="/">
+    <img class="avatar" src="https://www.hufeifei.cn/favicon.jpg">
+    <span class="title">站在巨人的肩膀上</span>
+  </a>
+
+  <ul class="pure-menu-list clearfix">
+      
+          
+            <li class="pure-menu-item"><a href="/" class="pure-menu-link">首页</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/tags" class="pure-menu-link">标签</a></li>
+          
+      
+          
+            <li class="pure-menu-item"><a href="/atom.xml" class="pure-menu-link">RSS</a></li>
+          
+      
+  </ul>
+   
+</nav>
+  </div>
+
+  <div class="container" id="content-outer">
+    <div class="inner" id="content-inner">
+      <div class="post-container">
+  <article class="post" id="post">
+    <header class="post-header text-center">
+      <h1 class="title">
+        谈阿里核心业务监控平台 SunFire 的技术架构
+      </h1>
+      <span>
+        
+        <time class="time" datetime="2021-11-22T00:00:00.000Z">
+          2021-11-22
+        </time>
+        
+      </span>
+      <span class="slash">/</span>
+      <span class="post-meta">
+        <span class="post-tags">
+          <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Alibaba/" rel="tag">Alibaba</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Sunfire/" rel="tag">Sunfire</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/monitor/" rel="tag">monitor</a></li></ul>
+        </span>
+      </span>
+      <span class="slash">/</span>
+      <span id="/backend/alimonitor-sunfire-architecture/" class="read leancloud_visitors" data-flag-title="谈阿里核心业务监控平台 SunFire 的技术架构">
+        <span class="leancloud-visitors-count"></span> 点击
+      </span>
+      <span class="slash">/</span>
+      <span class="read">阅读耗时 33 分钟</span>
+    </header>
+
+    <div class="post-content">
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><p>在 2016 年双 11 全球购物狂欢节中，天猫全天交易额 1207 亿元，前 30 分钟每秒交易峰值 17.5 万笔，每秒支付峰值 12 万笔。承载这些秒级数据背后的监控产品是如何实现的呢？接下来本文将从阿里监控体系、监控产品、监控技术架构及实现分别进行详细讲述。</p>
+<p>阿里有众多监控产品，且各产品分工明确，百花齐放。整个阿里监控体系如下图：</p>
+<p><img src="https://static001.infoq.cn/resource/image/bb/2b/bb8fd397d31beaa3d0bc0d16f519902b.jpg" rel="external noreferrer nofollow noopener" referrerpolicy="no-referrer" alt="img"></p>
+<p>集团层面的监控，以平台为主，全部为阿里自主研发（除引入了第三方基调、博睿等外部检测系统，用于各地 CDN 用户体验监控），这些监控平台覆盖了阿里集团 80% 的监控需求。</p>
+<p>此外，每个事业群均根据自身特性自主研发了多套监控系统，以满足自身特定业务场景的监控需求，如广告的 GoldenEye、菜鸟的棱镜、阿里云的天基、蚂蚁的金融云（基于 XFlush）、中间件的 EagleEye 等，这些监控系统均有各自的使用场景。</p>
+<p>阿里的监控规模早已达到了千万量级的监控项，PB 级的监控数据，亿级的报警通知，基于数据挖掘、机器学习等技术的智能化监控将会越来越重要。</p>
+<p>阿里全球运行指挥中心（GOC）基于历史监控数据，通过异常检测、异常标注、挖掘训练、机器学习、故障模拟等方式，进行业务故障的自动化定位，并赋能监控中心 7*24 小时专业监控值班人员，使阿里集团具备第一时间发现业务指标异常，并快速进行应急响应、故障恢复的能力，将故障对线上业务的影响降到最低。</p>
+<p>接下来将详细讲述本文的主角，承载阿里核心业务监控的 SunFire 监控平台。</p>
+<h2 id="SunFire-简介"><a href="#SunFire-简介" class="headerlink" title="SunFire 简介"></a>SunFire 简介</h2><p>SunFire 是一整套海量日志实时分析解决方案，以日志、REST 接口、Shell 脚本等作为数据采集来源，提供设备、应用、业务等各种视角的监控能力，从而帮您快速发现问题、定位问题、分析问题、解决问题，为线上系统可用率提供有效保障。</p>
+<p>SunFire 利用文件传输、流式计算、分布式文件存储、数据可视化、数据建模等技术，提供实时、智能、可定制、多视角、全方位的监控体系。其主要优势有：</p>
+<ul>
+<li>全方位实时监控：提供设备、应用、业务等各种视角的监控能力，关键指标秒级、普通指标分钟级，高可靠、高时效、低延迟。</li>
+<li>灵活的报警规则：可根据业务特征、时间段、重要程度等维度设置报警规则，实现不误报、不漏报。</li>
+<li>管理简单：分钟级万台设备的监控部署能力，故障自动恢复，集群可伸缩</li>
+<li>自定义便捷配置：丰富的自定义产品配置功能，便捷、高效的完成产品配置、报警配置。</li>
+<li>可视化：丰富的可视化 Dashboard，帮助您定制个性化的监控大盘。</li>
+<li>低资源占用：在完成大量监控数据可靠传输的同时，保证对宿主机的 CPU、内存等资源极低占用率。</li>
+</ul>
+<p>Sunfire 技术架构如下：</p>
+<p><img src="https://static001.infoq.cn/resource/image/fe/c3/fe8537a7abd2fc1bd30381ab1b30c4c3.jpg" rel="external noreferrer nofollow noopener" referrerpolicy="no-referrer" alt="Sunfire"></p>
+<h3 id="主要模块实现及功能"><a href="#主要模块实现及功能" class="headerlink" title="主要模块实现及功能"></a>主要模块实现及功能</h3><p>针对架构图中的各个组件，其中最关键的为采集（Agent）、计算（Map、Reduce）组件，接下来将对这两个组件进行详细介绍。</p>
+<h3 id="1-采集"><a href="#1-采集" class="headerlink" title="1. 采集"></a>1. 采集</h3><p>Agent 负责所有监控数据的原始采集，它以 Agent 形式部署在应用系统上，负责原始日志的采集、系统命令的执行。日志原始数据的采集，按周期查询日志的服务，且日志查询要低耗、智能。Agent 上不执行计算逻辑。主要具有以下特点：</p>
+<p><strong>低耗</strong></p>
+<p>采集日志，不可避免要考虑日志压缩的问题，通常做日志压缩则意味着它必须做两件事情：一是磁盘日志文件的内容要读到应用程序态；二是要执行压缩算法。</p>
+<p>这两个过程就是 CPU 消耗的来源。但是它必须做压缩，因为日志需要从多个机房传输到集中的机房。跨机房传输占用的带宽不容小觑，必须压缩才能维持运转。所以低耗的第一个要素，就是避免跨机房传输。SunFire 达到此目标的方式是运行时组件自包含在机房内部，需要全量数据时才从各机房查询合并。</p>
+<p>网上搜索 zero-copy，会知道文件传输其实是可以不经过用户态的，可以在 Linux 的核心态用类似 DMA 的思想，实现极低 CPU 占用的文件传输。SunFire 的 Agent 当然不能放过这个利好，对它的充分利用是 Agent 低耗的根本原因。以前这部分传输代码是用 c 语言编写的 sendfile 逻辑，集成到 Java 工程里，后来被直接改造为了 Java 实现。</p>
+<p>最后，在下方的计算平台中会提到，要求 Agent 的日志查询服务具备“按周期查询日志”的能力。这是目前 Agent 工程里最大的难题，我们都用过 RAF（RandomAccessFile），你给它一个游标，指定 offset，再给它一个长度，指定读取的文件 size，它可以很低耗的扒出文件里的这部分内容。然而问题在于：周期≠offset。从周期转换为 offset 是一个痛苦的过程。</p>
+<p>在流式计算里一般不会遇到这个问题，因为在流式架构里，Agent 是水龙头，主动权掌握在 Agent 手里，它可以从 0 开始 push 文件内容，push 到哪里就做一个标记，下次从标记继续往后 push，不断重复。这个标记就是 offset，所以流式不会有任何问题。</p>
+<p>而计算平台周期任务驱动架构里，pull 的方式就无法提供 offset，只能提供 Term（周期，比如 2015-11-11 00:00 分）。Agent 解决此问题的方式算是简单粗暴，那就是二分查找法。而且日志还有一个天然优势，它是连续性的。所以按照对二分查找法稍加优化，就能达到“越猜越准”的效果（因为区间在缩小，区间越小，它里面的日志分布就越平均）。</p>
+<p>于是，Agent 代码里的 LogFinder 组件撑起了这个职责，利用上述两个利好，实现了一个把 CPU 控制在 5% 以下的算法，目前能够维持运转。其中 CPU 的消耗不用多说，肯定是来自于猜的过程，因为每一次猜测，都意味着要从日志的某个 offset 拉出一小段内容来核实，会导致文件内容进入用户态并解析。这部分算法依然有很大的提升空间。</p>
+<p><strong>日志滚动</strong></p>
+<p>做过 Agent 的同学肯定都被日志滚动困扰过，各种各样的滚动姿势都需要支持。SunFire 的 pull 方式当然也会遇到这个问题，于是我们简单粗暴的穷举出了某次 pull 可能会遇到的所有场景，比如：</p>
+<ul>
+<li>正常猜到了 offset</li>
+<li>整个日志都猜不到 offset</li>
+<li>上次猜到了 offset，但是下次再来的时候发现不对劲（比如滚动了）</li>
+</ul>
+<p>这段逻辑代码穷举的分支之多，在一开始谁都没有想到。不过仔细分析了很多次，发现每个分支都必不可少。</p>
+<p><strong>查询接口</strong></p>
+<p>Agent 提供的查询服务分为 first query 和 ordinary query 两种。做这个区分的原因是：一个周期的查询请求只有第一次需要猜 offset，之后只需要顺序下移即可。而且计算组件里有大量的和 Agent 查询接口互相配合的逻辑，比如一个周期拉到什么位置上算是确定结束？一次 ordinary query 得到的日志里如果末尾是截断的（只有一半）该如何处理…… 这些逻辑虽然缜密，但十分繁琐，甚至让人望而却步。但现状如此，这些实现逻辑保障了 SunFire 的高一致性，不用担心数据不全、报警不准，随便怎么重启计算组件，随便怎么重启 Agent。但这些优势的背后，是值得深思的代码复杂度。</p>
+<p><strong>路径扫描</strong></p>
+<p>为了让用户配置简单便捷，SunFire 提供给用户选择日志的方式不是手写，而是像 windows 的文件夹一样可以浏览线上系统的日志目录和文件，让他双击一个心仪的文件来完成配置。但这种便捷带来的问题就是路径里若有变量就会出问题。所以 Agent 做了一个简单的 dir 扫描功能。Agent 能从应用目录往下扫描，找到同深度文件夹下“合适”的目标日志。</p>
+<h3 id="2-计算"><a href="#2-计算" class="headerlink" title="2. 计算"></a>2. 计算</h3><p>由 Map、Reduce 组成计算平台，负责所有采集内容的加工计算，具备故障自动恢复能力及弹性伸缩能力。计算平台一直以来都是发展最快、改造最多的领域，因为它是很多需求的直接生产者，也是性能压力的直接承担者。因此，在经过多年的反思后，最终走向了一条插件化、周期驱动、自协调、异步化的道路。主要具有以下几个特点：</p>
+<p><strong>纯异步</strong></p>
+<p>原来的 SunFire 计算系统里，线程池繁复，从一个线程池处理完还会丢到下一个线程池里；为了避免并发 bug，加锁也很多。这其中最大的问题有两个：CPU 密集型的逻辑和 I/O 密集型混合。</p>
+<p>对于第一点，只要发生混合，无论你怎么调整线程池参数，都会导致各式各样的问题。线程调的多，会导致某些时刻多线程抢占 CPU，load 飙高；线程调的少，会导致某些时刻所有线程都进入阻塞等待，堆积如山的活儿没人干。</p>
+<p>对于第二点，最典型的例子就是日志包合并。比如一台 Map 上的一个日志计算任务，它要收集 10 个 Agent 的日志，那肯定是并发去收集的，10 个日志包陆续（同时）到达，到达之后各自解析，解析完了 data 要进行 merge。这个 merge 过程如果涉及到互斥区（比如嵌套 Map 的填充），就必须加锁，否则 bug 满天飞。</p>
+<p>但其实我们重新编排一下任务就能杜绝所有的锁。比如上面的例子，我们能否让这个日志计算任务的 10 个 Agent 的子任务，全部在同一个线程里做？这当然是可行的，只要回答两个问题就行：</p>
+<ul>
+<li>如果串行，那 10 个 I/O 动作（拉日志包）怎么办？串行不就浪费 cpu 浪费时间吗？</li>
+<li>把它们都放到一个线程里，那我怎么发挥多核机器的性能？</li>
+</ul>
+<p>第一个问题，答案就是异步 I/O。只要肯花时间，所有的 I/O 都可以用 NIO 来实现，无锁，事件监听，不会涉及阻塞等待。即使串行也不会浪费 CPU。第二个问题，就是一个大局观问题了。现实中我们面临的场景往往是用户配置了 100 个产品，每个产品都会拆解为子任务发送到每台 Map，而一台 Map 只有 4 个核。所以，你让一个核负责 25 个任务已经足够榨干机器性能了，没必要追求更细粒度子任务并发。因此，计算平台付出了很大的精力，做了协程框架。</p>
+<p>我们用 Akka 作为协程框架，有了协程框架后再也不用关注线程池调度等问题了，于是我们可以轻松的设计协程角色，实现 CPU 密集型和 I/O 密集型的分离、或者为了无锁而做任务编排。接下来，尽量用 NIO 覆盖所有的 I/O 场景，杜绝 I/O 密集型逻辑，让所有的协程都是纯跑 CPU。按照这种方式，计算平台已经基本能够榨干机器的性能。</p>
+<h2 id="周期驱动"><a href="#周期驱动" class="headerlink" title="周期驱动"></a>周期驱动</h2><p>所谓周期驱动型任务调度，说白了就是 Map/Reduce。Brain 被选举出来之后，定时捞出用户的配置，转换为计算作业模型，生成一个周期（比如某分钟的）的任务, 我们称之为拓扑 (Topology), 拓扑也很形象的表现出 Map/Reduce 多层计算结构的特征。所有任务所需的信息，都保存在 topology 对象中，包括计算插件、输入输出插件逻辑、Map 有几个、每个 Map 负责哪些输入等等。这些信息虽然很多，但其实来源可以简单理解为两个：一是用户的配置；二是运维元数据。拓扑被安装到一台 Reduce 机器（A）上。</p>
+<p>A 上的 Reduce 任务判断当前集群里有多少台 Map 机器，就产生多少个任务（每个任务被平均分配一批 Agent），这些任务被安装到每台机器上 Map。被安装的 Map 任务其实就是一个协程，它负责了一批 Agent，于是它就将每个 Agent 的拉取任务再安装为一个协程。至此，安装过程结束。Agent 拉取任务协程（也称之为 input 输入协程，因为它是数据输入源）在周期到点后，开始执行，拉取日志，解析日志，将结果交予 Map 协程；Map 协程在得到了所有 Agent 的输入结果并 merge 完成后，将 merge 结果回报到 Reduce 协程（这是一个远程协程消息，跨机器）；Reduce 协程得到了所有 Map 协程的汇报结果后，数据到齐，写入到 Hbase 存储，结束。</p>
+<p>上述过程非常简单，不高不大也不上，但经过多年大促的考验，其实非常的务实。能解决问题的架构，就是好的架构，能简单，为何要把事情做得复杂呢？</p>
+<p>这种架构里，有一个非常重要的特性：任务是按周期隔离的。也就是说，同一个配置，它的 2015-11-11 00:00 分的任务和 2015-11-11 00:01 分的任务，是两个任务，没有任何关系，各自驱动，各自执行。理想情况下，我们可以做出结论：一旦某个周期的任务结束了，它得到的数据必然是准确的（只要每个 Agent 都正常响应了）。所以采用了这种架构之后，SunFire 很少再遇到数据不准的问题，当出现业务故障的时候我们都可以断定监控数据是准确的，甚至秒级都可以断定是准确的，因为秒级也就是 5 秒为周期的任务，和分钟级没有本质区别，只是周期范围不同而已。能获得这个能力当然也要归功于 Agent 的“按周期查询日志”的能力。</p>
+<h2 id="任务重试"><a href="#任务重试" class="headerlink" title="任务重试"></a>任务重试</h2><p>在上节描述的 Brain-&gt;Reduce-&gt;Map 的任务安装流程里，我们对每一个上游赋予一个职责：监督下游。当机器发生重启或宕机，会丢失一大批协程角色。每一种角色的丢失，都需要重试恢复。监督主要通过监听 Terminated 事件实现，Terminated 事件会在下游挂掉 (不论是该协程挂掉还是所在的机器挂掉或是断网等) 的时候发送给上游。由于拓扑是提前生成好且具备完备的描述信息，因此每个角色都可以根据拓扑的信息来重新生成下游任务完成重试。</p>
+<ul>
+<li>若 Brain 丢失，则 Brain 会再次选主, Brain 读取最后生成到的任务周期, 再继续生成任务。</li>
+<li>若 Reduce 丢失，每个任务在 Brain 上都有一个 TopologySupervisor 角色, 来监听 Reduce 协程的 Terminated 事件来执行重试动作。</li>
+<li>若 Map 丢失，Reduce 本身也监听了所有 Map 的 Terminated 事件来执行重试动作。</li>
+<li>为确保万无一失，若 Reduce 没有在规定时间内返回完成事件给 Brain，Brain 同样会根据一定规则重试这个任务。</li>
+</ul>
+<p>过程依然非常简单，而且从理论上是可证的，无论怎么重启宕机，都可以确保数据不丢，只不过可能会稍有延迟（因为部分任务要重新做）。</p>
+<p>输入共享：在用户实际使用 SunFire 的过程中，常常会有这样的情况：用户配了几个不同的配置，其计算逻辑可能是不同的，比如有的是单纯计算行数，有的计算平均值，有的需要正则匹配出日志中的内容，但这几个配置可能都用的同一份日志，那么一定希望几个配置共享同一份拉取的日志内容。否则重复拉取日志会造成极大的资源消耗。那么我们就必须实现输入共享，输入共享的实现比较复杂，主要依赖两点：</p>
+<ul>
+<li>其一是依赖安装流，因为拓扑是提前安装的，因此在安装到真正开始拉取日志的这段时间内，我们希望能够通过拓扑信息判断出需要共享的输入源，构建出输入源和对应 Map 的映射关系。</li>
+<li>其二是依赖 Map 节点和 Agent 之间的一致性哈希，保证 Brain 在生成任务时，同一个机器上的日志，永远是分配相同的一个 Map 节点去拉取的（除非它对应的 Map 挂了）。</li>
+</ul>
+<p>站在 Map 节点的视角来看：在各个任务的 Reduce 拿着拓扑来注册的时候，我拿出输入源（对日志监控来说通常可以用一个 IP 地址和一个日志路径来描述）和 Map 之间的关系，暂存下来，每当一个新的 Reduce 来注册 Map，我都判断这个 Map 所需的输入源是否存在了，如果有，那就给这个输入源增加一个上游，等到这个输入源的周期到了，那就触发拉取，不再共享了。</p>
+<h2 id="其他组件"><a href="#其他组件" class="headerlink" title="其他组件"></a>其他组件</h2><p><strong>存储</strong>：负责所有计算结果的持久化存储，可以无限伸缩，且查询历史数据保持和查询实时数据相同的低延迟。Sunfire 原始数据存储使用的是阿里集团的 Hbase 产品（HBase ：Hadoop Database，是一个高可靠性、高性能、面向列、可伸缩的分布式存储系统），用户配置存储使用的是 MongoDB。</p>
+<p><strong>展示</strong>：负责提供用户交互，让用户通过简洁的建模过程来打造个性化的监控产品。基于插件化、组件化的构建方式，用户可以快速增加新类型的监控产品。</p>
+<p><strong>自我管控</strong>：即 OPS-Agent、Ops-web 组件，负责海量 Agent 的自动化安装监测，并且承担了整个监控平台各个角色的状态检测、一键安装、故障恢复、容量监测等职责。</p>
+
+    </div>
+
+    <div>全文完。</div>
+  </article>
+  <div class="fix-container">
+    <div id="toc" class="fix-right">
+      
+<div class="toc-wrapper">
+  <strong class="toc-title">目录</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#SunFire-%E7%AE%80%E4%BB%8B"><span class="toc-text">SunFire 简介</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BB%E8%A6%81%E6%A8%A1%E5%9D%97%E5%AE%9E%E7%8E%B0%E5%8F%8A%E5%8A%9F%E8%83%BD"><span class="toc-text">主要模块实现及功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E9%87%87%E9%9B%86"><span class="toc-text">1. 采集</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E8%AE%A1%E7%AE%97"><span class="toc-text">2. 计算</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%91%A8%E6%9C%9F%E9%A9%B1%E5%8A%A8"><span class="toc-text">周期驱动</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%BB%E5%8A%A1%E9%87%8D%E8%AF%95"><span class="toc-text">任务重试</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B6%E4%BB%96%E7%BB%84%E4%BB%B6"><span class="toc-text">其他组件</span></a></li></ol>
+</div>
+
+      
+<div class="ads-banner">
+    <div class="swiper-wrapper">
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/gze2lfYy" title="买云服务器，参与礼品兑换、抽奖，最高送价值8000元IPad，还有Bose耳机、千元京东卡等您来！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E4%BC%81%E4%B8%9A%E7%9B%9B%E5%A4%8F%E6%9C%89%E7%A4%BC-345x200-d2146292109c1c9e1ae000a6c3ecde162d89e493.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/ecs_amd_test-0901?userCode=s4pthvp2" title="云服务器AMD二代火热公测">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/2480630_1634815908.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/LonPwhxX" title="DNSPod解析套餐全面升配降价，更高的套餐配置规格，更优的价格方案，全面提升可用性及响应率，专业版限时99元/年！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%E9%8D%93%EE%88%9B%E6%B9%B0-82de69db27c1e7984b871bdba4ea3dd5d5acda1f.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/7ec01pIF" title="云产品限时秒杀，爆款1核2G云服务器，首年74元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-788d0ee3eed06e913b85ddb6b178f8b9960c4684.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/minisite/goods?userCode=s4pthvp2" title="云小站特惠">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/6421642_1634812338.jpg" />
+            
+            <span>云小站特惠</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/95DUQ4ON" title="境外1核2G服务器低至2折，半价续费券限量免费领取！">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A8%E7%90%83%E8%B4%AD_345%20200-dd004d4a4191fcbabcabea4fcd96f67d1e069f58.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SAIuJMWI" title="星星海SA2云服务器，1核2G首年99元起，高性价比首选">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200%20%281%29-87905a297b9ba92f411e1e8fefc629b63cca5781.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/3YMiCK6w" title="推广者专属福利，新客户无门槛领取总价值高达2860元代金券，每种代金券限量500张，先到先得。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200--2953d058277cb63c6b1cd127285163335cd6751e.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/activity_selection?userCode=s4pthvp2" title="云服务器 精选特惠 新用户低至0.5折起 爆款免费试用3个月">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9125844_1634816292.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/qbSzF0sM" title="中小企业福利专场，多款刚需产品，满足企业通用场景需求，云服务器2.5折起">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-b28f7dee9552f4241ea6a543f15a9798049701d4.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/H6YmBFC4" title="云开发CloudBase，一站式高效开发平台，新用户选购低至0元">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345-200-a1b026a76d4ef2fc73b9fd976759da3a16715b44.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/daily/bestoffer?userCode=s4pthvp2" title="阿里云 爆款特惠 精选爆款产品低至0.5折">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/9604134_1634812518.jpg" />
+            
+            <span>阿里云 爆款特惠 精选爆款产品低至0.5折</span>
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/activity/new?userCode=s4pthvp2" title="新人特惠专享 汇聚阿里云爆款云产品，云服务器1核2G n4 72.6元/年">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/3500689_1634812626.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/hDCEkRsS" title="ElasticSearch新用户特惠，快速实现日志分析、应用搜索，首购低至4折">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E8%85%BE%E8%AE%AF%E4%BA%913_345%20200_1-7aeb8eb451fd6de33676444898914b1ff3298996.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/YjfBwRLm" title="腾讯云数据库性能卓越稳定可靠，为您解决数据库运维难题">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E5%85%A5%E9%97%A8%E4%BA%91%E6%95%B0%E6%8D%AE%E5%BA%93MYSQL-345x200-a68c566987f9bf687433e2cf4fbdc85ece6e2d93.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/SDMIWAoV" title="腾讯云图，像PPT一样简单的数据可视化工具。5元搞定数据可视化，模板丰富，拖拖拽拽就能做出好看的可视化大屏。">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-89eeba55a2f49008e686e1a51e14bfe79f63af13.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/8DvMAlwF" title="视频通信爆款 9.9 元起， 提供电商、教育、社交娱乐等多行业多场景的一站式解决方案，最快 1 天布局火爆赛道">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200-51cc0ac5a1b375c4269c679987e3bc7c62a2c592.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://www.aliyun.com/daily-act/ecs/care?userCode=s4pthvp2" title="云服务器老用户专享礼遇 实例升级低至 6.3折、续费低至 3.5折 限时折扣！">
+            <img src="https://s.pc.qq.com/tousu/img/20211021/7740487_1634816569.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/VbUAuJ2j" title="即时通信 IM 首购 1 折特惠，仅需99.9元/月，支持直播电商、在线教育等多种热门应用场景">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD-15e14b2502f1e6df9e647ba452416d4a4f3dda04.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/6HS1Q41a" title="9.9元体验2万分钟实时音视频通话,支持1对1或多人音视频通话,单房可支持300人同时在线，10万人同时观看；全平台互通高品质通话">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%202-15a05a841743ffd2dc01731972dd7b3c2b46e357.png" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/Z3HKwaYY" title="云数据库MySQL基础版1元体验，为中小企业量身打造，单节点架构，保证数据可靠性">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/%E6%95%B0%E6%8D%AE%E5%BA%93%20SQL%20345x200-0f7c36787bd045c5a201bc29b01deab00bb4a3cd.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/pcReLJBk" title="专业版APP加固特惠5折起，可享免费兼容性测试">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345x200-5d6e2cf6805432934eeb9f7800bd1a5d282906ae.jpg" />
+            
+        </a>
+        
+        <a class="swiper-slide" target="_blank" rel="noopener" href="https://curl.qcloud.com/xwWYC6oW" title="新客户首购 TPNS 特惠9.8元/万 DAU，新老客户低至6.5折，给您提供快速、稳定、安全、高效的用户促活利器">
+            <img src="https://upload-dianshi-1255598498.file.myqcloud.com/345_200%E5%A4%87%E4%BB%BD%203-9f78293b201220263799ac53f85ae6cd13e0e8a7.png" />
+            
+        </a>
+        
+    </div>
+    <div aria-label="Previous" class="swiper-button-prev"></div>
+    <div aria-label="Next" class="swiper-button-next"></div>
+    <div class="swiper-pagination"></div>
+</div>
+<script>
+    window.addEventListener('load', function () {
+            let options = {"pagination":{"el":".swiper-pagination","type":"progressbar"},"navigation":{"nextEl":".swiper-button-next","prevEl":".swiper-button-prev"},"slidesPerView":1,"spaceBetween":10,"loop":true,"autoplay":{"delay":2000,"disableOnInteraction":false}} ;
+            var swiper = new Swiper(".ads-banner", options);
+        },
+        false);
+</script>
+
+    </div>
+  </div>
+</div>
+<div class="copyright">
+    <span>原文链接：</span>
+    <a target="_blank" rel="noopener" href="https://www.infoq.cn/article/alibaba-core-business-monitoring-platform-sunfire">https://www.infoq.cn/article/alibaba-core-business-monitoring-platform-sunfire</a>
+</div>
+<div class="share" style="width: 100%;">
+  <img src="https://www.hufeifei.cn/wechat-public-account.jpg" alt="Holmofy" style="margin: auto; display: block; width: 40%;min-width: 160px;max-width: 400px;"/>
+  <div style="margin: auto; text-align: center; font-size: 0.8em; color: grey;">老铁们关注走一走，不迷路</div>
+</div>
+
+  
+    <div class="post-nav">
+      <div class="post-nav-item post-nav-next">
+        
+          <span>〈 </span>
+          <a href="/backend/alimonitor-sunfire/" rel="next" title="阿里业务全链路智能监控探索">
+          阿里业务全链路智能监控探索
+          </a>
+        
+      </div>
+  
+      <div class="post-nav-item post-nav-prev">
+          
+          <a href="/backend/java-agent-profiler/" rel="prev" title="JVM CPU Profiler技术原理及源码深度解析">
+            JVM CPU Profiler技术原理及源码深度解析
+          </a>
+          <span>〉</span>
+        
+      </div>
+    </div>
+  
+
+<div id="vcomments" style="padding: 10px 50px;"></div>
+<script>
+    window.addEventListener('load', function () {
+        new Valine({"el":"#vcomments","enable":true,"appId":"8Yo6tv65sOStsPwvGSOAmOtM-gzGzoHsz","appKey":"IJPXPCV29V5ja34nj1JL3tQe","notify":false,"verify":false,"pageSize":10,"avatar":"mm","lang":"zh-cn","placeholder":"Just go go","visitor":true,"recordIP":true,"requiredFields":["nick"]});
+    });
+</script>
+
+    </div>
+
+    
+
+  </div>
+  <footer class="footer text-center">
+    <div id="bottom-inner">
+        <a class="bottom-item" href="https://www.hufeifei.cn">首页</a> |
+        <a class="bottom-item" href="https://blog.hufeifei.cn" target="_blank">个人博客</a> |
+        <a class="bottom-item" href="https://github.com/holmofy" target="_blank">GitHub</a>
+    </div>
+    
+    <div>
+        <span class="bottom-item">友情链接: </span>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://draveness.me/">draveness</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://coolshell.cn/">CoolShell</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="https://martin.kleppmann.com/">martin kleppmann</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://www.skywind.me/blog/">skywind</a>
+        
+        <a class="bottom-item" target="_blank" rel="noopener" href="http://duanple.com/">duanple</a>
+        
+    </div>
+    
+</footer>
+
+  
+  <!-- scripts list from theme config.yml -->
+  
+    <script src="//unpkg.com/swiper/swiper-bundle.min.js"></script>
+  
+    <script src="//cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+  
+
+
+<script>
+  (function(window, document, undefined) {
+
+    var timer = null;
+
+    function returnTop() {
+      cancelAnimationFrame(timer);
+      timer = requestAnimationFrame(function fn() {
+        var oTop = document.body.scrollTop || document.documentElement.scrollTop;
+        if (oTop > 0) {
+          document.body.scrollTop = document.documentElement.scrollTop = oTop - 50;
+          timer = requestAnimationFrame(fn);
+        } else {
+          cancelAnimationFrame(timer);
+        }
+      });
+    }
+
+    var hearts = [];
+    window.requestAnimationFrame = (function() {
+      return window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        function(callback) {
+          setTimeout(callback, 1000 / 60);
+        }
+    })();
+    init();
+
+    function init() {
+      css(".heart{z-index:9999;width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+      attachEvent();
+      gameloop();
+      addMenuEvent();
+    }
+
+    function gameloop() {
+      for (var i = 0; i < hearts.length; i++) {
+        if (hearts[i].alpha <= 0) {
+          document.body.removeChild(hearts[i].el);
+          hearts.splice(i, 1);
+          continue;
+        }
+        hearts[i].y--;
+        hearts[i].scale += 0.004;
+        hearts[i].alpha -= 0.013;
+        hearts[i].el.style.cssText = "left:" + hearts[i].x + "px;top:" + hearts[i].y + "px;opacity:" + hearts[i].alpha + ";transform:scale(" + hearts[i].scale + "," + hearts[i].scale + ") rotate(45deg);background:" + hearts[i].color;
+      }
+      requestAnimationFrame(gameloop);
+    }
+
+    /**
+     * 给logo设置点击事件
+     * 
+     * - 回到顶部
+     * - 出现爱心
+     */
+    function attachEvent() {
+      var old = typeof window.onclick === "function" && window.onclick;
+      var logo = document.getElementById("logo");
+      if (logo) {
+        logo.onclick = function(event) {
+          returnTop();
+          old && old();
+          createHeart(event);
+        }
+      }
+      
+    }
+
+    function createHeart(event) {
+      var d = document.createElement("div");
+      d.className = "heart";
+      hearts.push({
+        el: d,
+        x: event.clientX - 5,
+        y: event.clientY - 5,
+        scale: 1,
+        alpha: 1,
+        color: randomColor()
+      });
+      document.body.appendChild(d);
+    }
+
+    function css(css) {
+      var style = document.createElement("style");
+      style.type = "text/css";
+      try {
+        style.appendChild(document.createTextNode(css));
+      } catch (ex) {
+        style.styleSheet.cssText = css;
+      }
+      document.getElementsByTagName('head')[0].appendChild(style);
+    }
+
+    function randomColor() {
+      // return "rgb(" + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + "," + (~~(Math.random() * 255)) + ")";
+      return "#F44336";
+    }
+
+    function addMenuEvent() {
+      var menu = document.getElementById('menu-main-post');
+      if (menu) {
+        var toc = document.getElementById('toc');
+        if (toc) {
+          menu.onclick = function() {
+            if (toc) {
+              if (toc.style.display == 'block') {
+                toc.style.display = 'none';
+              } else {
+                toc.style.display = 'block';
+              }
+            }
+          };
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+    }
+
+  })(window, document);
+</script>
+
+  
+
+
+
+<script>(function (w, d, s, id) {
+            if (typeof (w.webpushr) !== 'undefined') return; w.webpushr = w.webpushr || function () { (w.webpushr.q = w.webpushr.q || []).push(arguments) }; var js, fjs = d.getElementsByTagName(s)[0]; js = d.createElement(s); js.id = id; js.async = 1; js.src = "https://cdn.webpushr.com/app.min.js";fjs.parentNode.appendChild(js);}(window, document, 'script', 'webpushr-jssdk'));webpushr('setup', { 'key': 'BPOxQK5zO7VR8Ja1xRzI_E6lKWqJqwAMSNJozmybmGC6-aujLX8k-lHdIAdb_BcX9po-j5bpVTyEEA6f9Kz0bqU' });</script></body>
+</html>
