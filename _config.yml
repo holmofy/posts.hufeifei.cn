@@ -170,6 +170,7 @@ nofollow:
     - "*.cdn.sohucs.com"
     - "*.infoq.cn"
     - "*.alicdn.com"
+    - "*.geekbang.org"
   rel:
     - 'external'
     - 'noreferrer'
