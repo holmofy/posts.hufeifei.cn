@@ -163,14 +163,8 @@ nofollow:
   enable: true
   elements: ["img"]
   field: post
-  include:
-    - "img.draveness.me"
-    - "duanple.com"
-    - "*.zhiimg.com"
-    - "*.cdn.sohucs.com"
-    - "*.infoq.cn"
-    - "*.alicdn.com"
-    - "*.geekbang.org"
+  exclude:
+    - "*.hufeifei.cn"
   rel:
     - 'external'
     - 'noreferrer'
