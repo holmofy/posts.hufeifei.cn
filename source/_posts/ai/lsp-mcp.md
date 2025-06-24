@@ -85,7 +85,7 @@ MCP的设计灵感很大程度上来源于LSP。David Soria Parra在X帖子中�
 
 ## MCP的潜力与挑战
 
-![MCP的潜力与挑战](https://p6-xtjj-sign.byteimg.com/tos-cn-i-73owjymdk6/2f1c0ac53a70416d8c083c30c157f2eb~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAgWENhcHRhaW5v:q75.awebp?rk3s=f64ab15b&x-expires=1750353725&x-signature=7B9zduLD3RbpD2XR9Bi6oBiKKvU%3D)
+![MCP的潜力与挑战](https://i-blog.csdnimg.cn/direct/29100a3d093048a5aa8280c1b5ebf451.png)
 
 ### MCP的潜力
 
