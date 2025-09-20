@@ -195,7 +195,7 @@ Supabase 还在想其他方法构建壁垒，例如他们去年收购了 OrioleD
 [2]: https://opentelemetry.io/
 [3]: https://iceberg.apache.org/  
 [4]: https://opensource.org/licenses
-[5]: https://en.wikipedia.org/wiki/Disruptive\_innovation
+[5]: https://en.wikipedia.org/wiki/Disruptive_innovation
 [6]: https://supabase.com/docs/guides/getting-started/architecture#everything-is-portable  
 [7]: https://www.postgresql.org/docs/current/protocol.html  
 [8]: https://www.postgresql.org/about/licence/  
@@ -208,7 +208,7 @@ Supabase 还在想其他方法构建壁垒，例如他们去年收购了 OrioleD
 [15]: https://github.com/SigNoz/signoz  
 [16]: https://github.com/openobserve/openobserve  
 [17]: https://github.com/open-telemetry/opentelemetry-collector  
-[18]: https://www.startdataengineering.com/post/what\_why\_table\_format/  
+[18]: https://www.startdataengineering.com/post/what_why_table_format/  
 [19]: https://delta.io/  
 [20]: https://hudi.apache.org/  
 [21]: https://iceberg.apache.org/  
@@ -219,8 +219,8 @@ Supabase 还在想其他方法构建壁垒，例如他们去年收购了 OrioleD
 [26]: https://aws.amazon.com/about-aws/whats-new/2024/08/amazon-s3-conditional-writes/  
 [27]: https://aws.amazon.com/blogs/aws/new-amazon-s3-express-one-zone-high-performance-storage-class/  
 [28]: https://aws.amazon.com/blogs/aws/up-to-85-price-reductions-for-amazon-s3-express-one-zone/  
-[29]: https://github.com/Mooncake-Labs/pg\_mooncake  
-[30]: https://github.com/duckdb/pg\_duckdb  
+[29]: https://github.com/Mooncake-Labs/pg_mooncake  
+[30]: https://github.com/duckdb/pg_duckdb  
 [31]: https://github.com/supabase/wrappers/pull/462  
 [32]: https://duckdb.org/2021/10/29/duckdb-wasm.html  
 [33]: https://sqlite.org/cloudsqlite/doc/trunk/www/index.wiki  
@@ -229,4 +229,4 @@ Supabase 还在想其他方法构建壁垒，例如他们去年收购了 OrioleD
 [36]: https://tonbo.io/  
 [37]: https://itsjustpostgres.com/  
 [38]: https://supabase.com/storage  
-[39]: https://github.com/supabase/supabase\_etl`
+[39]: https://github.com/supabase/supabase_etl
