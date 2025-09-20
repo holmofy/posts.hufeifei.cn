@@ -66,7 +66,8 @@ Postgres 点满了 “开源” 技能点，但它也并非在所有数据场景
 
 标准往往草根起家，商业公司则陷入经典的 [颠覆式创新][5] 两难：
 
-•**不跟**？潮流跑了，错过增长趋势。•**跟了**？自家产品锁定度变低。
+* **不跟**？潮流跑了，错过增长趋势。
+* **跟了**？自家产品锁定度变低。
 
 对开发者而言，这简直不能更香了 —— [我们坚信][6]：**可迁移性会逼着厂商拼体验**。
 
@@ -104,7 +105,8 @@ AWS S3 团队连环上新，把 “S3 当数据库” 的幻想推向现实。�
 
 不同场景对 S3 的姿势略有差异：
 
-•**OLTP**：性能要命，S3 与 NVMe 永远隔着物理网线。因此重点是 Zero ETL & 分层存储：冷热数据自由搬迁。Postgres 现有多种读 Iceberg 的方式，如 [pg\_mooncake][29]、[pg\_duckdb][30] 及 [Iceberg FDW][31]。•**遥测 / 数仓**：关键字是“基数”。S3 越便宜，大家越把海量数据往里倒，催生“存算分离”的架构。于是出现一堆以计算层自居的嵌入式数据库：如 [DuckDB][32]（OLAP）、SQLite 的[云后端存储][33]、[turbopuffer][34]（向量）、[SlateDB][35]（KV）、[Tonbo][36]（Arrow）。它们既可嵌入应用，也能单飞。
+* **OLTP**：性能要命，S3 与 NVMe 永远隔着物理网线。因此重点是 Zero ETL & 分层存储：冷热数据自由搬迁。Postgres 现有多种读 Iceberg 的方式，如 [pg\_mooncake][29]、[pg\_duckdb][30] 及 [Iceberg FDW][31]。
+* **遥测 / 数仓**：关键字是“基数”。S3 越便宜，大家越把海量数据往里倒，催生“存算分离”的架构。于是出现一堆以计算层自居的嵌入式数据库：如 [DuckDB][32]（OLAP）、SQLite 的[云后端存储][33]、[turbopuffer][34]（向量）、[SlateDB][35]（KV）、[Tonbo][36]（Arrow）。它们既可嵌入应用，也能单飞。
 
 ***
 
@@ -116,7 +118,10 @@ AWS S3 团队连环上新，把 “S3 当数据库” 的幻想推向现实。�
 
 ![图片](https://mmbiz.qpic.cn/mmbiz_png/Wkpr3rA9wF16IwIWZsYu0QguoALgibg9N8Y8EFLOf0KeoXB445VLTibPEpAljjOFWjLVCdcsPu2ibVle6mCSSs1sg/640?wx_fmt=png&from=appmsg&tp=webp&wxfrom=5&wx_lazy=1#imgIndex=3)
 
-•给我们维护的所有开源工具加上 OTel。•在 Supabase Storage 引入 Iceberg。•在 [Supabase ETL][39] 里打通 Postgres ↔ Iceberg 零 ETL。•通过扩展和 FDW，让 Postgres 能读能写 Iceberg。
+* 给我们维护的所有开源工具加上 OTel。
+* 在 Supabase Storage 引入 Iceberg。
+* 在 [Supabase ETL][39] 里打通 Postgres ↔ Iceberg 零 ETL。
+* 通过扩展和 FDW，让 Postgres 能读能写 Iceberg。
 
 接下来，我们押注三大开放数据标准：**Postgres、OTel、Iceberg**。敬请期待。
 
@@ -132,7 +137,9 @@ YC S20 的项目走过五年发展到今天，已经是估值 2B 的独角兽了
 
 老冯非常认同 Paul 的观点，Postgres 已经成为 OLTP 世界的事实标准。 但至少在当下，还有几件事是 PostgreSQL “不擅长” （不是做不到）的：
 
-•遥测•海量分析•对象存储
+* 遥测
+* 海量分析
+* 对象存储
 
 所以如果你想要提供一个真正 “完全覆盖” 的数据基础设施，那么光有 PostgreSQL 是不行的。
 
@@ -182,7 +189,6 @@ Supabase 还在想其他方法构建壁垒，例如他们去年收购了 OrioleD
 
 老实说，老冯很怀念全职创业前的那种状态，完全不考虑商业化，为了兴趣，热情，公益而开源，所以使用的是 Apache 2.0 协议。 后来因为拿投资人钱要有一个交代，所以把协议修改为更严格的 AGPLv3 ，目标是为了阻止云厂商与同行白嫖。 但既然现在我又成了数据库个体户，其实也是可以回到那种开源初心状态的 —— “反正俺也不靠这个赚钱”。
 
-  
 
 
 [1]: https://www.postgresql.org/
