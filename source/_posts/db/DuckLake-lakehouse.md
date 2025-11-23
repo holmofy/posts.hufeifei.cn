@@ -27,7 +27,7 @@ tags:
 
 ## Iceberg and Delta
 
-为了解决“在数据湖中修改数据”这一基本需求，各种新的开放标准应运而生，其中最突出的是 **Apache Iceberg** 和 **Linux Foundation [Delta Lake](https://zhida.zhihu.com/search?content_id=258373320&content_type=Article&match_order=1&q=Delta+Lake&zhida_source=entity)**。这两种格式的设计初衷，是在不放弃“在对象存储中使用开放格式”这一核心理念的前提下，引入对数据表进行修改的合理方式。例如，Iceberg 通过一系列复杂的 JSON 和 Avro 文件来定义 schema、快照以及某一时刻哪些 Parquet 文件属于该表。这种体系被称为 **“Lakehouse（湖仓一体）”** —— 实质上是在数据湖的基础上叠加了数据库特性，从而支持了许多令人兴奋的新型数据管理用例，比如跨引擎数据共享。
+为了解决“在数据湖中修改数据”这一基本需求，各种新的开放标准应运而生，其中最突出的是 **Apache Iceberg** 和 **Linux Foundation Delta Lake**。这两种格式的设计初衷，是在不放弃“在对象存储中使用开放格式”这一核心理念的前提下，引入对数据表进行修改的合理方式。例如，Iceberg 通过一系列复杂的 JSON 和 Avro 文件来定义 schema、快照以及某一时刻哪些 Parquet 文件属于该表。这种体系被称为 **“Lakehouse（湖仓一体）”** —— 实质上是在数据湖的基础上叠加了数据库特性，从而支持了许多令人兴奋的新型数据管理用例，比如跨引擎数据共享。
 
 ![](https://pic3.zhimg.com/v2-0df96da59a030cb86eb3cec1d6878b3c_1440w.jpg)
 
