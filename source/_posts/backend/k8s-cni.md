@@ -6,6 +6,7 @@ mathjax: true
 post_src: https://zhuanlan.zhihu.com/p/450140876
 tags:
 - K8S
+- CNI
 ---
 
 ## 引子
