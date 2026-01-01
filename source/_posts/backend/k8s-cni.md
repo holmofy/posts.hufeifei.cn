@@ -38,7 +38,9 @@ docker：“卧槽！爸爸我错了！”
 
 K8S 已经在很早前的 1.20 版发布之前就宣布要移除内嵌在 kubelet 中的 docker shim 的代码，大概原因就是谷歌一直在 k8s 中使用一套叫做 CRI（container runtime interface）的规范，该规范旨在定义 k8s 如何更好地操作容器技术，该规范大概分为三部分：CRI Client，CRI Server，OCI Runtime。
 
-简单来讲，就是在 kubelet 中放一个 grpc 的客户端，这个客户端要和一个 grpc 的服务端进行通信，这个 grpc 的服务端里头进行容器的，“拉起”，“销毁” 等动作的调用，而真正执行 “拉起”，“销毁” 等动作的代码由 OCI Runtime 实现。
+简单来讲，就是在 kubelet 中放一个 grpc 的客户端，这个客户端要和一个 grpc 的服务端进行通信，这个 grpc 的服务端里头进行容器的“拉起”，“销毁” 等动作的调用，而真正执行 “拉起”，“销毁” 等动作的代码由 OCI Runtime 实现。
+
+![cri shim](https://img2020.cnblogs.com/blog/794174/202201/794174-20220114161636291-2100977762.png)
 
 或者再简单点，对应到实现来说：CRI Client 端有个实现就是 kubelet，CRI Server 端有个实现叫 Containerd，OCI Runtime 有好多实现其中有个叫 runc。然后把他们串起来就是：kubelet 在做完了一些准入校验，CSI 的存储卷挂载等操作之后，要去拉起一个 pod 了，在拉起 pod 的时候，就先启动一个 grpc 的客户端，然后与 Containerd 中的 grpc 的服务端通信，告诉它说要拉起一个 pod 了。然后 containerd 收到后会按照一定的流程去“拉镜像”，“创建 sandbox”，“创建 netns”，“启动容器”，“创建容器网络”，“把容器加入到 sandbox” 中等。containerd 基本上只负责调用（高级运行时），真正实现这些功能的地方在 OCI 的 runc（或其他低级运行时）中，有点像是通常服务端的 controller 和 service。
 
